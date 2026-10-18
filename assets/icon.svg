@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="72%">
+      <stop offset="0" stop-color="#301715"/><stop offset="1" stop-color="#100909"/>
+    </radialGradient>
+    <radialGradient id="body" cx="36%" cy="26%" r="82%">
+      <stop offset="0" stop-color="#f4705f"/><stop offset="0.33" stop-color="#c8352b"/>
+      <stop offset="0.72" stop-color="#7a1512"/><stop offset="1" stop-color="#3a0706"/>
+    </radialGradient>
+    <linearGradient id="bodyshade" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0.45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.45"/>
+    </linearGradient>
+    <radialGradient id="atrium" cx="40%" cy="28%" r="85%">
+      <stop offset="0" stop-color="#c25864"/><stop offset="1" stop-color="#4c1426"/>
+    </radialGradient>
+    <linearGradient id="tubeV" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7d1914"/><stop offset="0.35" stop-color="#e2685a"/>
+      <stop offset="0.6" stop-color="#c13a30"/><stop offset="1" stop-color="#5e110e"/>
+    </linearGradient>
+    <linearGradient id="veinV" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a1330"/><stop offset="0.38" stop-color="#9a4c78"/>
+      <stop offset="1" stop-color="#341029"/>
+    </linearGradient>
+    <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ee7a6a"/><stop offset="0.5" stop-color="#c13a30"/><stop offset="1" stop-color="#6a130f"/>
+    </linearGradient>
+    <linearGradient id="pulm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8c1f1a"/><stop offset="0.4" stop-color="#e06a5c"/><stop offset="1" stop-color="#9a241e"/>
+    </linearGradient>
+    <linearGradient id="smoke" gradientUnits="userSpaceOnUse" x1="90" y1="262" x2="150" y2="150">
+      <stop offset="0" stop-color="#060303" stop-opacity="0"/><stop offset="0.5" stop-color="#060303" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#060303" stop-opacity="0.97"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
+    <filter id="blur8" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="8"/></filter>
+    <clipPath id="heartclip">
+      <path d="M 86 104 C 112 92 168 90 190 104 C 210 118 212 160 196 190 C 186 208 178 220 170 228 C 150 222 118 204 98 182 C 80 162 74 128 86 104 Z"/>
+    </clipPath>
+  </defs>
+
+  <clipPath id="tile"><rect x="8" y="8" width="240" height="240" rx="52"/></clipPath>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="url(#bg)"/>
+  <g clip-path="url(#tile)">
+  <ellipse cx="140" cy="140" rx="82" ry="78" fill="#d0402f" opacity="0.2" filter="url(#blur8)"/>
+
+  <!-- great vessels -->
+  <path d="M 89 108 L 89 46 L 107 46 L 107 108 Z" fill="url(#veinV)"/>
+  <ellipse cx="98" cy="46" rx="9" ry="3.4" fill="#2a0c22" stroke="#a65a86" stroke-width="1"/>
+  <path d="M 132 108 C 126 84 124 58 148 49 C 170 42 192 52 194 80 L 192 112" stroke="url(#arch)" stroke-width="26" fill="none"/>
+  <path d="M 128 98 C 124 76 128 58 146 52 C 160 47 174 49 182 56" stroke="#ffb3a6" stroke-width="3" opacity="0.35" fill="none" filter="url(#soft)"/>
+  <g>
+    <path d="M 128 58 L 122 26 L 134 24 L 140 55 Z" fill="url(#tubeV)"/>
+    <ellipse cx="128" cy="25" rx="6.2" ry="2.4" transform="rotate(-10 128 25)" fill="#3a0806" stroke="#c9604f" stroke-width="0.8"/>
+    <path d="M 145 50 L 145 20 L 156 20 L 156 49 Z" fill="url(#tubeV)"/>
+    <ellipse cx="150.5" cy="20" rx="5.6" ry="2.2" fill="#3a0806" stroke="#c9604f" stroke-width="0.8"/>
+    <path d="M 162 50 L 170 22 L 180 25 L 173 52 Z" fill="url(#tubeV)"/>
+    <ellipse cx="175" cy="23.5" rx="5.4" ry="2.2" transform="rotate(16 175 23.5)" fill="#3a0806" stroke="#c9604f" stroke-width="0.8"/>
+  </g>
+  <!-- pulmonary artery branch passing under the arch -->
+  <path d="M 150 86 C 164 80 180 80 198 86" stroke="#5a1210" stroke-width="13" stroke-linecap="round" fill="none"/>
+
+  <!-- heart -->
+  <ellipse cx="82" cy="130" rx="21" ry="29" fill="url(#atrium)"/>
+  <path d="M 192 102 C 212 96 220 114 206 124 C 198 120 192 112 192 102 Z" fill="#8e2a2c"/>
+  <path d="M 86 104 C 112 92 168 90 190 104 C 210 118 212 160 196 190 C 186 208 178 220 170 228
+           C 150 222 118 204 98 182 C 80 162 74 128 86 104 Z" fill="url(#body)"/>
+  <g clip-path="url(#heartclip)">
+    <rect x="70" y="90" width="150" height="150" fill="url(#bodyshade)"/>
+    <!-- fat and coronary vessels in the grooves -->
+    <path d="M 148 110 C 138 150 148 190 168 226" stroke="#e8c08a" stroke-width="7" opacity="0.28" fill="none" filter="url(#glow)"/>
+    <path d="M 148 110 C 138 150 148 190 168 226" stroke="#4a0a08" stroke-width="4" opacity="0.4" fill="none" filter="url(#soft)"/>
+    <path d="M 148 110 C 138 150 148 190 168 226" stroke="#f6a493" stroke-width="1.8" opacity="0.7" fill="none"/>
+    <path d="M 143 146 C 128 156 118 168 112 186" stroke="#f6a493" stroke-width="1.2" opacity="0.5" fill="none"/>
+    <path d="M 146 176 C 160 182 170 188 180 200" stroke="#f6a493" stroke-width="1.1" opacity="0.45" fill="none"/>
+    <path d="M 92 112 C 112 104 140 102 170 106" stroke="#e8c08a" stroke-width="6" opacity="0.22" fill="none" filter="url(#glow)"/>
+    <!-- wet highlights -->
+    <ellipse cx="114" cy="124" rx="24" ry="12" transform="rotate(-22 114 124)" fill="#fff" opacity="0.2" filter="url(#glow)"/>
+    <ellipse cx="108" cy="121" rx="7" ry="3" transform="rotate(-22 108 121)" fill="#fff" opacity="0.45" filter="url(#soft)"/>
+  </g>
+  <path d="M 148 114 C 156 100 166 88 180 80 L 190 94 C 178 100 168 110 162 120 Z" fill="url(#pulm)"/>
+  <ellipse cx="185" cy="87" rx="7.4" ry="3" transform="rotate(-58 185 87)" fill="#3a0806" stroke="#c9604f" stroke-width="0.8"/>
+
+  <!-- shadow hand gripping the heart from the right -->
+  <defs>
+    <linearGradient id="armfade" gradientUnits="userSpaceOnUse" x1="250" y1="262" x2="205" y2="190">
+      <stop offset="0" stop-color="#050303" stop-opacity="0"/>
+      <stop offset="0.22" stop-color="#050303" stop-opacity="0.45"/>
+      <stop offset="0.45" stop-color="#050303" stop-opacity="1"/>
+      <stop offset="1" stop-color="#050303" stop-opacity="1"/>
+    </linearGradient>
+    <g id="handshape">
+      <!-- back of the hand on the heart's right side, wrist leaving at the bottom right -->
+      <path d="M 196 112 C 214 108 232 120 236 146 C 240 172 232 194 222 210 C 230 226 240 244 250 262
+               L 214 268 C 206 248 196 232 184 220 C 192 196 194 150 196 112 Z"/>
+      <!-- four fingers wrapped across the front, knuckles on the right -->
+      <path d="M 206 124 C 186 120 160 122 142 130 C 132 134 130 146 140 148 C 160 146 186 142 206 144 Z"/>
+      <path d="M 210 146 C 186 142 152 146 128 156 C 116 161 116 175 128 175 C 154 170 186 166 210 168 Z"/>
+      <path d="M 208 169 C 186 166 156 170 134 180 C 123 185 124 198 135 197 C 158 192 186 189 208 190 Z"/>
+      <path d="M 202 191 C 184 190 162 194 148 202 C 139 207 141 218 150 216 C 168 211 188 208 204 209 Z"/>
+    </g>
+  </defs>
+  <use href="#handshape" fill="#ff5a46" opacity="0.55" filter="url(#glow)" transform="translate(1.5 -1)"/>
+  <use href="#handshape" fill="url(#armfade)" filter="url(#soft)"/>
+  <!-- finger separations and knuckle creases, faintly lit by the heart -->
+  <g stroke="#d4483b" stroke-width="1.1" fill="none" opacity="0.5" stroke-linecap="round">
+    <path d="M 206 145 C 186 143 162 146 140 150"/>
+    <path d="M 210 168 C 188 166 158 170 130 176"/>
+    <path d="M 206 190 C 186 189 160 192 138 198"/>
+    <path d="M 172 125 C 170 133 170 140 172 145"/>
+    <path d="M 160 148 C 158 156 158 163 160 170"/>
+    <path d="M 166 171 C 164 179 164 186 166 192"/>
+    <path d="M 172 193 C 170 199 170 205 172 210"/>
+  </g>
+  </g>
+  <rect x="8.5" y="8.5" width="239" height="239" rx="51.5" fill="none" stroke="#ffffff" stroke-opacity="0.06"/>
+</svg>

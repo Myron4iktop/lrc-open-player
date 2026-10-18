@@ -1,0 +1,13 @@
+# LRC Open Player — Python packages (Windows, Python 3.11 or newer)
+PyQt6>=6.8                 # 6.8 or newer is needed for the visualizer
+mutagen                    # reading and writing tags
+cutlet                     # Japanese -> romaji
+unidic-lite                # dictionary used by cutlet
+
+# Windows media controls (media keys, lock screen, volume flyout)
+winrt-runtime ; sys_platform == "win32"
+winrt-Windows.Foundation ; sys_platform == "win32"
+winrt-Windows.Foundation.Collections ; sys_platform == "win32"
+winrt-Windows.Media ; sys_platform == "win32"
+winrt-Windows.Media.Playback ; sys_platform == "win32"
+winrt-Windows.Storage.Streams ; sys_platform == "win32"
