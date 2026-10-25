@@ -1,19 +1,26 @@
 import os
 import re
 import sys
+import html
 import json
 import math
 import time
 import array
+import atexit
 import base64
 import cmath
 import types
 import ctypes
+import locale
 import random
+import shutil
 import socket
 import tempfile
+import threading
+import traceback
 import http.client
 from collections import deque
+import urllib.error
 import urllib.request
 import urllib.parse
 from datetime import timedelta
@@ -43,35 +50,208 @@ except ImportError:
 
 
 # ---------------------------------------------------------
+# Files: temp folder, reading lyrics files
+# ---------------------------------------------------------
+_TEMP_DIR = None
+
+
+def private_temp_dir() -> str:
+    """A folder of our own for temporary images, removed when the app exits ("" if it can't be made).
+
+    A fresh, randomly named folder instead of fixed names in the shared temp folder: two
+    copies of the player don't trip over each other and nothing is left behind.
+    """
+    global _TEMP_DIR
+    if _TEMP_DIR is None:
+        try:
+            _TEMP_DIR = tempfile.mkdtemp(prefix="lrcopenplayer-")
+            atexit.register(shutil.rmtree, _TEMP_DIR, True)
+        except OSError:
+            _TEMP_DIR = ""
+    return _TEMP_DIR
+
+
+_KANA = re.compile(r"[\u3040-\u30ff]")  # hiragana and katakana
+LYRICS_FILE_LIMIT = 4 * 1024 * 1024  # far more than any song's lyrics
+
+
+def decode_lyrics_bytes(data: bytes) -> str:
+    """The text of a lyrics file, whatever encoding it was saved in.
+
+    UTF-8 (with or without a BOM) and UTF-16/32 (Notepad's "Unicode") are recognised by
+    their bytes. Older files use a legacy code page: Shift-JIS for most Japanese lyrics,
+    otherwise usually this PC's ANSI code page (Windows-1252 in Western Europe, GBK in
+    China...).
+    """
+    for bom, codec in ((b"\xef\xbb\xbf", "utf-8"), (b"\xff\xfe\x00\x00", "utf-32-le"),
+                       (b"\x00\x00\xfe\xff", "utf-32-be"), (b"\xff\xfe", "utf-16-le"),
+                       (b"\xfe\xff", "utf-16-be")):
+        if data.startswith(bom):
+            return data[len(bom):].decode(codec, errors="replace")
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        pass
+    try:
+        text = data.decode("cp932")
+        if _KANA.search(text):  # real Japanese has kana; other code pages rarely decode to it
+            return text
+    except UnicodeDecodeError:
+        pass
+    try:
+        return data.decode(locale.getpreferredencoding(False) or "cp1252")
+    except (UnicodeDecodeError, LookupError):
+        return data.decode("cp1252", errors="replace")
+
+
+def read_lyrics_file(path: str) -> str:
+    """Reads an .lrc or .txt file; raises OSError if it can't be read."""
+    with open(path, "rb") as f:
+        data = f.read(LYRICS_FILE_LIMIT + 1)
+    if len(data) > LYRICS_FILE_LIMIT:
+        raise OSError(f"“{os.path.basename(path)}” is too big to be a lyrics file.")
+    return decode_lyrics_bytes(data)
+
+
+def file_error_text(path: str, error: Exception) -> str:
+    """'Couldn't read “x.lrc”: Permission denied.' for an error from read_lyrics_file()."""
+    name = os.path.basename(path)
+    if isinstance(error, OSError) and error.strerror:
+        return f"Couldn't read “{name}”: {error.strerror}."
+    return str(error) or f"Couldn't read “{name}”."
+
+
+# ---------------------------------------------------------
 # Metadata & Track Helpers
 # ---------------------------------------------------------
-def get_track_sort_key(file_path: str):
-    """Sorts album files by (Disc Number, Track Number, Filename)."""
-    disc_no = 1
-    track_no = 999
+def _first_number(value):
+    """The leading number of a track/disc tag in any format: '5', '05/12', MP4's (5, 12), ID3 frames."""
+    if value is None:
+        return None
+    if hasattr(value, "text"):                      # ID3 frame
+        value = value.text
+    if isinstance(value, tuple):                    # MP4 trkn / disk: (number, total)
+        return value[0] if value and isinstance(value[0], int) and value[0] > 0 else None
+    if isinstance(value, list):
+        return _first_number(value[0]) if value else None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    m = re.match(r"\s*(\d+)", str(value))
+    return (int(m.group(1)) or None) if m else None
+
+
+def _first_text(value):
+    if value is None:
+        return None
+    if hasattr(value, "text"):                      # ID3 frame
+        value = value.text
+    if isinstance(value, (list, tuple)):
+        value = value[0] if value else None
+    text = str(value).strip() if value is not None else ""
+    return text or None
+
+
+def read_track_tags(file_path: str) -> dict:
+    """Title, track and disc number from a song's tags (None for whatever is missing).
+
+    Each format names them differently: ID3 (MP3, WAV) uses TIT2 / TRCK / TPOS, MP4 (M4A)
+    uses ©nam / trkn / disk, and Vorbis comments (FLAC, OGG, Opus) use title / tracknumber /
+    discnumber.
+    """
+    out = {"title": None, "track": None, "disc": None}
     try:
         import mutagen
         audio = mutagen.File(file_path)
-        if audio:
-            def parse_num(keys):
-                for k in keys:
-                    v = audio.get(k) or (audio.tags.get(k) if hasattr(audio, "tags") and audio.tags else None)
-                    if v:
-                        raw = str(v[0] if isinstance(v, list) else getattr(v, "text", str(v)))
-                        m = re.match(r"^(\d+)", raw.strip())
-                        if m:
-                            return int(m.group(1))
-                return None
-
-            d = parse_num(["discnumber", "tpos", "disk"])
-            if d is not None:
-                disc_no = d
-            t = parse_num(["tracknumber", "trck", "trkn"])
-            if t is not None:
-                track_no = t
+        tags = audio.tags if audio is not None else None
     except Exception:
-        pass
-    return (disc_no, track_no, os.path.basename(file_path).lower())
+        return out
+    if not tags:
+        return out
+
+    def get(*keys):
+        for k in keys:
+            try:
+                v = tags.get(k)
+            except Exception:  # some tag types reject key names they can't hold
+                v = None
+            if v:
+                return v
+        return None
+
+    out["title"] = _first_text(get("TIT2", "\xa9nam", "title"))
+    out["track"] = _first_number(get("TRCK", "trkn", "tracknumber"))
+    out["disc"] = _first_number(get("TPOS", "disk", "discnumber"))
+    return out
+
+
+def _natural_key(text: str):
+    """Sorts 'Disc 2' before 'Disc 10' and '2 Song' before '10 Song'."""
+    return [int(part) if i % 2 else part.casefold() for i, part in enumerate(re.split(r"(\d+)", text))]
+
+
+def album_sort_key(file_path: str, tags: dict, root: str = ""):
+    """Album order: folder by folder (CD1 before CD2), then disc, track number and file name."""
+    folder = os.path.dirname(file_path)
+    try:
+        rel = os.path.relpath(folder, root) if root else folder
+    except ValueError:  # another drive
+        rel = folder
+    parts = [] if rel in ("", ".") else [p for p in re.split(r"[\\/]+", rel) if p]
+    return ([_natural_key(p) for p in parts], tags.get("disc") or 1, tags.get("track") or 999,
+            _natural_key(os.path.basename(file_path)))
+
+
+def scan_album_folder(folder: str, exts, cancelled=None, progress=None):
+    """Every song under `folder` in album order, with its title: [(path, title or None), ...].
+
+    Reads each song's tags once. That takes a while for big folders or slow drives, so
+    the player runs it on a background thread.
+    """
+    found = []
+    for root, dirs, files in os.walk(folder):
+        dirs.sort(key=_natural_key)
+        found.extend(os.path.join(root, f) for f in files if f.lower().endswith(exts))
+    entries = []
+    for i, path in enumerate(found):
+        if cancelled is not None and cancelled():
+            return []
+        tags = read_track_tags(path)
+        entries.append((album_sort_key(path, tags, folder), path, tags["title"]))
+        if progress is not None and i % 25 == 24:
+            progress(i + 1)
+    entries.sort(key=lambda e: e[0])
+    return [(path, title) for _, path, title in entries]
+
+
+def _embedded_pictures(audio):
+    """Embedded image data of any supported format, front cover first."""
+    pics = []  # (picture type, bytes); type 3 is the front cover
+    for pic in getattr(audio, "pictures", None) or []:          # FLAC
+        pics.append((getattr(pic, "type", 0), pic.data))
+    tags = getattr(audio, "tags", None)
+    if tags:
+        from mutagen.id3 import ID3
+        if isinstance(tags, ID3):                                # MP3, WAV
+            for frame in tags.getall("APIC"):
+                pics.append((getattr(frame, "type", 0), frame.data))
+        else:
+            for key, kind in (("covr", "mp4"), ("metadata_block_picture", "vorbis")):
+                try:
+                    values = tags.get(key) or []
+                except Exception:
+                    values = []
+                for v in values:
+                    try:
+                        if kind == "mp4":                        # M4A
+                            pics.append((3, bytes(v)))
+                        else:                                    # OGG, Opus
+                            from mutagen.flac import Picture
+                            pic = Picture(base64.b64decode(v))
+                            pics.append((pic.type, pic.data))
+                    except Exception:
+                        continue
+    pics.sort(key=lambda p: 0 if p[0] == 3 else 1)
+    return [data for _, data in pics]
 
 
 def extract_metadata_and_cover(file_path: str):
@@ -95,7 +275,8 @@ def extract_metadata_and_cover(file_path: str):
         "bits_per_sample": 16,
         "channels": 2,
         "is_hd": False,
-        "file_path": file_path
+        "file_path": file_path,
+        "title_from_tags": False,  # False: the title above is just the file name
     }
 
     try:
@@ -190,7 +371,9 @@ def extract_metadata_and_cover(file_path: str):
         return None
 
     t_val = find_tag_value(["title", "tit2", "\xa9nam"])
-    if t_val: info["title"] = t_val
+    if t_val:
+        info["title"] = t_val
+        info["title_from_tags"] = True
 
     a_val = find_tag_value(["artist", "tpe1", "\xa9art", "performer"])
     if a_val: info["artist"] = a_val
@@ -201,11 +384,19 @@ def extract_metadata_and_cover(file_path: str):
     aa_val = find_tag_value(["albumartist", "album artist", "tpe2", "aart"])
     if aa_val: info["album_artist"] = aa_val
 
+    def number_pair(text):
+        """M4A stores track and disc as a pair, which reads as '(5, 12)': show it as '5/12'."""
+        m = re.fullmatch(r"\((\d+),\s*(\d+)\)", text or "")
+        if not m:
+            return text
+        number, total = int(m.group(1)), int(m.group(2))
+        return "-" if not number else (f"{number}/{total}" if total else str(number))
+
     tr_val = find_tag_value(["tracknumber", "trck", "trkn"])
-    if tr_val: info["track_number"] = tr_val
+    if tr_val: info["track_number"] = number_pair(tr_val)
 
     disc_val = find_tag_value(["discnumber", "tpos", "disk"])
-    if disc_val: info["disc_number"] = disc_val
+    if disc_val: info["disc_number"] = number_pair(disc_val)
 
     g_val = find_tag_value(["genre", "tcon", "\xa9gen"])
     if g_val: info["genre"] = g_val
@@ -222,8 +413,9 @@ def extract_metadata_and_cover(file_path: str):
                 break
 
         if not lyrics:
+            # USLT is where MP3 (ID3) keeps unsynced lyrics, under a key like "USLT::eng"
             for k, text in tag_pairs:
-                if "lyric" in k or "\xa9lyr" in k or "unsynced" in k:
+                if ("lyric" in k or "\xa9lyr" in k or "unsynced" in k or k.startswith("uslt")) and text.strip():
                     lyrics = text
                     break
     except Exception as e:
@@ -231,26 +423,11 @@ def extract_metadata_and_cover(file_path: str):
 
     # 4. Embedded Cover Art Extraction
     try:
-        if hasattr(audio, "pictures") and audio.pictures:
-            for pic in audio.pictures:
-                qimg = QImage()
-                if qimg.loadFromData(pic.data):
-                    cover_pixmap = QPixmap.fromImage(qimg)
-                    if getattr(pic, "type", None) == 3:
-                        break
-        elif hasattr(audio, "tags") and audio.tags:
-            for frame in audio.tags.values():
-                if getattr(frame, "FrameID", "") == "APIC":
-                    qimg = QImage()
-                    if qimg.loadFromData(frame.data):
-                        cover_pixmap = QPixmap.fromImage(qimg)
-                        break
-        elif hasattr(audio, "get") and audio.get("covr"):
-            covers = audio.get("covr")
-            if covers:
-                qimg = QImage()
-                if qimg.loadFromData(bytes(covers[0])):
-                    cover_pixmap = QPixmap.fromImage(qimg)
+        for data in _embedded_pictures(audio):
+            qimg = QImage()
+            if qimg.loadFromData(data):
+                cover_pixmap = QPixmap.fromImage(qimg)
+                break
     except Exception as e:
         print(f"Cover art extraction error: {e}")
 
@@ -268,9 +445,21 @@ def extract_metadata_and_cover(file_path: str):
 # ---------------------------------------------------------
 # LRCLIB Network Fetcher (Worker Thread)
 # ---------------------------------------------------------
-def clean_query_string(text: str) -> str:
-    cleaned = re.sub(r"^\d+[\s.-]+", "", text)
-    cleaned = re.sub(r"\s*\(\d+\)$", "", cleaned)
+# "01 Song", "01. Song", "01 - Song", "1-03 Song": a track number in front of a file name
+_FILENAME_TRACK_PREFIX = re.compile(r"^(?:\d{1,2}[-.])?\d{1,3}(?:\s*[-._]\s*|\s+)(?=\S)")
+
+
+def clean_query_string(text: str, from_filename: bool = False) -> str:
+    """Search text for LRCLIB.
+
+    Only a title that comes from the file name loses its track number ("01 - Song") and
+    copy suffix ("Song (2)"). Titles and artists from tags stay as they are: "7 Rings",
+    "99 Luftballons" and "50 Cent" really do start with a number.
+    """
+    cleaned = text
+    if from_filename:
+        cleaned = _FILENAME_TRACK_PREFIX.sub("", cleaned)
+        cleaned = re.sub(r"\s*\(\d+\)$", "", cleaned)
     cleaned = re.sub(r"\[(FLAC|MP3|WAV|HQ)\]", "", cleaned, flags=re.IGNORECASE)
     return cleaned.strip()
 
@@ -334,15 +523,71 @@ class RomajiConverter:
         return result
 
 
-class LrcFetchWorker(QThread):
-    finished_signal = pyqtSignal(str, str)
+class AlbumScanWorker(QThread):
+    """Lists album folders and reads every song's tags, off the GUI thread."""
+    progress = pyqtSignal(int, int)  # token, songs read so far
+    done = pyqtSignal(int, object)   # token, [(path, title or None), ...] in playing order
 
-    def __init__(self, title: str, artist: str, duration_sec: int, save_path: str = ""):
+    def __init__(self, token: int, folders, files, exts, sort_files: bool = True):
         super().__init__()
-        self.title = clean_query_string(title)
+        self.token = token
+        self.folders, self.files, self.exts, self.sort_files = list(folders), list(files), exts, sort_files
+        self._cancelled = False
+
+    def cancel(self):
+        self._cancelled = True
+
+    def run(self):
+        entries = []
+        try:
+            for folder in self.folders:
+                base = len(entries)
+                entries.extend(scan_album_folder(
+                    folder, self.exts, lambda: self._cancelled,
+                    lambda count: self.progress.emit(self.token, base + count)))
+                if self._cancelled:
+                    return
+            loose = []
+            for path in self.files:
+                if self._cancelled:
+                    return
+                tags = read_track_tags(path)
+                loose.append((album_sort_key(path, tags), path, tags["title"]))
+            if self.sort_files:
+                loose.sort(key=lambda e: e[0])
+            entries.extend((path, title) for _, path, title in loose)
+        except Exception as e:
+            print(f"Album scan error: {e}")
+        if not self._cancelled:
+            self.done.emit(self.token, entries)
+
+
+class LrcFetchWorker(QThread):
+    """Looks a song up on LRCLIB. It never writes files: the window decides what to keep.
+
+    finished_signal(lyrics, message, trusted, lrclib_duration_sec): `trusted` means LRCLIB's
+    entry is as long as the song (an exact lookup, or a search hit within a few seconds),
+    so it is almost certainly the right one. A looser search hit can be another version of
+    the song, or another song with the same name.
+    """
+    finished_signal = pyqtSignal(str, str, bool, int)
+
+    MATCH_TOLERANCE_SEC = 4
+
+    def __init__(self, title: str, artist: str, duration_sec: int, title_from_tags: bool = True):
+        super().__init__()
+        self.title = clean_query_string(title, from_filename=not title_from_tags)
         self.artist = "" if artist == "Unknown Artist" else clean_query_string(artist)
         self.duration_sec = duration_sec
-        self.save_path = save_path
+        self._cancelled = False
+
+    def cancel(self):
+        """The answer is no longer wanted (the app is closing); stop after the current request."""
+        self._cancelled = True
+
+    def _emit(self, text: str, message: str, trusted: bool = False, duration: float = 0):
+        if not self._cancelled:
+            self.finished_signal.emit(text, message, trusted, int(round(duration or 0)))
 
     def run(self):
         headers = {"User-Agent": "LRCOpenPlayer/3.0 (Desktop; Python/PyQt6)"}
@@ -360,17 +605,19 @@ class LrcFetchWorker(QThread):
             with urllib.request.urlopen(req, timeout=6) as response:
                 if response.status == 200:
                     data = json.loads(response.read().decode("utf-8"))
-                    synced = data.get("syncedLyrics")
-                    if synced:
-                        self._save_cache(synced)
-                        self.finished_signal.emit(synced, "Synced lyrics downloaded from LRCLIB.")
+                    exact = self.duration_sec > 0  # LRCLIB only returns an entry of that length
+                    if isinstance(data, dict) and data.get("syncedLyrics"):
+                        self._emit(data["syncedLyrics"], "Synced lyrics downloaded from LRCLIB.", exact,
+                                   data.get("duration") or 0)
                         return
-                    plain = data.get("plainLyrics")
-                    if plain:
-                        self.finished_signal.emit(plain, "Plain lyrics downloaded from LRCLIB.")
+                    if isinstance(data, dict) and data.get("plainLyrics"):
+                        self._emit(data["plainLyrics"], "Plain lyrics downloaded from LRCLIB.", exact,
+                                   data.get("duration") or 0)
                         return
         except Exception:
             pass
+        if self._cancelled:
+            return
 
         search_terms = f"{self.title} {self.artist}".strip()
         search_url = f"https://lrclib.net/api/search?{urllib.parse.urlencode({'q': search_terms})}"
@@ -380,34 +627,34 @@ class LrcFetchWorker(QThread):
             with urllib.request.urlopen(req_search, timeout=7) as response:
                 if response.status == 200:
                     results = json.loads(response.read().decode("utf-8"))
-                    if results and isinstance(results, list):
-                        for item in results:
-                            if item.get("syncedLyrics"):
-                                if self.duration_sec > 0 and abs(item.get("duration", 0) - self.duration_sec) <= 4:
-                                    self._save_cache(item["syncedLyrics"])
-                                    self.finished_signal.emit(item["syncedLyrics"], "Synced lyrics matched on LRCLIB.")
-                                    return
-                        for item in results:
-                            if item.get("syncedLyrics"):
-                                self._save_cache(item["syncedLyrics"])
-                                self.finished_signal.emit(item["syncedLyrics"], "Synced lyrics matched on LRCLIB.")
-                                return
-                        for item in results:
-                            if item.get("plainLyrics"):
-                                self.finished_signal.emit(item["plainLyrics"], "Plain lyrics found on LRCLIB.")
-                                return
+                    results = [r for r in results if isinstance(r, dict)] if isinstance(results, list) else []
+
+                    def length(item):
+                        try:
+                            return float(item.get("duration") or 0)
+                        except (TypeError, ValueError):
+                            return 0.0
+
+                    def fits(item):
+                        return self.duration_sec > 0 and abs(length(item) - self.duration_sec) <= self.MATCH_TOLERANCE_SEC
+
+                    for item in results:
+                        if item.get("syncedLyrics") and fits(item):
+                            self._emit(item["syncedLyrics"], "Synced lyrics matched on LRCLIB.", True, length(item))
+                            return
+                    for item in results:
+                        if item.get("syncedLyrics"):
+                            self._emit(item["syncedLyrics"], "Synced lyrics found on LRCLIB (maybe another version).",
+                                       False, length(item))
+                            return
+                    for item in results:
+                        if item.get("plainLyrics"):
+                            self._emit(item["plainLyrics"], "Plain lyrics found on LRCLIB.", fits(item), length(item))
+                            return
         except Exception as e:
             print(f"LRCLIB Search error: {e}")
 
-        self.finished_signal.emit("", "No lyrics found online.")
-
-    def _save_cache(self, lyrics_text: str):
-        if self.save_path:
-            try:
-                with open(self.save_path, "w", encoding="utf-8") as f:
-                    f.write(lyrics_text)
-            except Exception as e:
-                print(f"Could not cache LRC file: {e}")
+        self._emit("", "No lyrics found online.")
 
 
 # ---------------------------------------------------------
@@ -631,9 +878,10 @@ class WindowsMediaControls(QObject):
                 512, 512, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
             )
             self._cover_counter += 1
-            path = os.path.join(
-                tempfile.gettempdir(), f"lrcplayer_cover_{os.getpid()}_{self._cover_counter}.png"
-            )
+            folder = private_temp_dir()
+            if not folder:
+                raise OSError("no temp folder")
+            path = os.path.join(folder, f"cover_{self._cover_counter}.png")
             if scaled.save(path, "PNG"):
                 self._cover_file = path
                 return path
@@ -653,6 +901,28 @@ class WindowsMediaControls(QObject):
 # ---------------------------------------------------------
 # UI Components
 # ---------------------------------------------------------
+class PlainLabel(QLabel):
+    """A label that shows its text as it is, never as HTML.
+
+    A plain QLabel renders anything that looks like markup. A lyric line or a tag such as
+    <img src="file://server/share/x.png"> then makes Qt open that path, which on Windows
+    is a network-share request that can hand the user's sign-in hash to that server.
+    Lyrics come from LRCLIB, which anyone can edit, and tags from whoever made the file,
+    so every label in the app is a PlainLabel.
+    """
+
+    def __init__(self, text: str = ""):
+        super().__init__()
+        self.setTextFormat(Qt.TextFormat.PlainText)
+        if text:
+            self.setText(text)
+
+
+def plain_tooltip(text: str) -> str:
+    """Text as HTML that shows it literally, for tooltips and message boxes (they render HTML too)."""
+    return "<p>" + html.escape(text).replace("\n", "<br>") + "</p>" if text else ""
+
+
 # ---------------------------------------------------------
 # Themes: every color in the app comes from PAL
 # ---------------------------------------------------------
@@ -882,9 +1152,11 @@ def _check_image(color: str) -> str:
         path.lineTo(36, 15)
         painter.drawPath(path)
         painter.end()
-        file = os.path.join(tempfile.gettempdir(), f"lrcplayer_check_{color.strip('#')}.png")
+        folder = private_temp_dir()
+        file = os.path.join(folder, f"check_{color.strip('#')}.png") if folder else ""
         try:
-            pm.save(file, "PNG")
+            if file and not pm.save(file, "PNG"):
+                file = ""
         except Exception:
             file = ""
         _CHECK_IMAGES[color] = file.replace("\\", "/")
@@ -1154,12 +1426,12 @@ class MetadataDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(16)
 
-        lbl_head = QLabel("Track Details")
+        lbl_head = PlainLabel("Track Details")
         lbl_head.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {PAL['title']};")
         layout.addWidget(lbl_head)
 
         if cover_pixmap and not cover_pixmap.isNull():
-            lbl_cover_prev = QLabel()
+            lbl_cover_prev = PlainLabel()
             lbl_cover_prev.setFixedSize(140, 140)
             lbl_cover_prev.setStyleSheet(f"border-radius: 10px; border: 1px solid {PAL['surface_border']};")
             scaled = cover_pixmap.scaled(140, 140, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
@@ -1193,9 +1465,9 @@ class MetadataDialog(QDialog):
         ]
 
         for row, (label, val) in enumerate(fields):
-            lbl_name = QLabel(label)
+            lbl_name = PlainLabel(label)
             lbl_name.setStyleSheet(f"color: {PAL['dim']}; font-weight: 600;")
-            lbl_val = QLabel(str(val))
+            lbl_val = PlainLabel(str(val))
             lbl_val.setStyleSheet(f"color: {PAL['text_soft']};")
             lbl_val.setWordWrap(True)
 
@@ -1240,12 +1512,12 @@ class LyricCard(QFrame):
         self.layout.setContentsMargins(16, self._padding_y, 16, self._padding_y)
         self.layout.setSpacing(6)
 
-        self.lbl_main = QLabel(self.main_text)
+        self.lbl_main = PlainLabel(self.main_text)
         self.lbl_main.setWordWrap(True)
         self.lbl_main.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.layout.addWidget(self.lbl_main)
 
-        self.lbl_sub = QLabel(self.sub_text)
+        self.lbl_sub = PlainLabel(self.sub_text)
         self.lbl_sub.setWordWrap(True)
         self.lbl_sub.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         if not self.sub_text:
@@ -2238,9 +2510,9 @@ class AiSettingsDialog(QDialog):
         v = QVBoxLayout(self)
         v.setContentsMargins(22, 20, 22, 18)
         v.setSpacing(12)
-        head = QLabel("AI alignment")
+        head = PlainLabel("AI alignment")
         head.setObjectName("dlgHeading")
-        intro = QLabel(
+        intro = PlainLabel(
             "Optional help for Lyrics ▾ → Add translation: a language model works out which translated "
             "line belongs to which sung line. It only matches lines; it never writes or changes the translation."
         )
@@ -2278,7 +2550,7 @@ class AiSettingsDialog(QDialog):
         self.ed_key.setPlaceholderText("Usually not needed for local servers")
         for row, (text, widget) in enumerate((("Server address", self.ed_url), ("Model", self.ed_model),
                                                ("API key", self.ed_key))):
-            lbl = QLabel(text)
+            lbl = PlainLabel(text)
             lbl.setObjectName("syncMuted")
             g.addWidget(lbl, row, 0)
             g.addWidget(widget, row, 1, 1, 1 if widget is self.ed_model else 2)
@@ -2300,10 +2572,10 @@ class AiSettingsDialog(QDialog):
         self.btn_get_key.setToolTip(OPENROUTER_KEYS_URL)
         self.ed_or_model = QLineEdit()
         self.ed_or_model.setPlaceholderText("Run Test connection, then type to search (e.g. qwen)")
-        self.lbl_cost = QLabel("")
+        self.lbl_cost = PlainLabel("")
         self.lbl_cost.setObjectName("syncMuted")
         for row, (text, widget) in enumerate((("API key", self.ed_or_key), ("Model", self.ed_or_model))):
-            lbl = QLabel(text)
+            lbl = PlainLabel(text)
             lbl.setObjectName("syncMuted")
             g.addWidget(lbl, row, 0)
             g.addWidget(widget, row, 1, 1, 1 if widget is self.ed_or_key else 2)
@@ -2318,12 +2590,12 @@ class AiSettingsDialog(QDialog):
 
         test_row = QHBoxLayout()
         self.btn_test = QPushButton("Test connection")
-        self.lbl_test = QLabel("")
+        self.lbl_test = PlainLabel("")
         self.lbl_test.setWordWrap(True)
         test_row.addWidget(self.btn_test)
         test_row.addWidget(self.lbl_test, 1)
 
-        self.hint = QLabel("")
+        self.hint = PlainLabel("")
         self.hint.setObjectName("syncHelp")
         self.hint.setWordWrap(True)
 
@@ -2556,7 +2828,7 @@ class TranslationDialog(QDialog):
         v = QVBoxLayout(page)
         v.setContentsMargins(0, 0, 0, 0)
         v.setSpacing(10)
-        intro = QLabel(
+        intro = PlainLabel(
             "Paste a translation of these lyrics, one line per line. Each translated line will appear "
             "under the sung line it belongs to. Section labels like [Chorus] are fine: they're skipped."
         )
@@ -2564,7 +2836,7 @@ class TranslationDialog(QDialog):
         intro.setWordWrap(True)
         self.txt = QPlainTextEdit()
         self.txt.setPlaceholderText("Paste the translation here…")
-        self.lbl_counts = QLabel("")
+        self.lbl_counts = PlainLabel("")
         self.lbl_counts.setObjectName("syncMuted")
         self.lbl_counts.setWordWrap(True)
 
@@ -2583,7 +2855,7 @@ class TranslationDialog(QDialog):
         self.busy_box.setObjectName("plainBox")
         busy = QHBoxLayout(self.busy_box)
         busy.setContentsMargins(0, 0, 0, 0)
-        self.lbl_busy = QLabel("")
+        self.lbl_busy = PlainLabel("")
         self.lbl_busy.setObjectName("syncStatus")
         self.progress = QProgressBar()
         self.progress.setTextVisible(False)
@@ -2637,7 +2909,7 @@ class TranslationDialog(QDialog):
         self.btn_romaji.setCheckable(True)
         self.btn_romaji.setFixedWidth(36)
         self.btn_romaji.setToolTip("Show the sung lines as romaji")
-        self.lbl_cover = QLabel("")
+        self.lbl_cover = PlainLabel("")
         self.lbl_cover.setObjectName("syncMuted")
         tools.addWidget(self.btn_shift_down)
         tools.addWidget(self.btn_shift_up)
@@ -2659,8 +2931,8 @@ class TranslationDialog(QDialog):
         bottom.addWidget(self.btn_embed)
         bottom.addWidget(self.btn_save)
 
-        hint = QLabel("Double-click a time to hear that line   ·   Double-click a translation to edit it   ·   "
-                      "Tinted rows have no translation")
+        hint = PlainLabel("Double-click a time to hear that line   ·   Double-click a translation to edit it   ·   "
+                          "Tinted rows have no translation")
         hint.setObjectName("syncHelp")
         hint.setWordWrap(True)
         v.addWidget(self.table, 1)
@@ -2670,7 +2942,7 @@ class TranslationDialog(QDialog):
         self.stack.addWidget(page)
 
         status_row = QHBoxLayout()
-        self.lbl_status = QLabel("")
+        self.lbl_status = PlainLabel("")
         self.lbl_status.setObjectName("syncStatus")
         self.lbl_status.setWordWrap(True)
         self.btn_raw = QPushButton("Show model's answer")
@@ -2733,7 +3005,7 @@ class TranslationDialog(QDialog):
         set_role(self.btn_ai, "primary")
         set_role(self.btn_match, "" if on else "primary")
         if on:
-            self.btn_ai.setToolTip(f"Uses {cfg['model'] or 'the model'} on {cfg['where']}")
+            self.btn_ai.setToolTip(plain_tooltip(f"Uses {cfg['model'] or 'the model'} on {cfg['where']}"))
 
     def apply_theme(self):
         self.setStyleSheet(dialog_stylesheet(PAL))
@@ -2756,8 +3028,10 @@ class TranslationDialog(QDialog):
         path, _ = QFileDialog.getOpenFileName(self, "Load translation", start_dir,
                                               "Lyrics (*.txt *.lrc);;All files (*)")
         if path:
-            with open(path, "r", encoding="utf-8-sig", errors="ignore") as f:
-                self.txt.setPlainText(f.read())
+            try:
+                self.txt.setPlainText(read_lyrics_file(path))
+            except OSError as e:
+                self._set_status(file_error_text(path, e), error=True)
 
     def _set_busy(self, busy: bool):
         self.busy_box.setVisible(busy)
@@ -2891,7 +3165,7 @@ class TranslationDialog(QDialog):
             t_item.setToolTip("Double-click to hear this line")
             s_item = QTableWidgetItem(self._sung_display(main))
             s_item.setFlags(fixed)
-            s_item.setToolTip(main)
+            s_item.setToolTip(plain_tooltip(main))
             tr_item = QTableWidgetItem(self.texts[r])
             tr_item.setFlags(fixed | Qt.ItemFlag.ItemIsEditable)
             self._mark_repeat(tr_item, main)
@@ -2932,7 +3206,7 @@ class TranslationDialog(QDialog):
         text = f"{filled} of {n} lines have a translation"
         if unused:
             text += f"   ·   {len(unused)} translation line{'s' if len(unused) != 1 else ''} not used"
-            self.lbl_cover.setToolTip("Not used anywhere:\n" + "\n".join(unused[:25]))
+            self.lbl_cover.setToolTip(plain_tooltip("Not used anywhere:\n" + "\n".join(unused[:25])))
         else:
             self.lbl_cover.setToolTip("")
         self.lbl_cover.setText(text)
@@ -3086,8 +3360,10 @@ class TranslationDialog(QDialog):
 # ---------------------------------------------------------
 # Main Audio Player Window
 # ---------------------------------------------------------
-_LRC_STAMP = re.compile(r"\[(\d{1,3}):(\d{1,2}(?:[.:]\d{1,3})?)\]")
-_LRC_LEADING = re.compile(r"^((?:\[\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?\])+)(.*)$")
+# [mm:ss], [mm:ss.xx], [mm:ss.xxx], and the [mm:ss:xx] / [mm:ss,xx] that some tools write.
+# The player, the sync editor and the translation window all read timestamps with these.
+_LRC_STAMP = re.compile(r"\[(\d{1,3}):(\d{1,2}(?:[.:,]\d{1,6})?)\]")
+_LRC_LEADING = re.compile(r"^((?:\[\d{1,3}:\d{1,2}(?:[.:,]\d{1,6})?\])+)(.*)$")
 _LRC_META = re.compile(r"^\[[A-Za-z#]+:.*\]$")
 
 
@@ -3143,7 +3419,7 @@ def _fmt_lrc_time(ms: int) -> str:
 
 def _stamp_to_ms(match) -> int:
     minutes = int(match.group(1))
-    seconds = float(match.group(2).replace(":", "."))
+    seconds = float(match.group(2).replace(":", ".").replace(",", "."))
     return int(round((minutes * 60 + seconds) * 1000))
 
 
@@ -3187,7 +3463,7 @@ class LyricsSyncDialog(QDialog):
         v0 = QVBoxLayout(page_text)
         v0.setContentsMargins(0, 0, 0, 0)
         v0.setSpacing(10)
-        intro = QLabel(
+        intro = PlainLabel(
             "Paste the lyrics, one sung line per line. Empty lines are skipped.\n"
             "Lines that already have [mm:ss.xx] timestamps keep them, so you can also fix an existing LRC."
         )
@@ -3215,7 +3491,7 @@ class LyricsSyncDialog(QDialog):
         v1.setContentsMargins(0, 0, 0, 0)
         v1.setSpacing(10)
 
-        self.lbl_warn = QLabel("")
+        self.lbl_warn = PlainLabel("")
         self.lbl_warn.setObjectName("syncWarn")
         self.lbl_warn.setWordWrap(True)
         self.lbl_warn.hide()
@@ -3233,9 +3509,9 @@ class LyricsSyncDialog(QDialog):
         self.btn_play.setIconSize(QSize(18, 18))
         self.btn_play.setFixedWidth(56)
         self.btn_fwd = QPushButton("+5 s")
-        self.lbl_progress = QLabel("")
+        self.lbl_progress = PlainLabel("")
         self.lbl_progress.setObjectName("syncProgress")
-        self.lbl_time = QLabel("00:00.00")
+        self.lbl_time = PlainLabel("00:00.00")
         self.lbl_time.setFont(QFont("Consolas", 13))
         self.lbl_time.setObjectName("syncTime")
         self.btn_stamp = QPushButton("Stamp line   ⏎")
@@ -3265,10 +3541,10 @@ class LyricsSyncDialog(QDialog):
         bottom.addWidget(self.btn_embed)
         bottom.addWidget(self.btn_save)
 
-        self.lbl_help = QLabel(self.HELP)
+        self.lbl_help = PlainLabel(self.HELP)
         self.lbl_help.setObjectName("syncHelp")
         self.lbl_help.setWordWrap(True)
-        self.lbl_status = QLabel("")
+        self.lbl_status = PlainLabel("")
         self.lbl_status.setObjectName("syncStatus")
 
         v1.addWidget(self.lbl_warn)
@@ -3350,8 +3626,10 @@ class LyricsSyncDialog(QDialog):
         start_dir = os.path.dirname(self.track_path)
         path, _ = QFileDialog.getOpenFileName(self, "Load lyrics", start_dir, "Lyrics (*.lrc *.txt);;All files (*)")
         if path:
-            with open(path, "r", encoding="utf-8-sig", errors="ignore") as f:
-                self.txt_input.setPlainText(f.read())
+            try:
+                self.txt_input.setPlainText(read_lyrics_file(path))
+            except OSError as e:
+                QMessageBox.warning(self, "Load lyrics", file_error_text(path, e))
 
     @staticmethod
     def _parse_text(text: str):
@@ -3441,16 +3719,16 @@ class LyricsSyncDialog(QDialog):
             h = QHBoxLayout(w)
             h.setContentsMargins(6, self.ROW_VPAD, 6, self.ROW_VPAD)
             h.setSpacing(10)
-            marker = QLabel("")
+            marker = PlainLabel("")
             marker.setFixedWidth(14)
-            time_lbl = QLabel("")
+            time_lbl = PlainLabel("")
             time_lbl.setFixedWidth(78)
             time_lbl.setFont(QFont("Consolas", 11))
             col = QVBoxLayout()
             col.setSpacing(self.ROW_GAP)
-            main_lbl = QLabel("")
+            main_lbl = PlainLabel("")
             main_lbl.setFont(QFont("Segoe UI", 12))
-            sub_lbl = QLabel("")
+            sub_lbl = PlainLabel("")
             sub_lbl.setFont(QFont("Segoe UI", 10))
             col.addWidget(main_lbl)
             col.addWidget(sub_lbl)
@@ -3762,9 +4040,14 @@ class AudioLRCPlayer(QMainWindow):
         self.user_is_seeking = False
         self.current_pixmap = None
         self.current_info = {}
+        self.current_embedded_lyrics = ""  # lyrics stored in the current song's tags
         self._sync_dialog = None       # open "Sync lyrics" window, if any
         self._translate_dialog = None  # open "Add translation" window, if any
         self._workers = set()         # keep running fetch threads alive until they finish
+        self._track_titles = {}       # path -> title from tags, filled by the album scan
+        self._scan_token = 0          # bumped by every open, so a slow album scan can't win late
+        self._scan_worker = None
+        self._scan_busy = False
 
         # Lyrics sync offset in ms. Positive = lyrics appear later, negative = earlier.
         self.lyrics_offset_ms = 0
@@ -3914,7 +4197,7 @@ class AudioLRCPlayer(QMainWindow):
         left_layout.addLayout(buttons_layout)
 
         # Cover Art
-        self.lbl_cover = QLabel()
+        self.lbl_cover = PlainLabel()
         self.lbl_cover.setFixedSize(330, 330)
         self.lbl_cover.setObjectName("coverArt")
         self.lbl_cover.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -3923,22 +4206,22 @@ class AudioLRCPlayer(QMainWindow):
         left_layout.addWidget(self.lbl_cover)
 
         # Track Title & Artist
-        self.lbl_title = QLabel("No track loaded")
+        self.lbl_title = PlainLabel("No track loaded")
         self.lbl_title.setObjectName("trackTitle")
         self.lbl_title.setWordWrap(True)
         left_layout.addWidget(self.lbl_title)
 
-        self.lbl_artist = QLabel("")
+        self.lbl_artist = PlainLabel("")
         self.lbl_artist.setObjectName("trackArtist")
         self.lbl_artist.setWordWrap(True)
         left_layout.addWidget(self.lbl_artist)
 
         # Seek Bar
         progress_layout = QHBoxLayout()
-        self.lbl_current_time = QLabel("0:00")
+        self.lbl_current_time = PlainLabel("0:00")
         self.lbl_current_time.setObjectName("timeLabel")
         self.seek_slider = QSlider(Qt.Orientation.Horizontal)
-        self.lbl_total_time = QLabel("0:00")
+        self.lbl_total_time = PlainLabel("0:00")
         self.lbl_total_time.setObjectName("timeLabel")
         progress_layout.addWidget(self.lbl_current_time)
         progress_layout.addWidget(self.seek_slider)
@@ -3946,7 +4229,7 @@ class AudioLRCPlayer(QMainWindow):
         left_layout.addLayout(progress_layout)
 
         # Gramophone Quality Badge
-        self.lbl_specs_badge = QLabel("")
+        self.lbl_specs_badge = PlainLabel("")
         self.lbl_specs_badge.setObjectName("specsBadge")
         self.lbl_specs_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_specs_badge.hide()
@@ -4005,12 +4288,12 @@ class AudioLRCPlayer(QMainWindow):
 
         # Lyrics sync offset:  [ − ]  +0.0 s  [ + ]  [Reset]
         offset_layout = QHBoxLayout()
-        lbl_offset_name = QLabel("Lyrics sync:")
+        lbl_offset_name = PlainLabel("Lyrics sync:")
         lbl_offset_name.setObjectName("dimLabel")
         self.btn_offset_minus = QPushButton("−")
         self.btn_offset_plus = QPushButton("+")
         self.btn_offset_reset = QPushButton("Reset")
-        self.lbl_offset = QLabel("+0.0 s")
+        self.lbl_offset = PlainLabel("+0.0 s")
         self.lbl_offset.setMinimumWidth(52)
         self.lbl_offset.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_offset.setObjectName("offsetValue")
@@ -4050,7 +4333,7 @@ class AudioLRCPlayer(QMainWindow):
         queue_layout.setSpacing(10)
 
         queue_header_layout = QHBoxLayout()
-        self.lbl_queue_title = QLabel("Album Tracklist")
+        self.lbl_queue_title = PlainLabel("Album Tracklist")
         self.lbl_queue_title.setObjectName("panelTitle")
         btn_close_queue = QPushButton("✕")
         btn_close_queue.setFixedSize(26, 26)
@@ -4095,7 +4378,8 @@ class AudioLRCPlayer(QMainWindow):
         self.main_layout.addWidget(self.visualizer, 1)
 
         # Shown while files are dragged over the window
-        self.drop_overlay = QLabel(central_widget)
+        self.drop_overlay = QLabel(central_widget)  # the one rich-text label; see _show_drop_overlay
+        self.drop_overlay.setTextFormat(Qt.TextFormat.RichText)
         self.drop_overlay.setObjectName("dropOverlay")
         self.drop_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.drop_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -4248,7 +4532,7 @@ class AudioLRCPlayer(QMainWindow):
         self.act_open_file.triggered.connect(lambda: self.open_single_file_dialog())
         self.act_open_album.triggered.connect(lambda: self.open_album_folder_dialog())
         self.act_load_lrc.triggered.connect(lambda: self.open_lrc_dialog())
-        self.act_search_online.triggered.connect(lambda: self.search_lyrics_online())
+        self.act_search_online.triggered.connect(lambda: self.search_lyrics_online(manual=True))
         self.act_sync_lyrics.triggered.connect(lambda: self.open_sync_dialog())
         self.act_translate.triggered.connect(lambda: self.open_translation_dialog())
         self.act_local_ai.triggered.connect(lambda: self.open_ai_settings())
@@ -4308,15 +4592,49 @@ class AudioLRCPlayer(QMainWindow):
                 return os.path.dirname(c)
         return ""
 
-    def _scan_album_folder(self, folder: str):
-        audio_files = []
-        for root, _, files in os.walk(folder):
-            for f in files:
-                if f.lower().endswith(self.SUPPORTED_EXTS):
-                    audio_files.append(os.path.join(root, f))
-        # Sort by disc #, track #, and filename
-        audio_files.sort(key=get_track_sort_key)
-        return audio_files
+    # --- Reading albums in the background ---
+    def _scan(self, folders, files, then, sort_files: bool = True, label: str = ""):
+        """Reads songs' tags on a background thread, then calls then(entries) here.
+
+        entries: [(path, title or None), ...] in album order. A big folder, a slow disk or
+        a network drive can take seconds, and the window stays usable meanwhile. Opening
+        something else before it's done makes this result be ignored.
+        """
+        self._cancel_scan(keep_cursor=True)
+        token = self._scan_token
+        worker = AlbumScanWorker(token, folders, files, self.SUPPORTED_EXTS, sort_files)
+        self.keep_worker(worker)
+        worker.progress.connect(lambda tok, count: self._on_scan_progress(tok, count, label))
+        worker.done.connect(lambda tok, entries: self._on_scan_done(tok, entries, then))
+        self._scan_worker = worker
+        if not self._scan_busy:
+            self._scan_busy = True
+            QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        worker.start()
+
+    def _cancel_scan(self, keep_cursor: bool = False):
+        """Whatever is opened now wins over an album that is still being read."""
+        self._scan_token += 1
+        if self._scan_worker is not None:
+            self._scan_worker.cancel()
+            self._scan_worker = None
+        if self._scan_busy and not keep_cursor:
+            self._scan_busy = False
+            QApplication.restoreOverrideCursor()
+
+    def _on_scan_progress(self, token: int, count: int, label: str):
+        if token == self._scan_token and count >= 50:
+            self._show_lyrics_message(f"Reading {label or 'songs'}…   {count} songs so far")
+
+    def _on_scan_done(self, token: int, entries, then):
+        if token != self._scan_token:
+            return  # something else was opened in the meantime
+        self._scan_worker = None
+        if self._scan_busy:
+            self._scan_busy = False
+            QApplication.restoreOverrideCursor()
+        self._track_titles = dict(entries)
+        then(entries)
 
     def _set_playlist(self, files, kind: str, source: str):
         self.playlist = files
@@ -4371,21 +4689,27 @@ class AudioLRCPlayer(QMainWindow):
             self.open_album_folder(folder)
 
     def open_file(self, file_path: str):
+        self._cancel_scan()
         self._set_playlist([file_path], "file", file_path)
         self.load_track_by_index(0)
 
-    def open_album_folder(self, folder: str) -> bool:
-        audio_files = self._scan_album_folder(folder)
-        if not audio_files:
-            QMessageBox.information(self, "Open album", f"No audio files found in “{os.path.basename(folder)}”.")
-            return False
-        self._set_playlist(audio_files, "folder", folder)
-        self._show_queue_panel()
-        self.load_track_by_index(self._start_index())
-        return True
+    def open_album_folder(self, folder: str):
+        """Plays an album folder (with its subfolders) once its songs have been read."""
+        name = os.path.basename(folder.rstrip("/\\")) or folder
+
+        def then(entries):
+            if not entries:
+                QMessageBox.information(self, "Open album", f"No audio files found in “{name}”.")
+                return
+            self._set_playlist([path for path, _ in entries], "folder", folder)
+            self._show_queue_panel()
+            self.load_track_by_index(self._start_index())
+
+        self._scan([folder], [], then, label=f"“{name}”")
 
     def open_files(self, files):
         """Several songs (and/or folders) dropped at once."""
+        self._cancel_scan()
         if not files:
             return
         if len(files) == 1:
@@ -4431,9 +4755,10 @@ class AudioLRCPlayer(QMainWindow):
         return None
 
     def _show_drop_overlay(self, headline: str, detail: str):
+        # Rich text for the two-line layout, so the file name must be escaped
         self.drop_overlay.setText(
-            f"<div>{headline}</div>"
-            f"<div style='font-size:13px; font-weight:400; color:{PAL['muted']}'>{detail}</div>"
+            f"<div>{html.escape(headline)}</div>"
+            f"<div style='font-size:13px; font-weight:400; color:{PAL['muted']}'>{html.escape(detail)}</div>"
         )
         self._place_drop_overlay()
         self.drop_overlay.raise_()
@@ -4479,40 +4804,23 @@ class AudioLRCPlayer(QMainWindow):
 
     def _run_drop(self, action, payload):
         if action == "lyrics":
-            with open(payload, "r", encoding="utf-8-sig", errors="ignore") as f:
-                self.parse_and_display_lyrics(f.read())
+            self._show_lyrics_file(payload, "Open lyrics")
         elif action == "folder":
             self.open_album_folder(payload)
         elif action == "file":
             self.open_file(payload)
         elif action == "files":
             folders, audio = payload
-            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            try:
-                files = []
-                for folder in folders:
-                    files.extend(self._scan_album_folder(folder))
-                files.extend(sorted(audio, key=get_track_sort_key))
-            finally:
-                QApplication.restoreOverrideCursor()
-            self.open_files(files)
+            self._scan(folders, audio, lambda entries: self.open_files([path for path, _ in entries]))
 
     def _populate_queue_list(self):
         self.queue_list.clear()
         for idx, path in enumerate(self.playlist):
-            title = os.path.splitext(os.path.basename(path))[0]
-            try:
-                import mutagen
-                audio = mutagen.File(path)
-                if audio:
-                    for k in ("title", "tit2", "\xa9nam"):
-                        val = audio.get(k) or (audio.tags.get(k) if hasattr(audio, "tags") and audio.tags else None)
-                        if val:
-                            title = str(val[0] if isinstance(val, list) else getattr(val, "text", str(val)))
-                            break
-            except Exception:
-                pass
-
+            if path in self._track_titles:   # read by the album scan
+                title = self._track_titles[path]
+            else:
+                title = read_track_tags(path)["title"]
+            title = title or os.path.splitext(os.path.basename(path))[0]
             item = QListWidgetItem(f"{idx + 1:02d}. {title}")
             self.queue_list.addItem(item)
 
@@ -4542,6 +4850,7 @@ class AudioLRCPlayer(QMainWindow):
 
         embedded_lyrics, cover, info = extract_metadata_and_cover(file_path)
         self.current_info = info
+        self.current_embedded_lyrics = embedded_lyrics or ""
         self.act_details.setEnabled(True)
         self.act_search_online.setEnabled(True)
         self.act_sync_lyrics.setEnabled(True)
@@ -4566,20 +4875,43 @@ class AudioLRCPlayer(QMainWindow):
         self.media_controls.update_timeline(0, info.get("duration_sec", 0) * 1000, force=True)
         self._update_tray()
 
-        # A .lrc next to the song wins over lyrics embedded in the file: it is the one
-        # you created or fixed on purpose (sync editor, phone app, online search).
-        base_path = os.path.splitext(file_path)[0]
-        lrc_path = base_path + ".lrc"
+        if not self._show_own_lyrics(file_path):
+            self.search_lyrics_online()
+
+    @staticmethod
+    def _lrc_path_for(file_path: str) -> str:
+        return os.path.splitext(file_path)[0] + ".lrc"
+
+    def _show_own_lyrics(self, file_path: str) -> bool:
+        """Shows the song's own lyrics, if it has any; False if there are none.
+
+        A .lrc next to the song wins over lyrics embedded in the file: it is the one you
+        created or fixed on purpose (sync editor, phone app, online search).
+        """
+        lrc_path = self._lrc_path_for(file_path)
         if os.path.exists(lrc_path):
-            with open(lrc_path, "r", encoding="utf-8-sig", errors="ignore") as f:
-                self.parse_and_display_lyrics(f.read())
-            return
+            try:
+                self.parse_and_display_lyrics(read_lyrics_file(lrc_path))
+                return True
+            except OSError as e:
+                problem = file_error_text(lrc_path, e)
+                if not self.current_embedded_lyrics:
+                    # Say what's wrong instead of quietly showing lyrics from the internet
+                    self._show_lyrics_message(problem, "lyricsEmpty")
+                    return True
+                print(problem)
+        if self.current_embedded_lyrics:
+            self.parse_and_display_lyrics(self.current_embedded_lyrics)
+            return True
+        return False
 
-        if embedded_lyrics:
-            self.parse_and_display_lyrics(embedded_lyrics)
-            return
-
-        self.search_lyrics_online()
+    def _show_lyrics_message(self, text: str, object_name: str = "lyricsStatus"):
+        """A one-line note in the lyrics area instead of lyrics."""
+        self._clear_lyrics()
+        placeholder = PlainLabel(text)
+        placeholder.setObjectName(object_name)
+        placeholder.setWordWrap(True)
+        self.lyrics_layout.insertWidget(0, placeholder)
 
     def toggle_queue_panel(self):
         self.queue_panel.setVisible(not self.queue_panel.isVisible())
@@ -4858,47 +5190,113 @@ class AudioLRCPlayer(QMainWindow):
     # -----------------------------------------------------
     # Lyrics Parsing & Searching
     # -----------------------------------------------------
-    def search_lyrics_online(self):
+    def search_lyrics_online(self, manual: bool = False):
+        """Looks the song up on LRCLIB. `manual`: the user picked Lyrics ▾ → Search online.
+
+        Lyrics found are saved as a .lrc next to the song only when that can't overwrite
+        anything and the match is reliable. Otherwise a manual search asks first, and an
+        automatic one only shows them.
+        """
         if self.current_track_idx == -1 or not self.playlist:
             return
 
         current_file = self.playlist[self.current_track_idx]
-        self._clear_lyrics()
-        placeholder = QLabel("Searching online lyrics (LRCLIB)...")
-        placeholder.setObjectName("lyricsStatus")
-        self.lyrics_layout.insertWidget(0, placeholder)
-
-        base_path = os.path.splitext(current_file)[0]
-        lrc_save_path = base_path + ".lrc"
+        self._show_lyrics_message("Searching online lyrics (LRCLIB)...")
 
         worker = LrcFetchWorker(
             title=self.current_info.get("title", ""),
             artist=self.current_info.get("artist", ""),
             duration_sec=self.current_info.get("duration_sec", 0),
-            save_path=lrc_save_path
+            title_from_tags=self.current_info.get("title_from_tags", True),
         )
         # Keep a reference until the thread finishes (dropping it mid-run crashes Qt),
         # and ignore results that arrive after the user has moved to another track.
-        self._workers.add(worker)
-        worker.finished.connect(lambda w=worker: self._workers.discard(w))
+        self.keep_worker(worker)
         worker.finished_signal.connect(
-            lambda text, msg, path=current_file: self._on_online_lyrics_fetched(text, msg, path)
+            lambda text, msg, trusted, length, path=current_file, manual=manual:
+            self._on_online_lyrics_fetched(text, msg, path, trusted, length, manual)
         )
         worker.start()
 
-    def _on_online_lyrics_fetched(self, lyrics_text: str, status_msg: str, requested_path: str = ""):
-        if requested_path and not (
-            0 <= self.current_track_idx < len(self.playlist)
-            and self.playlist[self.current_track_idx] == requested_path
-        ):
+    def _is_current(self, path: str) -> bool:
+        return 0 <= self.current_track_idx < len(self.playlist) and self.playlist[self.current_track_idx] == path
+
+    def _on_online_lyrics_fetched(self, lyrics_text: str, status_msg: str, requested_path: str = "",
+                                  trusted: bool = False, lrclib_length: int = 0, manual: bool = False):
+        if requested_path and not self._is_current(requested_path):
             return  # stale result for a track that is no longer current
-        self._clear_lyrics()
-        if lyrics_text:
-            self.parse_and_display_lyrics(lyrics_text)
+        if not lyrics_text:
+            if manual and self._show_own_lyrics(requested_path):
+                QMessageBox.information(self, "Search online", "LRCLIB has no lyrics for this song.")
+                return
+            self._show_lyrics_message(
+                "No lyrics found (local or online). Use Lyrics ▾ → Load LRC file to add them manually.",
+                "lyricsEmpty")
+            return
+
+        self.parse_and_display_lyrics(lyrics_text)
+        if not self.is_synced or not requested_path:
+            return  # plain lyrics are only shown: without timestamps there's nothing worth keeping
+        lrc_path = self._lrc_path_for(requested_path)
+        has_file = os.path.exists(lrc_path)
+        if trusted and not has_file and not self.current_embedded_lyrics:
+            error = self._write_lrc(lrc_path, lyrics_text)  # kept, so the song opens instantly next time
+            if error:
+                print(f"Could not cache LRC file: {error}")
+            return
+        if manual:
+            self._offer_to_save_online_lyrics(requested_path, lyrics_text, trusted, lrclib_length, has_file)
+        # An automatic search never replaces anything, and doesn't keep a doubtful match
+
+    @staticmethod
+    def _write_lrc(lrc_path: str, text: str) -> str:
+        """Writes a .lrc file; returns "" or what went wrong."""
+        try:
+            with open(lrc_path, "w", encoding="utf-8") as f:
+                f.write(text if text.endswith("\n") else text + "\n")
+            return ""
+        except OSError as e:
+            return e.strerror or str(e)
+
+    def _offer_to_save_online_lyrics(self, path: str, text: str, trusted: bool, lrclib_length: int,
+                                     has_file: bool):
+        name = os.path.basename(self._lrc_path_for(path))
+        mins = lambda s: f"{s // 60}:{s % 60:02d}"
+        notes = []
+        if not trusted:
+            mine = int(self.current_info.get("duration_sec", 0) or 0)
+            if lrclib_length and mine:
+                notes.append(f"LRCLIB only has these lyrics for a {mins(lrclib_length)} version of the song "
+                             f"(this file is {mins(mine)}), so they may not line up.")
+            else:
+                notes.append("They come from a loose search, so they may belong to another version of the song.")
+        if has_file:
+            question, yes, no = f"Replace “{name}” with the lyrics from LRCLIB?", "Replace", "Keep mine"
+            notes.append("Your current file will be overwritten.")
+        elif self.current_embedded_lyrics:
+            question, yes, no = f"Save these lyrics as “{name}”?", "Save", "Keep mine"
+            notes.append("The player shows a .lrc file instead of the lyrics stored in the song.")
         else:
-            placeholder = QLabel("No lyrics found (local or online). Use Lyrics ▾ → Load LRC file to add them manually.")
-            placeholder.setObjectName("lyricsEmpty")
-            self.lyrics_layout.insertWidget(0, placeholder)
+            question, yes, no = f"Save these lyrics as “{name}”?", "Save", "Don't save"
+
+        box = QMessageBox(self)
+        box.setWindowTitle("Search online")
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setText(question)
+        if notes:
+            box.setInformativeText("\n\n".join(notes))
+        btn_yes = box.addButton(yes, QMessageBox.ButtonRole.AcceptRole)
+        btn_no = box.addButton(no, QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(btn_no if (has_file or self.current_embedded_lyrics) else btn_yes)
+        box.exec()
+
+        if box.clickedButton() is btn_yes:
+            error = self._write_lrc(self._lrc_path_for(path), text)
+            if error:
+                QMessageBox.warning(self, "Search online", f"Couldn't save “{name}”:\n{error}")
+        elif no == "Keep mine" and self._is_current(path):
+            self._show_own_lyrics(path)  # back to the user's own lyrics
 
     def current_lyrics_text(self) -> str:
         """The lyrics currently shown, as LRC if they are synced, otherwise as plain text."""
@@ -5087,8 +5485,15 @@ class AudioLRCPlayer(QMainWindow):
     def open_lrc_dialog(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select LRC File", "", "Lyrics Files (*.lrc *.txt)")
         if file_path:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                self.parse_and_display_lyrics(f.read())
+            self._show_lyrics_file(file_path, "Load LRC file")
+
+    def _show_lyrics_file(self, path: str, title: str):
+        try:
+            text = read_lyrics_file(path)
+        except OSError as e:
+            QMessageBox.warning(self, title, file_error_text(path, e))
+            return
+        self.parse_and_display_lyrics(text)
 
     def _clear_lyrics(self):
         self.scroll_anim.stop()
@@ -5142,7 +5547,7 @@ class AudioLRCPlayer(QMainWindow):
 
     def parse_and_display_lyrics(self, content: str):
         self._clear_lyrics()
-        tag_regex = re.compile(r"\[(\d{1,2}):(\d{1,2}(?:\.\d+)?)\]")
+        content = content.replace("\ufeff", "")  # a BOM (also seen inside tags) is never lyrics
         raw_entries = []
 
         for raw_line in content.splitlines():
@@ -5150,16 +5555,13 @@ class AudioLRCPlayer(QMainWindow):
             if not line:
                 continue
 
-            matches = list(tag_regex.finditer(line))
+            matches = list(_LRC_STAMP.finditer(line))
             if matches:
                 text = line[matches[-1].end():].strip()
                 if not text:
                     text = "♪"
                 for m in matches:
-                    minutes = float(m.group(1))
-                    seconds = float(m.group(2))
-                    time_ms = int((minutes * 60 + seconds) * 1000)
-                    raw_entries.append((time_ms, text))
+                    raw_entries.append((_stamp_to_ms(m), text))
 
         is_fs = self.isFullScreen()
 
@@ -5329,17 +5731,20 @@ class AudioLRCPlayer(QMainWindow):
         last_track = s.value("playback/last_track", "", type=str)
         last_pos = s.value("playback/last_position_ms", 0, type=int)
 
-        files = []
+        finish = lambda entries: self._finish_restore([p for p, _ in entries], kind, source, last_track, last_pos)
         if kind == "folder" and source and os.path.isdir(source):
-            files = self._scan_album_folder(source)
+            self._scan([source], [], finish)  # the album is read in the background
         elif kind == "file" and last_track and os.path.isfile(last_track):
-            files = [last_track]
             source = last_track
+            self._finish_restore([last_track], kind, source, last_track, last_pos)
         elif kind == "files":
             files = [f for f in (s.value("playback/files", [], type=list) or []) if os.path.isfile(f)]
+            if files:
+                self._scan([], files, finish, sort_files=False)  # keep the order they were played in
+
+    def _finish_restore(self, files, kind: str, source: str, last_track: str, last_pos: int):
         if not files:
             return
-
         self._set_playlist(files, kind, source)
 
         norm = lambda p: os.path.normcase(os.path.normpath(p))
@@ -5413,12 +5818,15 @@ class AudioLRCPlayer(QMainWindow):
                 event.ignore()  # unsaved edits: the user chose to keep editing
                 return
 
-        # Background threads must be finished before the app goes away
+        # Tell background threads to stop. Most stop at once; one still waiting for a slow
+        # server isn't waited for (its result is ignored and it writes nothing), so quitting
+        # never freezes the window. A running thread keeps itself alive, so leaving it is safe.
         for worker in list(self._workers):
             if hasattr(worker, "cancel"):
                 worker.cancel()
+        deadline = time.monotonic() + 0.3
         for worker in list(self._workers):
-            worker.wait(2500)
+            worker.wait(max(0, int((deadline - time.monotonic()) * 1000)))
 
         self._autosave_timer.stop()
         self._save_session(full=True)
@@ -5440,6 +5848,42 @@ def resource_path(relative_path: str) -> str:
     base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
     return os.path.join(base_path, relative_path)
 
+
+def install_error_handler(app):
+    """Reports unexpected errors instead of letting them close the app.
+
+    PyQt6 ends the whole program when an exception escapes a button, menu or timer
+    handler, unless sys.excepthook has been replaced. One unreadable file shouldn't stop
+    the music, so the error is shown (once) and the player keeps running.
+    """
+    state = {"showing": False, "last": "", "when": 0.0}
+
+    def hook(exc_type, exc, tb):
+        details = "".join(traceback.format_exception(exc_type, exc, tb))
+        if sys.stderr is not None:  # None in the windowed .exe
+            sys.stderr.write(details)
+        if threading.current_thread() is not threading.main_thread():
+            return  # a background thread can't show windows; the log line above is all
+        summary = f"{exc_type.__name__}: {exc}"
+        now = time.monotonic()
+        if state["showing"] or (summary == state["last"] and now - state["when"] < 10):
+            return  # one message at a time, and not the same one over and over
+        state.update(showing=True, last=summary, when=now)
+        try:
+            box = QMessageBox(QMessageBox.Icon.Warning, APP_TITLE,
+                              "Something went wrong, but the player is still running.")
+            box.setTextFormat(Qt.TextFormat.PlainText)
+            box.setInformativeText(plain_tooltip(summary[:400]))  # shown literally
+            box.setDetailedText(details)
+            box.exec()
+        except Exception:
+            pass
+        finally:
+            state["showing"] = False
+
+    sys.excepthook = hook
+
+
 if __name__ == "__main__":
     # Force Windows to register an independent taskbar identity
     try:
@@ -5448,6 +5892,7 @@ if __name__ == "__main__":
         pass
 
     app = QApplication(sys.argv)
+    install_error_handler(app)
     # QSettings (session memory) is keyed on these; on Windows it lives in
     # HKCU\Software\LRCPlayer\MinimalistLRCPlayer. Kept from the app's old name on purpose:
     # changing it would make existing installs forget all their settings.

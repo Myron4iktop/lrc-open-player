@@ -388,6 +388,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun saveLrc() {
         val st = editor ?: return
+        if (st.saving) return // a second tap before the button greys out would write twice
         val tree = treeUri ?: return
         val text = st.lyrics
         if (text.isBlank()) {
@@ -416,6 +417,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun convertLyricsToRomaji() {
         val st = editor ?: return
+        if (st.saving) return
         val text = st.lyrics
         st.saving = true
         viewModelScope.launch {
@@ -442,9 +444,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // =========================================================
     fun openSearch() {
         val st = editor ?: return
-        val title = st.fields[TagKey.TITLE].orEmpty().ifBlank { st.file.baseName }
+        val tagTitle = st.fields[TagKey.TITLE].orEmpty()
         search = SearchState(
-            track = cleanQuery(title),
+            track = if (tagTitle.isNotBlank()) cleanQuery(tagTitle) else cleanQuery(st.file.baseName, fromFileName = true),
             artist = cleanQuery(st.fields[TagKey.ARTIST].orEmpty()),
             album = st.fields[TagKey.ALBUM].orEmpty().trim(),
             fileDuration = st.durationSec,
@@ -522,11 +524,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun cleanQuery(s: String): String = s
-        .replace(Regex("^\\d+[\\s.\\-_]+"), "")
-        .replace(Regex("\\s*\\(\\d+\\)$"), "")
-        .replace(Regex("\\[(FLAC|MP3|WAV|HQ|Hi-?Res)]", RegexOption.IGNORE_CASE), "")
-        .trim()
+    /**
+     * Search text for LRCLIB. Only a title taken from the file name loses its track number
+     * ("01 - Song") and copy suffix ("Song (2)"): titles and artists from tags stay as they
+     * are, because "7 Rings", "99 Luftballons" and "50 Cent" really start with a number.
+     */
+    private fun cleanQuery(s: String, fromFileName: Boolean = false): String {
+        var q = s
+        if (fromFileName) {
+            q = q.replace(FILE_TRACK_PREFIX, "").replace(COPY_SUFFIX, "")
+        }
+        return q.replace(FORMAT_TAG, "").trim()
+    }
 
     // Runs after every property above has been initialised.
     init {
@@ -540,6 +549,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
         private const val KEY_TREE = "tree_uri"
+
+        // "01 Song", "01. Song", "01 - Song", "1-03 Song": a track number in front of a file name
+        private val FILE_TRACK_PREFIX = Regex("""^(?:\d{1,2}[-.])?\d{1,3}(?:\s*[-._]\s*|\s+)(?=\S)""")
+        private val COPY_SUFFIX = Regex("""\s*\(\d+\)$""")
+        private val FORMAT_TAG = Regex("""\[(FLAC|MP3|WAV|HQ|Hi-?Res)]""", RegexOption.IGNORE_CASE)
     }
 }
 
