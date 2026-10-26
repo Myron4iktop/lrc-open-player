@@ -41,6 +41,10 @@ The first romaji conversion takes a few seconds while the Japanese dictionary lo
 ## Notes
 
 - Tag editing works on a temporary copy and only overwrites the original after the edited copy is verified.
-  Keep backups of anything irreplaceable anyway.
-- Opus files can't be tag-edited (jaudiotagger has no Opus support), but their .lrc files work fine.
+  If writing the song back fails and the original can't be restored either, the app keeps a copy of the
+  original in its own storage and shows where. Keep backups of anything irreplaceable anyway.
+- Opus files can't be tag-edited (jaudiotagger has no Opus support), but they still open: finding, editing
+  and saving their .lrc files works.
+- Release builds are signed with Android's debug key, which is fine for installing on your own phone.
+  To publish the app (Play Store or similar), create your own signing key and set it in `app/build.gradle.kts`.
 - Romaji uses Kuromoji (IPADIC). Stylized readings in lyrics (e.g. 刃 sung as "yaiba") can't be guessed by any analyzer.

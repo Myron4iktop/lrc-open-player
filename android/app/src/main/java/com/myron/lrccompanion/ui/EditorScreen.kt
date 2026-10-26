@@ -139,14 +139,16 @@ private fun EditorContent(vm: AppViewModel, st: EditorState, onPickCover: () -> 
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Row {
-                    TextButton(onClick = onPickCover, contentPadding = PaddingValues(horizontal = 0.dp)) {
-                        Text("Change cover")
-                    }
-                    if (shownCover != null) {
-                        Spacer(Modifier.width(12.dp))
-                        TextButton(onClick = { vm.removeCover() }, contentPadding = PaddingValues(horizontal = 0.dp)) {
-                            Text("Remove")
+                if (st.tagsReadable) {
+                    Row {
+                        TextButton(onClick = onPickCover, contentPadding = PaddingValues(horizontal = 0.dp)) {
+                            Text("Change cover")
+                        }
+                        if (shownCover != null) {
+                            Spacer(Modifier.width(12.dp))
+                            TextButton(onClick = { vm.removeCover() }, contentPadding = PaddingValues(horizontal = 0.dp)) {
+                                Text("Remove")
+                            }
                         }
                     }
                 }
@@ -154,6 +156,14 @@ private fun EditorContent(vm: AppViewModel, st: EditorState, onPickCover: () -> 
         }
 
         // ---------- Tags ----------
+        if (!st.tagsReadable) {
+            Text(
+                "The tags of this file type can't be read or edited here. You can still find, " +
+                    "edit and save its lyrics as a .lrc file below.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         TagInput(st, TagKey.TITLE)
         TagInput(st, TagKey.ARTIST)
         TagInput(st, TagKey.ALBUM)
@@ -166,11 +176,15 @@ private fun EditorContent(vm: AppViewModel, st: EditorState, onPickCover: () -> 
         TagInput(st, TagKey.GENRE)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Switch(checked = st.embedLyrics, onCheckedChange = { st.embedLyrics = it })
+            Switch(
+                checked = st.embedLyrics && st.tagsReadable,
+                onCheckedChange = { st.embedLyrics = it },
+                enabled = st.tagsReadable,
+            )
             Spacer(Modifier.width(12.dp))
             Text("Also embed the lyrics below in the tags", style = MaterialTheme.typography.bodyMedium)
         }
-        Button(onClick = { vm.saveTags() }, enabled = !st.saving, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = { vm.saveTags() }, enabled = !st.saving && st.tagsReadable, modifier = Modifier.fillMaxWidth()) {
             Text(if (st.saving) "Saving…" else "Save tags")
         }
 
@@ -242,6 +256,7 @@ private fun TagInput(st: EditorState, key: TagKey, modifier: Modifier = Modifier
         onValueChange = { st.fields[key] = it },
         label = { Text(key.label) },
         singleLine = true,
+        enabled = st.tagsReadable,
         keyboardOptions = KeyboardOptions(
             keyboardType = if (key == TagKey.YEAR) KeyboardType.Number else KeyboardType.Text,
         ),

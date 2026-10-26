@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import kotlin.math.abs
 
 sealed interface Screen {
@@ -52,6 +53,9 @@ class EditorState(val file: DocEntry, val parentDocId: String) {
     var loading by mutableStateOf(true)
     var saving by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
+    // False when the tags couldn't be read (e.g. Opus, which jaudiotagger can't open):
+    // the editor still opens for the lyrics tools, but tag editing is turned off.
+    var tagsReadable by mutableStateOf(true)
 
     val fields = mutableStateMapOf<TagKey, String>()
     var originalFields by mutableStateOf<Map<TagKey, String>>(emptyMap())
@@ -257,25 +261,38 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val (file, data, lrc) = withContext(Dispatchers.IO) {
                     val file = storage.copyToCache(entry.uri, entry.extension)
-                    val data = TagRepo.read(file)
+                    // A format the tag library can't read (Opus, raw AAC...) still has lyrics
+                    // tools worth using, so a failed tag read doesn't stop the editor opening.
+                    val data = try {
+                        TagRepo.read(file)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (t: Throwable) {
+                        null
+                    }
                     val lrc = if (hasLrc) {
                         storage.findChild(tree, parent, entry.baseName + ".lrc")?.let { storage.readText(it.uri) }
                     } else null
                     Triple(file, data, lrc)
                 }
                 st.cacheFile = file
-                TagKey.entries.forEach { st.fields[it] = data.fields[it].orEmpty() }
-                st.originalFields = data.fields
-                st.cover = data.cover
-                st.durationSec = data.durationSec
-                st.formatInfo = data.formatInfo
+                if (data != null) {
+                    TagKey.entries.forEach { st.fields[it] = data.fields[it].orEmpty() }
+                    st.originalFields = data.fields
+                    st.cover = data.cover
+                    st.durationSec = data.durationSec
+                    st.formatInfo = data.formatInfo
+                } else {
+                    st.tagsReadable = false
+                    st.formatInfo = entry.extension.uppercase()
+                }
                 when {
                     !lrc.isNullOrBlank() -> {
                         st.lyrics = lrc
                         st.lyricsSource = LyricsSource.LRC_FILE
                     }
 
-                    data.lyrics.isNotBlank() -> {
+                    data != null && data.lyrics.isNotBlank() -> {
                         st.lyrics = data.lyrics
                         st.lyricsSource = LyricsSource.EMBEDDED
                         st.embedLyrics = true
@@ -324,7 +341,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun saveTags() {
         val st = editor ?: return
-        if (st.saving) return
+        if (st.saving || !st.tagsReadable) return
         val changed = TagKey.entries
             .filter { st.fields[it].orEmpty() != st.originalFields[it].orEmpty() }
             .associateWith { st.fields[it].orEmpty() }
@@ -346,7 +363,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.IO) {
                     val file = st.cacheFile?.takeIf { it.exists() }
                         ?: storage.copyToCache(st.file.uri, st.file.extension).also { st.cacheFile = it }
-                    val backup = File(file.parentFile, "backup.${st.file.extension}")
+                    // A pre-edit copy in app storage (not the cache, which the OS may clear),
+                    // so a failed write-back can be rolled back.
+                    val backup = File(getApplication<Application>().filesDir, "pre-edit.${st.file.extension}")
                     file.copyTo(backup, overwrite = true)
 
                     TagRepo.write(file, changed, lyricsToEmbed, coverChange)
@@ -354,13 +373,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
                     try {
                         storage.writeBack(file, st.file.uri)
-                    } catch (e: Exception) {
-                        // Put the untouched original back if the copy failed half way.
-                        runCatching { storage.writeBack(backup, st.file.uri) }
-                        throw e
-                    } finally {
-                        backup.delete()
+                    } catch (writeError: Exception) {
+                        // writeBack truncates the original before copying, so it may now be
+                        // half-written. Put the untouched copy back.
+                        try {
+                            storage.writeBack(backup, st.file.uri)
+                        } catch (restoreError: Exception) {
+                            // Both failed: the song on disk may be damaged. Keep the backup
+                            // where the OS won't clear it and tell the user where it is,
+                            // instead of deleting the only good copy.
+                            val saved = File(
+                                getApplication<Application>().filesDir,
+                                "recovered-${st.file.baseName}.${st.file.extension}",
+                            )
+                            runCatching { backup.copyTo(saved, overwrite = true) }
+                            throw IOException(
+                                "Couldn't save, and couldn't put the original back. A copy of " +
+                                    "your original is kept at ${saved.absolutePath}",
+                                writeError,
+                            )
+                        }
+                        throw writeError
                     }
+                    backup.delete() // only after a clean save or a successful rollback
                 }
                 st.originalFields = st.fields.toMap()
                 if (pendingCover != null) st.cover = pendingCover.bytes

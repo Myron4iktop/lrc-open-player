@@ -27,7 +27,8 @@ from datetime import timedelta
 from pathlib import Path
 from PyQt6.QtCore import (
     Qt, QUrl, QTime, QSize, QThread, QObject, QSettings, pyqtSignal, QTimer,
-    QPropertyAnimation, QEasingCurve, pyqtProperty, QPointF, QRectF
+    QPropertyAnimation, QEasingCurve, pyqtProperty, QPointF, QRectF,
+    QBuffer, QByteArray, QIODevice
 )
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -38,7 +39,7 @@ from PyQt6.QtWidgets import (
     QAbstractItemView, QStyledItemDelegate, QCompleter, QButtonGroup
 )
 from PyQt6.QtGui import (
-    QFont, QPixmap, QImage, QIcon, QPainter, QColor, QPolygonF, QKeySequence,
+    QFont, QPixmap, QImageReader, QIcon, QPainter, QColor, QPolygonF, QKeySequence,
     QPen, QPainterPath, QLinearGradient, QActionGroup, QDesktopServices
 )
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
@@ -254,6 +255,40 @@ def _embedded_pictures(audio):
     return [data for _, data in pics]
 
 
+# Only plain raster formats. SVG and some others (PDF, TIFF, TGA) can reference an
+# external path, e.g. <image href="file://server/share/x.png">; rendering cover art
+# that an untrusted file carries would make Qt fetch that path, which on Windows is a
+# network-share sign-in that can leak the user's password hash. Covers are decoded by
+# detected content, not by file extension, so a .png that is really SVG is still refused.
+_SAFE_COVER_FORMATS = {b"jpeg", b"png", b"gif", b"bmp", b"webp"}
+
+
+def load_cover_image(source):
+    """A cover image from bytes (embedded) or a file path, only if it's a plain raster image.
+
+    Returns a QImage, or None when the data isn't one of the safe formats or won't decode.
+    """
+    buffer = None
+    try:
+        if isinstance(source, (bytes, bytearray)):
+            buffer = QBuffer()
+            buffer.setData(QByteArray(bytes(source)))
+            buffer.open(QIODevice.OpenModeFlag.ReadOnly)
+            reader = QImageReader(buffer)
+        else:
+            reader = QImageReader(source)
+        reader.setDecideFormatFromContent(True)
+        if bytes(reader.format()).lower() not in _SAFE_COVER_FORMATS:
+            return None
+        img = reader.read()
+        return img if not img.isNull() else None
+    except Exception:
+        return None
+    finally:
+        if buffer is not None:
+            buffer.close()
+
+
 def extract_metadata_and_cover(file_path: str):
     """Safely extracts audio specifications, tags, lyrics, and album art with isolated error handling."""
     lyrics = None
@@ -334,10 +369,18 @@ def extract_metadata_and_cover(file_path: str):
         print(f"Stream specs parsing error: {e}")
 
     # 2. Extract Raw Tag Pairs
+    # Picture and other binary frames: never text, and turning their bytes into a string
+    # could feed a whole image to the lyrics scan below (a cover whose bytes contain
+    # "[12:34" would show up as synced lyrics).
+    def _is_binary_tag(key: str) -> bool:
+        return key.startswith(("apic", "covr", "metadata_block_picture", "geob", "priv", "mcdi"))
+
     tag_pairs = []
     try:
         if hasattr(audio, "tags") and audio.tags is not None:
             for k in list(audio.tags.keys()):
+                if _is_binary_tag(str(k).lower()):
+                    continue
                 try:
                     val = audio.tags[k]
                     if isinstance(val, list):
@@ -351,6 +394,8 @@ def extract_metadata_and_cover(file_path: str):
                     continue
         elif hasattr(audio, "keys"):
             for k in list(audio.keys()):
+                if _is_binary_tag(str(k).lower()):
+                    continue
                 try:
                     val = audio[k]
                     text_val = "\n".join(str(x) for x in val if x is not None) if isinstance(val, list) else str(val)
@@ -424,9 +469,9 @@ def extract_metadata_and_cover(file_path: str):
     # 4. Embedded Cover Art Extraction
     try:
         for data in _embedded_pictures(audio):
-            qimg = QImage()
-            if qimg.loadFromData(data):
-                cover_pixmap = QPixmap.fromImage(qimg)
+            img = load_cover_image(data)
+            if img is not None:
+                cover_pixmap = QPixmap.fromImage(img)
                 break
     except Exception as e:
         print(f"Cover art extraction error: {e}")
@@ -436,8 +481,10 @@ def extract_metadata_and_cover(file_path: str):
         for name in ("cover.jpg", "cover.png", "folder.jpg", "folder.png"):
             path = os.path.join(folder, name)
             if os.path.exists(path):
-                cover_pixmap = QPixmap(path)
-                break
+                img = load_cover_image(path)
+                if img is not None:
+                    cover_pixmap = QPixmap.fromImage(img)
+                    break
 
     return lyrics, cover_pixmap, info
 
@@ -638,8 +685,21 @@ class LrcFetchWorker(QThread):
                     def fits(item):
                         return self.duration_sec > 0 and abs(length(item) - self.duration_sec) <= self.MATCH_TOLERANCE_SEC
 
+                    def matches(item):
+                        # "Trusted" means safe to keep without asking, so /api/search hits must
+                        # agree on the song, not only its length: another track of the same
+                        # length is a different song. (The /api/get path above already keys on
+                        # title+artist+duration, so its hits are trusted on their own.)
+                        if not fits(item):
+                            return False
+                        if not _same_text(item.get("trackName") or "", self.title):
+                            return False
+                        if self.artist and not _same_text(item.get("artistName") or "", self.artist):
+                            return False
+                        return True
+
                     for item in results:
-                        if item.get("syncedLyrics") and fits(item):
+                        if item.get("syncedLyrics") and matches(item):
                             self._emit(item["syncedLyrics"], "Synced lyrics matched on LRCLIB.", True, length(item))
                             return
                     for item in results:
@@ -649,7 +709,7 @@ class LrcFetchWorker(QThread):
                             return
                     for item in results:
                         if item.get("plainLyrics"):
-                            self._emit(item["plainLyrics"], "Plain lyrics found on LRCLIB.", fits(item), length(item))
+                            self._emit(item["plainLyrics"], "Plain lyrics found on LRCLIB.", matches(item), length(item))
                             return
         except Exception as e:
             print(f"LRCLIB Search error: {e}")
@@ -2062,7 +2122,10 @@ def parse_alignment(text: str, n_rows: int, translations) -> dict:
                     continue
                 b_line, b_part = int(tm.group(3)), int(tm.group(4) or 0)
                 if b_line == a_line and a_part and b_part and b_part >= a_part:   # T5.1-T5.3
-                    for k in range(a_part, b_part + 1):
+                    # Only iterate over parts the line actually has; ref() drops the rest
+                    # anyway, so an answer like "T1.1-T1.999999999" can't spin for minutes.
+                    max_part = len(parts_of[a_line - 1]) if 1 <= a_line <= n_trans else 0
+                    for k in range(a_part, min(b_part, max_part) + 1):
                         add(ref(a_line, k))
                 elif (a_part and tm.group(4) is None and 1 <= a_line <= n_trans
                       and a_part < b_line <= len(parts_of[a_line - 1])):            # T5.1-3
@@ -2716,7 +2779,8 @@ class AiSettingsDialog(QDialog):
         self.local_models = ids
         menu = QMenu(self.btn_pick)
         for mid in ids:
-            menu.addAction(mid).triggered.connect(lambda _=False, m=mid: self.ed_model.setText(m))
+            # "&&": menus treat a lone & as a shortcut marker and would hide it
+            menu.addAction(mid.replace("&", "&&")).triggered.connect(lambda _=False, m=mid: self.ed_model.setText(m))
         self.btn_pick.setMenu(menu)
         self.btn_pick.setEnabled(bool(ids) and self.chk.isChecked())
         current = self.ed_model.text().strip()
@@ -4481,7 +4545,8 @@ class AudioLRCPlayer(QMainWindow):
         if artist == "Unknown Artist":
             artist = ""
         now = f"{title} — {artist}" if title and artist else (title or "Nothing playing")
-        self.tray_act_now.setText(now if len(now) <= 60 else now[:57] + "…")
+        shown = now if len(now) <= 60 else now[:57] + "…"
+        self.tray_act_now.setText(shown.replace("&", "&&"))  # a lone & marks a shortcut key in menus
         self.tray.setToolTip(now[:120] if has_track else APP_TITLE)
         playing = self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
         self.tray_act_play.setText("Pause" if playing else "Play")
@@ -5378,6 +5443,10 @@ class AudioLRCPlayer(QMainWindow):
         if error:
             QMessageBox.warning(parent, "Embed lyrics", f"Couldn't update “{name}”:\n{error}")
             return False
+        if is_current:
+            # The song now carries these lyrics, so a later online search treats them as
+            # the song's own (won't quietly save a .lrc over them, and "Keep mine" restores them).
+            self.current_embedded_lyrics = text
         return True
 
     def _editor_open(self) -> bool:
@@ -5501,6 +5570,9 @@ class AudioLRCPlayer(QMainWindow):
             item = self.lyrics_layout.takeAt(0)
             w = item.widget()
             if w:
+                # Hidden now: deleteLater only runs once control is back in the main event
+                # loop, so behind a dialog (e.g. "Replace … ?") it would still be drawn.
+                w.hide()
                 w.deleteLater()
         self.lyric_cards = []
         self.current_card_index = -1

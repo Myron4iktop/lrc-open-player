@@ -4,9 +4,12 @@ import kotlin.math.abs
 
 object Lrc {
 
-    /** One or more [mm:ss.xx] stamps at the start of a line, then the lyric text. */
-    private val leadingStamps = Regex("""^((?:\s*\[\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?])+)(.*)$""")
-    private val stamp = Regex("""\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?]""")
+    /**
+     * One or more [mm:ss.xx] stamps at the start of a line, then the lyric text. Also reads
+     * [mm:ss:xx], [mm:ss,xx] and longer fractions ([mm:ss.xxxx]), like the desktop player.
+     */
+    private val leadingStamps = Regex("""^((?:\s*\[\d{1,3}:\d{1,2}(?:[.:,]\d{1,6})?])+)(.*)$""")
+    private val stamp = Regex("""\[(\d{1,3}):(\d{1,2})(?:[.:,](\d{1,6}))?]""")
     private val metaTag = Regex("""^\[[A-Za-z#]+:.*]\s*$""")
 
     data class Line(val timeMs: Long?, val text: String)
