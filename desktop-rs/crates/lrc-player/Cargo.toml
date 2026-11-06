@@ -17,6 +17,16 @@ lrc-core.workspace = true
 slint.workspace = true
 # Lets Slint decode `desktop/favicon.ico` for the window icon (it reads PNG and JPEG only by default).
 image = { version = "0.25", default-features = false, features = ["ico"] }
+# Decoding: FLAC, MP3, AAC and ALAC in M4A, Vorbis and Opus in OGG, and WAV. The metadata
+# readers only let the probe step over ID3 and APE tags; tags themselves come from lrc-core.
+symphonia = { version = "0.6", default-features = false, features = ["aac", "alac", "all-meta", "flac", "isomp4", "mp3", "ogg", "pcm", "vorbis", "wav", "opt-simd"] }
+# Symphonia has no Opus decoder of its own. `bundled` (the default) builds libopus from C.
+symphonia-adapter-libopus = "0.3"
+cpal = "0.18"
+rubato = "5"
+# The lock-free buffer between the decode thread and the output callback.
+rtrb = "0.4"
+rfd = "0.17"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = ["Win32_UI_Shell"] }
