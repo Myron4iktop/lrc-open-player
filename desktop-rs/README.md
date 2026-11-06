@@ -4,7 +4,7 @@ A native Rust rewrite of the Windows player in `desktop/`. It is not finished ye
 
 ## Layout
 
-- `crates/lrc-core`: lyrics, tags, library and online lookups. No UI and no Windows APIs, so it is tested on Linux.
+- `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order and the LRCLIB lookup. No UI and no Windows APIs, so it is tested on Linux.
 - `crates/lrc-romaji`: Japanese to romaji (from M5).
 - `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`.
 
@@ -26,3 +26,5 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test -p lrc-core
 ```
+
+The `lrc-core` tests compare against results written by the Python player itself, through `tools/make_fixtures.py` (see `tools/README.md`). CI also makes tagged test songs in all six formats with ffmpeg and checks that mutagen reads back the lyrics `lrc-core` writes. The LRCLIB test needs the internet, so it only runs by hand: `cargo test -p lrc-core -- --ignored`.
