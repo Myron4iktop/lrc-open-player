@@ -1,0 +1,81 @@
+// The transport icons, redrawn from `make_media_icon` in lrcplayer.py.
+//
+// The Python app paints them with QPainter on a 24 x 24 grid; these are the same shapes as
+// paths on the same grid. Kinds: play, pause, prev, next, shuffle, repeat, repeat_one,
+// volume and mute.
+
+export component MediaIcon {
+    in property <string> kind;
+    in property <color> color;
+    in property <length> size: 18px;
+    width: root.size;
+    height: root.size;
+
+    // One shape per Path: some renderers join the sub-paths of a filled path.
+    Path {
+        width: 100%;
+        height: 100%;
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        fill: root.color;
+        commands:
+        kind == "play" ? "M7 4 L20 12 L7 20 Z" :
+        kind == "pause" ? "M7.2 4 L9.3 4 A1.2 1.2 0 0 1 10.5 5.2 L10.5 18.8 A1.2 1.2 0 0 1 9.3 20 L7.2 20 A1.2 1.2 0 0 1 6 18.8 L6 5.2 A1.2 1.2 0 0 1 7.2 4 Z" :
+        kind == "prev" ? "M6 5 L6.6 5 A1 1 0 0 1 7.6 6 L7.6 18 A1 1 0 0 1 6.6 19 L6 19 A1 1 0 0 1 5 18 L5 6 A1 1 0 0 1 6 5 Z" :
+        kind == "next" ? "M17.4 5 L18 5 A1 1 0 0 1 19 6 L19 18 A1 1 0 0 1 18 19 L17.4 19 A1 1 0 0 1 16.4 18 L16.4 6 A1 1 0 0 1 17.4 5 Z" :
+        kind == "volume" ? "M3 9.5 L6.8 9.5 L11.5 5.2 L11.5 18.8 L6.8 14.5 L3 14.5 Z" :
+        kind == "mute" ? "M3 9.5 L6.8 9.5 L11.5 5.2 L11.5 18.8 L6.8 14.5 L3 14.5 Z" :
+        "";
+    }
+
+    Path {
+        width: 100%;
+        height: 100%;
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        fill: root.color;
+        commands:
+        kind == "pause" ? "M14.7 4 L16.8 4 A1.2 1.2 0 0 1 18 5.2 L18 18.8 A1.2 1.2 0 0 1 16.8 20 L14.7 20 A1.2 1.2 0 0 1 13.5 18.8 L13.5 5.2 A1.2 1.2 0 0 1 14.7 4 Z" :
+        kind == "prev" ? "M19 5 L8.5 12 L19 19 Z" :
+        kind == "next" ? "M5 5 L15.5 12 L5 19 Z" :
+        "";
+    }
+
+    Path {
+        width: 100%;
+        height: 100%;
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        stroke: root.color;
+        // 2 units of the 24-unit grid, like the Python app's 2.0 pen.
+        stroke-width: root.size * 2 / 24;
+        stroke-line-cap: round;
+        commands:
+        kind == "shuffle" ? "M3.5 7 L6.5 7 C11.5 7 11 17 16 17 L19.5 17 M3.5 17 L6.5 17 C11.5 17 11 7 16 7 L19.5 7 M17 4.5 L19.5 7 L17 9.5 M17 14.5 L19.5 17 L17 19.5" :
+        kind == "repeat" ? "M4 12.5 L4 10 Q4 7 7 7 L18.5 7 M20 11.5 L20 14 Q20 17 17 17 L5.5 17 M16 4.5 L18.5 7 L16 9.5 M8 14.5 L5.5 17 L8 19.5" :
+        kind == "repeat_one" ? "M4 12.5 L4 10 Q4 7 7 7 L18.5 7 M20 11.5 L20 14 Q20 17 17 17 L5.5 17 M16 4.5 L18.5 7 L16 9.5 M8 14.5 L5.5 17 L8 19.5" :
+        kind == "volume" ? "M14.721 14.867 A3 3.5 0 0 0 14.721 9.133 M17.941 17.734 A6 7 0 0 0 17.941 6.266" :
+        kind == "mute" ? "M15 9.5 L20 14.5 M20 9.5 L15 14.5" :
+        "";
+    }
+
+    // The "1" of repeat-one: Segoe UI bold, 8 units tall, centered in (7, 7.6, 10, 9).
+    if root.kind == "repeat_one": Text {
+        x: root.size * 7 / 24;
+        y: root.size * 7.6 / 24;
+        width: root.size * 10 / 24;
+        height: root.size * 9 / 24;
+        text: "1";
+        color: root.color;
+        font-size: root.size * 8 / 24;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

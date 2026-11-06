@@ -237,6 +237,27 @@ def fmt_time_cases():
                        3_599_995, 6_000_000)]
 
 
+def palette_cases():
+    """Every color of every theme and accent (`build_palette`), as `QColor` computes them."""
+    out = []
+    for theme, _ in L.THEMES:
+        for accent, _, _ in L.ACCENTS:
+            out.append({"theme": theme, "accent": accent, "palette": L.build_palette(theme, accent)})
+    # Unknown keys fall back the way the app does
+    out.append({"theme": "dark", "accent": "nope", "palette": L.build_palette("dark", "nope")})
+    return out
+
+
+def window_text_cases():
+    """The clock under the seek bar and the lyrics offset label."""
+    times = [{"ms": ms, "text": L.AudioLRCPlayer._format_time(ms)}
+             for ms in (0, 999, 1000, 59_999, 60_000, 61_500, 599_999, 3_599_999, 3_600_000,
+                        3_725_000, 86_399_999, 86_400_000, 90_000_000)]
+    offsets = [{"ms": ms, "text": f"{ms / 1000:+.1f} s"}
+               for ms in (0, 100, -100, 1200, -30000, 30000, 50, -50, 150, 250, -250, 1)]
+    return {"format_time": times, "offset": offsets}
+
+
 class _FakeResponse:
     def __init__(self, status, body):
         self.status, self._body = status, body
@@ -329,6 +350,8 @@ def build_pure():
         "same_text": same_text_cases(),
         "album_order": album_order_cases(),
         "lrclib": lrclib_cases(),
+        "palette": palette_cases(),
+        "window_text": window_text_cases(),
     }
 
 

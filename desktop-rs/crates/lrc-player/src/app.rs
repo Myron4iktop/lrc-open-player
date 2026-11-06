@@ -1,0 +1,974 @@
+//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py, minus what later
+//! milestones bring (online lyrics, session, romaji, tray, media keys, visualizer,
+//! editors).
+//!
+//! The rules live in `lrc-core` (`queue`, `window`, `lrc`, `theme`) and are tested there;
+//! this file wires them to the Slint window and the audio engine.
+
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::rc::{Rc, Weak};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
+
+use lrc_core::library::{SUPPORTED_EXTS, scan_songs};
+use lrc_core::lrc::{self, LyricLine};
+use lrc_core::queue::{Previous, Queue, Repeat, Source};
+use lrc_core::tags::{TrackInfo, extract_metadata_and_cover, read_track_tags};
+use lrc_core::text::read_lyrics_file;
+use lrc_core::theme::{ACCENTS, Palette, build_palette, known_accent, known_theme, parse_color};
+use lrc_core::window::{self as rules, DropAction};
+use slint::{
+    Color, ComponentHandle, Image, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer,
+    TimerMode, VecModel,
+};
+
+use crate::audio::{Event, Player, State};
+use crate::{LyricLineData, MainWindow, ShortcutRow, ShortcutsDialog, Theme};
+
+thread_local! {
+    /// The app, for answers that come back from worker threads.
+    static APP: RefCell<Weak<RefCell<App>>> = const { RefCell::new(Weak::new()) };
+}
+
+/// What to do with an album scan's songs once they're read.
+enum ScanThen {
+    /// Play this album folder (`open_album_folder`).
+    Album { folder: PathBuf, name: String },
+    /// Play everything that was dropped (`_run_drop` → `open_files`).
+    Files,
+}
+
+pub struct App {
+    ui: slint::Weak<MainWindow>,
+    player: Player,
+    queue: Queue,
+    /// Titles read by the album scan, so the tracklist needn't read tags again.
+    track_titles: HashMap<PathBuf, Option<String>>,
+    info: Option<TrackInfo>,
+    embedded_lyrics: String,
+
+    lines: Rc<VecModel<LyricLineData>>,
+    line_times: Vec<i64>,
+    synced: bool,
+    current_line: Option<usize>,
+    offset_ms: i64,
+    seeking: bool,
+
+    theme: &'static str,
+    accent: &'static str,
+    queue_was_visible: bool,
+
+    scan_token: u64,
+    scan_cancel: Option<Arc<AtomicBool>>,
+
+    hovered: Vec<PathBuf>,
+    dropped: Vec<PathBuf>,
+    drop_pending: bool,
+
+    shortcuts: Option<ShortcutsDialog>,
+}
+
+/// Starts the app in `ui`. The returned timer drives playback and must be kept alive.
+pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timer) {
+    let lines = Rc::new(VecModel::default());
+    ui.set_lines(ModelRc::from(lines.clone()));
+    let app = Rc::new(RefCell::new(App {
+        ui: ui.as_weak(),
+        player: Player::new(),
+        queue: Queue::new(),
+        track_titles: HashMap::new(),
+        info: None,
+        embedded_lyrics: String::new(),
+        lines,
+        line_times: Vec::new(),
+        synced: false,
+        current_line: None,
+        offset_ms: 0,
+        seeking: false,
+        theme: "dark",
+        accent: "coral",
+        queue_was_visible: false,
+        scan_token: 0,
+        scan_cancel: None,
+        hovered: Vec::new(),
+        dropped: Vec::new(),
+        drop_pending: false,
+        shortcuts: None,
+    }));
+    APP.with(|a| *a.borrow_mut() = Rc::downgrade(&app));
+    app.borrow_mut().apply_theme(ui, "dark", "coral");
+    ui.set_volume(80.0);
+    connect(ui, &app);
+
+    // Reads the clock and moves the lyrics, like Qt's positionChanged.
+    let timer = Timer::default();
+    let weak = Rc::downgrade(&app);
+    timer.start(TimerMode::Repeated, Duration::from_millis(30), move || {
+        if let Some(app) = weak.upgrade()
+            && let Ok(mut app) = app.try_borrow_mut()
+        {
+            app.tick();
+        }
+    });
+    (app, timer)
+}
+
+/// Runs `f` on the app and the window, unless either is gone or the app is busy (a
+/// modal dialog is open further up the stack).
+fn with_app(app: &Weak<RefCell<App>>, f: impl FnOnce(&mut App, &MainWindow)) {
+    let Some(app) = app.upgrade() else { return };
+    let Ok(mut app) = app.try_borrow_mut() else {
+        return;
+    };
+    let Some(ui) = app.ui.upgrade() else { return };
+    f(&mut app, &ui);
+}
+
+fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
+    macro_rules! on {
+        ($setter:ident, |$a:ident, $ui:ident $(, $arg:ident)*| $body:expr) => {{
+            let weak = Rc::downgrade(app);
+            ui.$setter(move |$($arg),*| with_app(&weak, |$a, $ui| {
+                $body;
+            }));
+        }};
+    }
+
+    // File dialogs run without the app borrowed: they pump messages, and the playback
+    // timer must keep running meanwhile.
+    let weak = Rc::downgrade(app);
+    ui.on_open_file(move || {
+        let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
+            return;
+        };
+        let mut dialog = rfd::FileDialog::new()
+            .set_title("Select Audio File")
+            .add_filter("Audio Files", &["flac", "mp3", "wav", "m4a", "ogg", "opus"]);
+        if let Some(dir) = start {
+            dialog = dialog.set_directory(dir);
+        }
+        if let Some(path) = dialog.pick_file() {
+            with_app(&weak, |a, ui| a.open_file(ui, path));
+        }
+    });
+
+    let weak = Rc::downgrade(app);
+    ui.on_open_album(move || {
+        let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
+            return;
+        };
+        let mut dialog = rfd::FileDialog::new().set_title("Select Album Folder");
+        if let Some(dir) = start {
+            dialog = dialog.set_directory(dir);
+        }
+        if let Some(folder) = dialog.pick_folder() {
+            with_app(&weak, |a, _ui| a.open_album_folder(folder));
+        }
+    });
+
+    let weak = Rc::downgrade(app);
+    ui.on_load_lrc(move || {
+        let path = rfd::FileDialog::new()
+            .set_title("Select LRC File")
+            .add_filter("Lyrics Files", &["lrc", "txt"])
+            .pick_file();
+        if let Some(path) = path {
+            show_lyrics_file(&weak, &path, "Load LRC file");
+        }
+    });
+
+    on!(on_show_shortcuts, |a, _ui| a.show_shortcuts());
+    on!(on_set_theme, |a, ui, theme| {
+        let accent = a.accent;
+        a.apply_theme(ui, &theme, accent)
+    });
+    on!(on_set_accent, |a, ui, accent| {
+        let theme = a.theme;
+        a.apply_theme(ui, theme, &accent)
+    });
+    on!(on_toggle_play, |a, _ui| a.toggle_play());
+    on!(on_previous, |a, ui| a.play_previous(ui));
+    on!(on_next, |a, ui| a.play_next(ui));
+    on!(on_toggle_shuffle, |a, ui| {
+        let on = !a.queue.shuffle();
+        a.set_shuffle(ui, on)
+    });
+    on!(on_cycle_repeat, |a, ui| {
+        let r = a.queue.repeat().next();
+        a.set_repeat(ui, r)
+    });
+    on!(on_toggle_mute, |a, ui| a.toggle_mute(ui));
+    on!(on_volume_changed, |a, ui, value| a
+        .volume_changed(ui, value));
+    on!(on_seek_pressed, |a, _ui| a.seeking = true);
+    on!(on_seek_released, |a, _ui, value| {
+        a.seeking = false;
+        a.seek_to(value.max(0.0) as u64)
+    });
+    on!(on_offset_step, |a, ui, delta| {
+        let ms = a.offset_ms + i64::from(delta);
+        a.set_lyrics_offset(ui, ms)
+    });
+    on!(on_offset_reset, |a, ui| a.set_lyrics_offset(ui, 0));
+    on!(on_queue_play, |a, ui, row| {
+        if let Ok(i) = usize::try_from(row) {
+            a.play_index(ui, i)
+        }
+    });
+    on!(on_line_clicked, |a, _ui, row| a.line_clicked(row));
+    on!(on_toggle_fullscreen, |a, ui| a.toggle_fullscreen(ui));
+
+    let weak = Rc::downgrade(app);
+    ui.window().on_close_requested(move || {
+        if let Some(app) = weak.upgrade()
+            && let Ok(mut app) = app.try_borrow_mut()
+        {
+            app.player.stop();
+            if let Some(dialog) = &app.shortcuts {
+                let _ = dialog.hide();
+            }
+        }
+        let _ = slint::quit_event_loop();
+        slint::CloseRequestResponse::HideWindow
+    });
+}
+
+/// `_show_lyrics_file`: shows a lyrics file, or says why it can't be read.
+fn show_lyrics_file(app: &Weak<RefCell<App>>, path: &Path, title: &str) {
+    match read_lyrics_file(path) {
+        Ok(text) => with_app(app, |a, ui| a.parse_and_display_lyrics(ui, &text)),
+        Err(e) => {
+            rfd::MessageDialog::new()
+                .set_level(rfd::MessageLevel::Warning)
+                .set_title(title)
+                .set_description(e.to_string())
+                .set_buttons(rfd::MessageButtons::Ok)
+                .show();
+        }
+    }
+}
+
+/// A palette color for Slint.
+fn color(p: &Palette, name: &str) -> Color {
+    let [r, g, b, a] = parse_color(p.get(name)).unwrap_or([255, 0, 255, 255]);
+    Color::from_argb_u8(a, r, g, b)
+}
+
+/// Puts a palette into a window's `Theme` global. Every Slint window has its own copy of
+/// the global, so each window is filled.
+fn fill_theme(t: &Theme<'_>, p: &Palette) {
+    t.set_dark(p.dark);
+    t.set_inactive_opacity(p.inactive_opacity as f32);
+    macro_rules! set {
+        ($($setter:ident = $name:literal),* $(,)?) => { $( t.$setter(color(p, $name)); )* };
+    }
+    set!(
+        set_bg = "bg",
+        set_dialog_bg = "dialog_bg",
+        set_surface = "surface",
+        set_surface2 = "surface2",
+        set_surface_border = "surface_border",
+        set_btn = "btn",
+        set_btn_hover = "btn_hover",
+        set_btn_border = "btn_border",
+        set_btn_disabled = "btn_disabled",
+        set_btn_disabled_border = "btn_disabled_border",
+        set_menu = "menu",
+        set_menu_border = "menu_border",
+        set_divider = "divider",
+        set_hover = "hover",
+        set_groove = "groove",
+        set_badge_bg = "badge_bg",
+        set_text = "text",
+        set_text_soft = "text_soft",
+        set_title = "title",
+        set_list_text = "list_text",
+        set_muted = "muted",
+        set_dim = "dim",
+        set_faint = "faint",
+        set_faint2 = "faint2",
+        set_text_disabled = "text_disabled",
+        set_handle = "handle",
+        set_handle_border = "handle_border",
+        set_icon = "icon",
+        set_icon_muted = "icon_muted",
+        set_accent = "accent",
+        set_artist = "artist",
+        set_badge_text = "badge_text",
+        set_sel = "sel",
+        set_sel_text = "sel_text",
+        set_toggle_bg = "toggle_bg",
+        set_toggle_border = "toggle_border",
+        set_toggle_text = "toggle_text",
+        set_primary = "primary",
+        set_primary_hover = "primary_hover",
+        set_primary_border = "primary_border",
+        set_primary_text = "primary_text",
+        set_primary_disabled = "primary_disabled",
+        set_primary_disabled_text = "primary_disabled_text",
+        set_primary_disabled_border = "primary_disabled_border",
+        set_lyric_active = "lyric_active",
+        set_lyric_active_sub = "lyric_active_sub",
+        set_lyric_inactive = "lyric_inactive",
+        set_lyric_inactive_sub = "lyric_inactive_sub",
+        set_lyric_plain = "lyric_plain",
+        set_time_ok = "time_ok",
+        set_status = "status",
+        set_error = "error",
+        set_warn_text = "warn_text",
+        set_warn_bg = "warn_bg",
+        set_overlay = "overlay",
+    );
+}
+
+/// The accent dot of the View menu (`make_swatch_icon`): a filled circle, with a ring
+/// around it for the accent in use. Drawn at 48 px, as the Python app does (16 px × 3).
+fn swatch_icon(hex: &str, selected: bool, ring: [u8; 4]) -> Image {
+    const SIZE: u32 = 48;
+    let [r, g, b, _] = parse_color(hex).unwrap_or([0, 0, 0, 255]);
+    let scale = SIZE as f32 / 24.0;
+    let mut buf = SharedPixelBuffer::<Rgba8Pixel>::new(SIZE, SIZE);
+    let (cx, cy) = (12.0 * scale, 12.0 * scale);
+    // Coverage of a pixel by a disc or ring, softened over one pixel for smooth edges.
+    let cover = |d: f32, radius: f32| (radius - d + 0.5).clamp(0.0, 1.0);
+    for (i, px) in buf.make_mut_slice().iter_mut().enumerate() {
+        let x = (i as u32 % SIZE) as f32 + 0.5;
+        let y = (i as u32 / SIZE) as f32 + 0.5;
+        let d = ((x - cx).powi(2) + (y - cy).powi(2)).sqrt();
+        let (dot, ring_alpha) = if selected {
+            let ring_r = 9.5 * scale;
+            let half = 1.0 * scale;
+            let ring_alpha = cover(d, ring_r + half) * (1.0 - cover(d, ring_r - half));
+            (cover(d, 5.5 * scale), ring_alpha)
+        } else {
+            (cover(d, 8.0 * scale), 0.0)
+        };
+        *px = if dot > 0.0 {
+            Rgba8Pixel::new(r, g, b, (dot * 255.0) as u8)
+        } else if ring_alpha > 0.0 {
+            Rgba8Pixel::new(ring[0], ring[1], ring[2], (ring_alpha * 255.0) as u8)
+        } else {
+            Rgba8Pixel::new(0, 0, 0, 0)
+        };
+    }
+    Image::from_rgba8(buf)
+}
+
+impl App {
+    // -------------------------------------------------------------------------
+    // Look
+    // -------------------------------------------------------------------------
+
+    /// `apply_theme`: switches theme and accent; everything re-reads the palette.
+    pub fn apply_theme(&mut self, ui: &MainWindow, theme: &str, accent: &str) {
+        self.theme = known_theme(theme);
+        self.accent = known_accent(accent);
+        let p = build_palette(self.theme, self.accent);
+        fill_theme(&ui.global::<Theme>(), &p);
+        if let Some(dialog) = &self.shortcuts {
+            fill_theme(&dialog.global::<Theme>(), &p);
+        }
+        ui.invoke_sync_color_scheme();
+        ui.set_theme_key(self.theme.into());
+        ui.set_accent_key(self.accent.into());
+        let ring = parse_color(p.get("text_soft")).unwrap_or([255; 4]);
+        let icons: Vec<Image> = ACCENTS
+            .iter()
+            .map(|(key, _, hex)| swatch_icon(hex, *key == self.accent, ring))
+            .collect();
+        ui.set_accent_icons(ModelRc::from(Rc::new(VecModel::from(icons))));
+        // `_rescale_cards`: the playing line goes back to the middle.
+        ui.set_rescale_count(ui.get_rescale_count().wrapping_add(1));
+        crate::platform::apply_title_bar(ui, p.dark);
+    }
+
+    // -------------------------------------------------------------------------
+    // Opening songs
+    // -------------------------------------------------------------------------
+
+    /// Where file dialogs open: the album folder or the current song's folder, if it
+    /// still exists (`_dialog_start_dir`, before the remembered folder of M4).
+    fn dialog_start_dir(&self) -> Option<PathBuf> {
+        let mut candidates = Vec::new();
+        if let Source::Folder(folder) = self.queue.source() {
+            candidates.push(folder.clone());
+        }
+        if let Some(parent) = self.queue.current_path().and_then(|p| p.parent()) {
+            candidates.push(parent.to_path_buf());
+        }
+        candidates.into_iter().find_map(|c| {
+            if c.is_dir() {
+                Some(c)
+            } else if c.is_file() {
+                c.parent().map(Path::to_path_buf)
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn open_file(&mut self, ui: &MainWindow, path: PathBuf) {
+        self.cancel_scan();
+        self.set_playlist(ui, vec![path.clone()], Source::File(path));
+        self.load_track_by_index(ui, 0);
+    }
+
+    /// Plays an album folder, with its subfolders, once its songs have been read.
+    pub fn open_album_folder(&mut self, folder: PathBuf) {
+        let trimmed = folder.to_string_lossy();
+        let trimmed = trimmed.trim_end_matches(['/', '\\']);
+        let name = Path::new(trimmed)
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .filter(|n| !n.is_empty())
+            .unwrap_or_else(|| folder.to_string_lossy().into_owned());
+        let label = format!("“{name}”");
+        self.scan(
+            vec![folder.clone()],
+            Vec::new(),
+            ScanThen::Album { folder, name },
+            label,
+        );
+    }
+
+    /// Opens a folder as an album, or a song (the debug-only `LRC_DEV_OPEN`).
+    #[cfg(debug_assertions)]
+    pub fn open_path(&mut self, ui: &MainWindow, path: PathBuf) {
+        if path.is_dir() {
+            self.open_album_folder(path);
+        } else {
+            self.open_file(ui, path);
+        }
+    }
+
+    /// Several songs and folders dropped at once (`open_files`).
+    fn open_files(&mut self, ui: &MainWindow, files: Vec<PathBuf>) {
+        self.cancel_scan();
+        if files.is_empty() {
+            return;
+        }
+        if files.len() == 1 {
+            let file = files.into_iter().next().unwrap();
+            self.open_file(ui, file);
+            return;
+        }
+        let dir = files[0].parent().map(Path::to_path_buf).unwrap_or_default();
+        self.set_playlist(ui, files, Source::Files(dir));
+        self.show_queue_panel(ui);
+        let start = self.queue.start_index();
+        self.load_track_by_index(ui, start);
+    }
+
+    /// Reads songs' tags on a worker thread, then carries on with `then` (`_scan`).
+    /// Opening something else first makes this result be ignored.
+    fn scan(&mut self, folders: Vec<PathBuf>, files: Vec<PathBuf>, then: ScanThen, label: String) {
+        self.cancel_scan();
+        let token = self.scan_token;
+        let cancel = Arc::new(AtomicBool::new(false));
+        self.scan_cancel = Some(cancel.clone());
+        let label = if label.is_empty() {
+            "songs".to_owned()
+        } else {
+            label
+        };
+        let spawned = std::thread::Builder::new()
+            .name("album scan".into())
+            .spawn(move || {
+                let cancelled = || cancel.load(Ordering::Relaxed);
+                let mut progress = |count: usize| {
+                    let label = label.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        app_call(|a, ui| a.scan_progress(ui, token, count, &label));
+                    });
+                };
+                let songs = scan_songs(
+                    &folders,
+                    &files,
+                    &SUPPORTED_EXTS,
+                    true,
+                    &cancelled,
+                    &mut progress,
+                );
+                if let Some(songs) = songs {
+                    let _ = slint::invoke_from_event_loop(move || {
+                        let entries = songs.into_iter().map(|s| (s.path, s.title)).collect();
+                        app_call(|a, ui| a.scan_done(ui, token, entries, then));
+                    });
+                }
+            });
+        if spawned.is_err() {
+            self.scan_cancel = None;
+        }
+    }
+
+    /// Whatever is opened now wins over an album that is still being read.
+    fn cancel_scan(&mut self) {
+        self.scan_token += 1;
+        if let Some(cancel) = self.scan_cancel.take() {
+            cancel.store(true, Ordering::Relaxed);
+        }
+    }
+
+    fn scan_progress(&mut self, ui: &MainWindow, token: u64, count: usize, label: &str) {
+        if token == self.scan_token && count >= 50 {
+            self.show_lyrics_message(
+                ui,
+                &format!("Reading {label}…   {count} songs so far"),
+                "status",
+            );
+        }
+    }
+
+    fn scan_done(
+        &mut self,
+        ui: &MainWindow,
+        token: u64,
+        entries: Vec<(PathBuf, Option<String>)>,
+        then: ScanThen,
+    ) {
+        if token != self.scan_token {
+            return; // something else was opened in the meantime
+        }
+        self.scan_cancel = None;
+        self.track_titles = entries.iter().cloned().collect();
+        let paths: Vec<PathBuf> = entries.into_iter().map(|(p, _)| p).collect();
+        match then {
+            ScanThen::Album { folder, name } => {
+                if paths.is_empty() {
+                    // After this call returns, so the app isn't borrowed while the box is up.
+                    Timer::single_shot(Duration::ZERO, move || {
+                        rfd::MessageDialog::new()
+                            .set_level(rfd::MessageLevel::Info)
+                            .set_title("Open album")
+                            .set_description(format!("No audio files found in “{name}”."))
+                            .set_buttons(rfd::MessageButtons::Ok)
+                            .show();
+                    });
+                    return;
+                }
+                self.set_playlist(ui, paths, Source::Folder(folder));
+                self.show_queue_panel(ui);
+                let start = self.queue.start_index();
+                self.load_track_by_index(ui, start);
+            }
+            ScanThen::Files => self.open_files(ui, paths),
+        }
+    }
+
+    fn set_playlist(&mut self, ui: &MainWindow, files: Vec<PathBuf>, source: Source) {
+        self.queue.set_playlist(files, source);
+        self.populate_queue_list(ui);
+    }
+
+    /// `_populate_queue_list`.
+    fn populate_queue_list(&mut self, ui: &MainWindow) {
+        let rows: Vec<SharedString> = self
+            .queue
+            .playlist()
+            .iter()
+            .enumerate()
+            .map(|(i, path)| {
+                let title = match self.track_titles.get(path) {
+                    Some(title) => title.clone(),
+                    None => read_track_tags(path).title,
+                };
+                rules::queue_row_text(i + 1, title.as_deref(), path).into()
+            })
+            .collect();
+        let count = rows.len();
+        ui.set_queue_rows(ModelRc::from(Rc::new(VecModel::from(rows))));
+        ui.set_queue_current(-1);
+        ui.set_queue_title(format!("Tracklist ({count})").into());
+    }
+
+    fn show_queue_panel(&mut self, ui: &MainWindow) {
+        if ui.get_fullscreen() {
+            self.queue_was_visible = true;
+        } else {
+            ui.set_queue_visible(true);
+        }
+    }
+
+    /// A song the user picked in the tracklist (`play_index`).
+    fn play_index(&mut self, ui: &MainWindow, index: usize) {
+        self.queue.pick(index);
+        self.load_track_by_index(ui, index);
+    }
+
+    /// `load_track_by_index`: plays a playlist song and shows its details and lyrics.
+    fn load_track_by_index(&mut self, ui: &MainWindow, index: usize) {
+        if !self.queue.set_current(index) {
+            return;
+        }
+        let path = self.queue.playlist()[index].clone();
+        ui.set_queue_current(index as i32);
+        self.player.load(&path);
+        self.player.play();
+
+        let meta = extract_metadata_and_cover(&path);
+        self.embedded_lyrics = meta.lyrics.unwrap_or_default();
+        ui.set_has_track(true);
+        ui.set_track_title(meta.info.title.as_str().into());
+        ui.set_track_artist(meta.info.artist.as_str().into());
+        ui.set_specs_text(rules::specs_text(&meta.info).into());
+        match meta.cover {
+            Some(cover) => {
+                let (w, h) = (cover.image.width(), cover.image.height());
+                let buf =
+                    SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(cover.image.as_raw(), w, h);
+                ui.set_cover(Image::from_rgba8(buf));
+                ui.set_has_cover(true);
+            }
+            None => {
+                ui.set_cover(Image::default());
+                ui.set_has_cover(false);
+            }
+        }
+        self.info = Some(meta.info);
+
+        if !self.show_own_lyrics(ui, &path) {
+            // M4 brings the LRCLIB search (`search_lyrics_online`).
+            self.show_lyrics_message(
+                ui,
+                "No lyrics for this song yet. Online search arrives in M4.",
+                "empty",
+            );
+        }
+    }
+
+    /// `_show_own_lyrics`: a .lrc next to the song wins over lyrics in its tags. False
+    /// if the song has neither.
+    fn show_own_lyrics(&mut self, ui: &MainWindow, path: &Path) -> bool {
+        let lrc_path = path.with_extension("lrc");
+        if lrc_path.exists() {
+            match read_lyrics_file(&lrc_path) {
+                Ok(text) => {
+                    self.parse_and_display_lyrics(ui, &text);
+                    return true;
+                }
+                Err(problem) => {
+                    if self.embedded_lyrics.is_empty() {
+                        // Say what's wrong instead of quietly showing other lyrics.
+                        self.show_lyrics_message(ui, &problem.to_string(), "empty");
+                        return true;
+                    }
+                    eprintln!("{problem}");
+                }
+            }
+        }
+        if !self.embedded_lyrics.is_empty() {
+            let text = self.embedded_lyrics.clone();
+            self.parse_and_display_lyrics(ui, &text);
+            return true;
+        }
+        false
+    }
+
+    // -------------------------------------------------------------------------
+    // Lyrics
+    // -------------------------------------------------------------------------
+
+    /// `_clear_lyrics`.
+    fn clear_lyrics(&mut self, ui: &MainWindow) {
+        ui.invoke_stop_lyrics_scroll();
+        self.lines.set_vec(Vec::new());
+        self.line_times.clear();
+        self.current_line = None;
+        self.synced = false;
+        ui.set_synced(false);
+        ui.set_lyrics_message(SharedString::new());
+        ui.set_lyrics_scroll(0.0);
+    }
+
+    /// `_show_lyrics_message`: a one-line note in the lyrics area instead of lyrics.
+    fn show_lyrics_message(&mut self, ui: &MainWindow, text: &str, kind: &str) {
+        self.clear_lyrics(ui);
+        ui.set_lyrics_message(text.into());
+        ui.set_lyrics_message_kind(kind.into());
+    }
+
+    /// `parse_and_display_lyrics`.
+    pub fn parse_and_display_lyrics(&mut self, ui: &MainWindow, content: &str) {
+        self.clear_lyrics(ui);
+        let parsed = lrc::parse(content);
+        self.synced = parsed.synced;
+        ui.set_synced(parsed.synced);
+        self.line_times = parsed.lines.iter().map(|l| l.time_ms).collect();
+        let rows: Vec<LyricLineData> = parsed
+            .lines
+            .into_iter()
+            .map(|LyricLine { main, sub, .. }| LyricLineData {
+                main: main.into(),
+                sub: sub.into(),
+                active: false,
+            })
+            .collect();
+        self.lines.set_vec(rows);
+        // `_reset_scroll_and_sync`: back to the top, then the line for the position.
+        let pos = self.player.position_ms();
+        if pos > 0 {
+            self.sync_lyrics_to_position(pos);
+        }
+    }
+
+    /// `_sync_lyrics_to_position`: lights up the line for `pos_ms`.
+    fn sync_lyrics_to_position(&mut self, pos_ms: u64) {
+        if self.line_times.is_empty() || !self.synced {
+            return;
+        }
+        let new = rules::active_line(&self.line_times, pos_ms, self.offset_ms);
+        if new == self.current_line {
+            return;
+        }
+        if let Some(old) = self.current_line {
+            self.set_line_active(old, false);
+        }
+        if let Some(new) = new {
+            // The card scrolls itself to the middle once it's active.
+            self.set_line_active(new, true);
+        }
+        self.current_line = new;
+    }
+
+    fn set_line_active(&self, row: usize, active: bool) {
+        use slint::Model;
+        if let Some(mut data) = self.lines.row_data(row) {
+            data.active = active;
+            self.lines.set_row_data(row, data);
+        }
+    }
+
+    /// `LyricCard.mousePressEvent`: a click on a synced line seeks to it.
+    fn line_clicked(&mut self, row: i32) {
+        if !self.synced {
+            return;
+        }
+        if let Some(&t) = usize::try_from(row)
+            .ok()
+            .and_then(|r| self.line_times.get(r))
+        {
+            self.seek_to(rules::line_seek_ms(t, self.offset_ms));
+        }
+    }
+
+    /// `set_lyrics_offset`: ±30 s at most. Saving it arrives with the session in M4.
+    fn set_lyrics_offset(&mut self, ui: &MainWindow, ms: i64) {
+        self.offset_ms = rules::clamp_offset(ms);
+        ui.set_offset_text(rules::offset_text(self.offset_ms).into());
+        let pos = self.player.position_ms();
+        self.sync_lyrics_to_position(pos);
+    }
+
+    // -------------------------------------------------------------------------
+    // Transport
+    // -------------------------------------------------------------------------
+
+    fn toggle_play(&mut self) {
+        if self.player.state() == State::Playing {
+            self.player.pause();
+        } else {
+            self.player.play();
+        }
+    }
+
+    fn seek_to(&mut self, ms: u64) {
+        self.player.seek(ms);
+    }
+
+    fn play_previous(&mut self, ui: &MainWindow) {
+        let pos = self.player.position_ms();
+        match self.queue.previous_track(pos) {
+            Some(Previous::Restart) => self.seek_to(0),
+            Some(Previous::Play(i)) => self.load_track_by_index(ui, i),
+            None => {}
+        }
+    }
+
+    fn play_next(&mut self, ui: &MainWindow) {
+        if let Some(i) = self.queue.next_track() {
+            self.load_track_by_index(ui, i);
+        }
+    }
+
+    fn set_shuffle(&mut self, ui: &MainWindow, on: bool) {
+        self.queue.set_shuffle(on);
+        ui.set_shuffle(on);
+    }
+
+    /// `set_repeat`: repeat-track loops inside the player, which is gapless.
+    fn set_repeat(&mut self, ui: &MainWindow, repeat: Repeat) {
+        self.queue.set_repeat(repeat);
+        self.player.set_looping(repeat == Repeat::Track);
+        ui.set_repeat(repeat.key().into());
+        ui.set_repeat_tip(repeat.tooltip().into());
+    }
+
+    fn toggle_mute(&mut self, ui: &MainWindow) {
+        let muted = !self.player.is_muted();
+        self.player.set_muted(muted);
+        ui.set_muted(muted);
+    }
+
+    /// `_on_volume_changed`: linear, and moving the slider up unmutes.
+    fn volume_changed(&mut self, ui: &MainWindow, value: f32) {
+        self.player.set_volume(value / 100.0);
+        if self.player.is_muted() && value > 0.0 {
+            self.player.set_muted(false);
+            ui.set_muted(false);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Window
+    // -------------------------------------------------------------------------
+
+    /// `toggle_fullscreen`: the tracklist hides while fullscreen and comes back after.
+    fn toggle_fullscreen(&mut self, ui: &MainWindow) {
+        if ui.get_fullscreen() {
+            ui.set_fullscreen(false);
+            if self.queue_was_visible {
+                ui.set_queue_visible(true);
+            }
+        } else {
+            self.queue_was_visible = ui.get_queue_visible();
+            ui.set_queue_visible(false);
+            ui.set_fullscreen(true);
+        }
+        ui.set_rescale_count(ui.get_rescale_count().wrapping_add(1));
+    }
+
+    /// `show_shortcuts`: the F1 list.
+    fn show_shortcuts(&mut self) {
+        if self.shortcuts.is_none() {
+            let Ok(dialog) = ShortcutsDialog::new() else {
+                return;
+            };
+            let rows: Vec<ShortcutRow> = rules::SHORTCUTS
+                .iter()
+                .map(|(keys, action)| ShortcutRow {
+                    keys: (*keys).into(),
+                    action: (*action).into(),
+                })
+                .collect();
+            dialog.set_rows(ModelRc::from(Rc::new(VecModel::from(rows))));
+            dialog.set_footer(rules::SHORTCUTS_FOOTER.into());
+            fill_theme(
+                &dialog.global::<Theme>(),
+                &build_palette(self.theme, self.accent),
+            );
+            let weak = dialog.as_weak();
+            dialog.on_dismiss(move || {
+                if let Some(d) = weak.upgrade() {
+                    let _ = d.hide();
+                }
+            });
+            self.shortcuts = Some(dialog);
+        }
+        if let Some(dialog) = &self.shortcuts {
+            let _ = dialog.show();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Drops (`dragEnterEvent`, `dropEvent`, `_run_drop`)
+    // -------------------------------------------------------------------------
+
+    pub fn drag_hovered(&mut self, ui: &MainWindow, path: PathBuf) {
+        self.hovered.push(path);
+        match rules::drop_plan(&self.hovered, self.queue.current().is_some()) {
+            Some(plan) => {
+                ui.set_drop_headline(plan.headline.into());
+                ui.set_drop_detail(plan.detail.into());
+                ui.set_drop_visible(true);
+            }
+            None => ui.set_drop_visible(false),
+        }
+    }
+
+    pub fn drag_left(&mut self, ui: &MainWindow) {
+        self.hovered.clear();
+        ui.set_drop_visible(false);
+    }
+
+    /// A file was dropped. Several arrive one after another; they're handled together
+    /// once the drop is over, so Explorer isn't left waiting while an album is read.
+    pub fn file_dropped(&mut self, path: PathBuf) {
+        self.dropped.push(path);
+        if self.drop_pending {
+            return;
+        }
+        self.drop_pending = true;
+        Timer::single_shot(Duration::ZERO, || app_call(|a, ui| a.run_drop(ui)));
+    }
+
+    fn run_drop(&mut self, ui: &MainWindow) {
+        self.drop_pending = false;
+        let paths = std::mem::take(&mut self.dropped);
+        self.hovered.clear();
+        ui.set_drop_visible(false);
+        let Some(plan) = rules::drop_plan(&paths, self.queue.current().is_some()) else {
+            return;
+        };
+        match plan.action {
+            DropAction::Lyrics(path) => {
+                let weak = APP.with(|a| a.borrow().clone());
+                Timer::single_shot(Duration::ZERO, move || {
+                    show_lyrics_file(&weak, &path, "Open lyrics")
+                });
+            }
+            DropAction::Folder(folder) => self.open_album_folder(folder),
+            DropAction::File(file) => self.open_file(ui, file),
+            DropAction::Files { folders, audio } => {
+                self.scan(folders, audio, ScanThen::Files, String::new());
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // The clock
+    // -------------------------------------------------------------------------
+
+    fn tick(&mut self) {
+        let Some(ui) = self.ui.upgrade() else { return };
+        for event in self.player.poll() {
+            match event {
+                Event::Loaded { duration_ms } => {
+                    // `_on_duration_changed`
+                    ui.set_seek_max(duration_ms as f32);
+                    ui.set_duration_text(rules::format_time(duration_ms).into());
+                }
+                Event::StateChanged(state) => ui.set_playing(state == State::Playing),
+                // `_on_media_status_changed`: no editors yet (M7), so nothing holds a song.
+                Event::EndOfMedia => {
+                    if self.queue.repeat() == Repeat::Track {
+                        self.player.seek(0);
+                        self.player.play();
+                    } else if self.queue.has_next() {
+                        self.play_next(&ui);
+                    }
+                }
+                // The Python app has no handler for player errors; M6 adds the message.
+                Event::Error(message) => eprintln!("playback error: {message}"),
+            }
+        }
+        if self.player.duration_ms() == 0 {
+            ui.set_seek_max(0.0);
+            ui.set_duration_text(rules::format_time(0).into());
+        }
+        let pos = self.player.position_ms();
+        if !self.seeking {
+            ui.set_seek_value(pos as f32);
+            ui.set_position_text(rules::format_time(pos).into());
+        }
+        self.sync_lyrics_to_position(pos);
+    }
+}
+
+/// Runs `f` on the app from a callback that has no handle to it (workers, timers).
+fn app_call(f: impl FnOnce(&mut App, &MainWindow)) {
+    let weak = APP.with(|a| a.borrow().clone());
+    with_app(&weak, f);
+}

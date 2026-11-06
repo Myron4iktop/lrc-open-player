@@ -4,52 +4,39 @@
 
 slint::include_modules!();
 
+mod app;
 mod audio;
-mod debug_window;
+mod platform;
 
 fn main() -> Result<(), slint::PlatformError> {
     #[cfg(windows)]
-    win::set_app_user_model_id();
+    platform::set_app_user_model_id();
+
+    // Slint's software renderer draws the small transport icons crisply, as the Python
+    // app's QPainter does; its OpenGL renderer blurs shapes this small. `SLINT_BACKEND`
+    // still picks another one, for comparing.
+    if std::env::var_os("SLINT_BACKEND").is_none() {
+        slint::BackendSelector::new()
+            .backend_name("winit".into())
+            .renderer_name("software".into())
+            .select()?;
+    }
 
     let window = MainWindow::new()?;
-    let _ticker = debug_window::attach(&window);
+    let (app, _ticker) = app::attach(&window);
     window.show()?;
+    // The native window exists only once shown.
     #[cfg(windows)]
-    win::set_icons_from_exe(&window);
+    platform::set_icons_from_exe(&window);
+    platform::apply_title_bar(&window, window.global::<Theme>().get_dark());
+    platform::hook_file_drops(&window, &app);
+    window.invoke_focus_window();
+    // Developer aid in debug builds only: `LRC_DEV_OPEN=<folder or song>` opens it at
+    // start, for checking the window without a file dialog.
+    #[cfg(debug_assertions)]
+    if let Some(path) = std::env::var_os("LRC_DEV_OPEN") {
+        app.borrow_mut().open_path(&window, path.into());
+    }
     slint::run_event_loop()?;
     window.hide()
-}
-
-#[cfg(windows)]
-mod win {
-    use slint::ComponentHandle;
-    use slint::winit_030::WinitWindowAccessor;
-    use windows::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
-    use windows::core::HSTRING;
-    use winit::platform::windows::{IconExtWindows, WindowExtWindows};
-    use winit::window::Icon;
-
-    /// The resource number `winresource` gives the icon in `build.rs`.
-    const ICON_RESOURCE: u16 = 1;
-
-    /// Gives the player its own taskbar identity, as the Python app does at start-up.
-    /// Failing is harmless (the taskbar then groups by .exe path), so the error is ignored.
-    pub fn set_app_user_model_id() {
-        let id = HSTRING::from(lrc_core::APP_USER_MODEL_ID);
-        // SAFETY: `id` is a valid, NUL-terminated wide string that outlives the call.
-        let _ = unsafe { SetCurrentProcessExplicitAppUserModelID(&id) };
-    }
-
-    /// Slint only sets the small (title bar) icon. The taskbar and Alt+Tab use the big one,
-    /// so both are loaded from the .exe's own icon, which Windows picks at the right size.
-    pub fn set_icons_from_exe(window: &crate::MainWindow) {
-        window.window().with_winit_window(|w| {
-            if let Ok(icon) = Icon::from_resource(ICON_RESOURCE, None) {
-                w.set_window_icon(Some(icon));
-            }
-            if let Ok(icon) = Icon::from_resource(ICON_RESOURCE, None) {
-                w.set_taskbar_icon(Some(icon));
-            }
-        });
-    }
 }

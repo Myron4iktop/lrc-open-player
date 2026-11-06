@@ -6,7 +6,7 @@ A native Rust rewrite of the Windows player in `desktop/`. It is not finished ye
 
 - `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order and the LRCLIB lookup. No UI and no Windows APIs, so it is tested on Linux.
 - `crates/lrc-romaji`: Japanese to romaji (from M5).
-- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. For now the window is a small debug player (open, play, seek, volume, mute) that M3 replaces.
+- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), and `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files. Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start.
 
 ## Building
 
