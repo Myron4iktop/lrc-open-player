@@ -1,0 +1,12 @@
+[package]
+name = "lrc-romaji"
+description = "Japanese lyrics to Hepburn romaji for LRC Open Player."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+# Lindera and its embedded dictionary arrive in M5. It downloads the dictionary while
+# building, so this crate is left out of `default-members` and out of the core test job.
+[dependencies]

@@ -1,0 +1,24 @@
+[workspace]
+resolver = "3"
+members = ["crates/lrc-core", "crates/lrc-romaji", "crates/lrc-player"]
+default-members = ["crates/lrc-core", "crates/lrc-player"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+repository = "https://github.com/Myron4iktop/lrc-open-player"
+publish = false
+
+[workspace.dependencies]
+lrc-core = { path = "crates/lrc-core" }
+# Pinned to one minor version on purpose: M3 uses Slint's unstable winit API.
+slint = { version = "~1.18.1", features = ["unstable-winit-030"] }
+slint-build = "~1.18.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+# Keep unwinding: the error handler (M6) catches panics in UI callbacks.
+panic = "unwind"

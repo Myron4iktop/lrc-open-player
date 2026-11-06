@@ -1,0 +1,30 @@
+[package]
+name = "lrc-player"
+description = "LRC Open Player, a Windows music player built around synced lyrics."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[[bin]]
+name = "LRCOpenPlayer"
+path = "src/main.rs"
+
+[dependencies]
+lrc-core.workspace = true
+slint.workspace = true
+# Lets Slint decode `desktop/favicon.ico` for the window icon (it reads PNG and JPEG only by default).
+image = { version = "0.25", default-features = false, features = ["ico"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Win32_UI_Shell"] }
+# The same winit that Slint uses, for the taskbar icon. Keep its minor version in step with Slint's.
+winit = { version = "0.30", default-features = false }
+
+[build-dependencies]
+slint-build.workspace = true
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"

@@ -17,6 +17,18 @@ These are included in the built `.exe`.
 | [unidic-lite](https://github.com/polm/unidic-lite) (UniDic 2.1.2) | Japanese dictionary | MIT, BSD-3-Clause |
 | [PyWinRT](https://github.com/pywinrt/pywinrt) | Windows media controls | MIT |
 
+## Player, Rust build (in progress)
+
+The Rust port in `desktop-rs/` is not released yet. These are the libraries it uses so far.
+
+| Project | Used for | License |
+| --- | --- | --- |
+| [Slint](https://slint.dev/) | Window and user interface | GPL-3.0 (one of its license options) |
+| [winit](https://github.com/rust-windowing/winit) | Window icon on Windows | Apache-2.0 |
+| [image](https://github.com/image-rs/image) | Reading the app icon | MIT or Apache-2.0 |
+| [windows](https://github.com/microsoft/windows-rs) | Windows APIs | MIT or Apache-2.0 |
+| [winresource](https://github.com/BenjaminRi/winresource) (build only) | Putting the icon into the `.exe` | MIT |
+
 ## LRC Companion (Android)
 
 | Project | Used for | License |

@@ -25,3 +25,6 @@ android/captures/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Rust port
+desktop-rs/target/
