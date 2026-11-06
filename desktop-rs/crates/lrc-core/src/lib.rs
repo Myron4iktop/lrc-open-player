@@ -1,8 +1,26 @@
 //! The parts of LRC Open Player that need neither a window nor Windows.
 //!
-//! Everything here builds and is tested on Linux (`cargo test -p lrc-core`).
-//! The modules from the port plan (`text`, `lrc`, `tags`, `library`, `lrclib`,
-//! `align`) arrive in M1 and M7.
+//! Everything here builds and is tested on Linux (`cargo test -p lrc-core`). Each module
+//! ports functions from `desktop/lrcplayer.py`, which stays the reference: same rules,
+//! same edge cases and the same messages.
+//!
+//! - [`text`]: reading lyrics files in any encoding.
+//! - [`lrc`]: LRC timestamps, and parsing lyrics into lines with translations.
+//! - [`tags`]: tags, covers and embedded lyrics of a song, and writing lyrics into it.
+//! - [`library`]: album scans, natural sort and search text.
+//! - [`lrclib`]: the LRCLIB lookup and the rules that pick an answer.
+//!
+//! The AI alignment module (`align`) arrives in M7.
+
+mod codepages;
+pub mod library;
+pub mod lrc;
+pub mod lrclib;
+mod mpeg;
+mod ogg;
+pub mod py;
+pub mod tags;
+pub mod text;
 
 /// The name shown in the title bar and in message boxes (`APP_TITLE` in `lrcplayer.py`).
 pub const APP_TITLE: &str = "LRC Open Player";

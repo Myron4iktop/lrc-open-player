@@ -1,0 +1,4 @@
+# What tools/make_fixtures.py needs. Pinned, so the expected outputs only change when
+# the Python app does. Keep these inside the ranges in desktop/requirements.txt.
+PyQt6==6.12.0
+mutagen==1.48.1

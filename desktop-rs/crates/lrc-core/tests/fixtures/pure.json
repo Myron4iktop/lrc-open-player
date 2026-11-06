@@ -1,0 +1,8654 @@
+{
+ "_comment": "Written by tools/make_fixtures.py pure from desktop/lrcplayer.py. Do not edit.",
+ "decode": [
+  {
+   "data": "",
+   "code_page": 1252,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1252,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1252,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1252,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1252,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1252,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1252,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1252,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1252,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1252,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1252,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1252,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1252,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1252,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1252,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1252,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1252,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1252,
+   "text": "Ïðèâåò ìèð"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1252,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1252,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1252,
+   "text": "ùìåí"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1252,
+   "text": "ãÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1252,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1252,
+   "text": "Xin chào"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1252,
+   "text": "ÊÇÑÊ´Õ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1252,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1252,
+   "text": "ÄãºÃÊÀ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1252,
+   "text": "¾È³çÇÏ¼¼¿ä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1252,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1252,
+   "text": "bad utf-8 Ã( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1252,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1252,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1252,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1252,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1252,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1252,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1252,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1252,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1252,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1252,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1252,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1252,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1252,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1252,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1252,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1252,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1252,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1252,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1252,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1252,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1252,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1252,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1252,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1252,
+   "text": "½’ÕäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1252,
+   "text": "ç°ù÷Ññ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1252,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1252,
+   "text": "Õ¬àÅ³Ã"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1252,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1252,
+   "text": "ÂìÒ×Îï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1252,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1252,
+   "text": "Ñ¿§±óñ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1252,
+   "text": "êÖÄïäÂ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1252,
+   "text": "þÐ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1252,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1252,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1252,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1252,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1252,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1252,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1252,
+   "text": "ÄîøÇÐª"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1252,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1252,
+   "text": "Ä§Æ¥ä·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1252,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1252,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1252,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1252,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1252,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1252,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1252,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1252,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1252,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1252,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1252,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1252,
+   "text": "õ¬Ã©êÏ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1252,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1252,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1252,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1252,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1252,
+   "text": "Ô°™å–Ñ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1252,
+   "text": " ’ÔûÃ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1252,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1252,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1252,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1252,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1252,
+   "text": "‡ÌØî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1252,
+   "text": "ô–·”ÙÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1252,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1252,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1252,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1252,
+   "text": "ïÜ„ëÐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1252,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1252,
+   "text": "£áùâÎÆ"
+  },
+  {
+   "data": "",
+   "code_page": 1250,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1250,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1250,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1250,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1250,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1250,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1250,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1250,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1250,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1250,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1250,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1250,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1250,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1250,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1250,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1250,
+   "text": "café crčme"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1250,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1250,
+   "text": "Ďđčâĺň ěčđ"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1250,
+   "text": "ĂĺéÜ óďő"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1250,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1250,
+   "text": "ůěĺí"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1250,
+   "text": "ăŃÍČÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1250,
+   "text": "Labas pasauli ŕčć"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1250,
+   "text": "Xin chŕo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1250,
+   "text": "ĘÇŃĘ´Ő"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1250,
+   "text": "Zażółć gęślą jaźń"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1250,
+   "text": "ÄăşĂĘŔ˝ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1250,
+   "text": "ľČłçÇĎĽĽżä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1250,
+   "text": "§A¦nĄ@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1250,
+   "text": "bad utf-8 Ă( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1250,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1250,
+   "text": "ąĚ6Ł´+eó®0Ĺm›ůzd_ÇS”§Ę$˘2!uDŐ™Č€J-3¶źI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1250,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1250,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1250,
+   "text": "ů÷Řrëé’Ř24…V,ií)Xˇô6ęÓqn•0µaű2ĐŤS9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1250,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1250,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1250,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1250,
+   "text": "±•íË™Č'íëŮ—Éě:&}ë™0C¶tyŕŕjlÎĎµt°k°Q˘đßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1250,
+   "text": "¨ŃşTv˘ur•d5â¦¶µ¬>ň^aCţ'…)Ę+UĘGp¤zŹŁ1řân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1250,
+   "text": "bŇś´Xyˇ5Çď$Îµtü°ZIšźĎĚC¨żľ1E¨ö^ĐJˇáˇĐć„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1250,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1250,
+   "text": "Ëí×Ąü˝"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1250,
+   "text": "‡Űßę¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1250,
+   "text": "„¶˛¤ˇÁ"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1250,
+   "text": "Ś÷ÜßÉĺ"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1250,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1250,
+   "text": "Äž‰·ŢŻ"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1250,
+   "text": "ŇĘÜĹ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1250,
+   "text": "«€č˝±ń"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1250,
+   "text": "Ĺ¬Účüű"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1250,
+   "text": "úńßšć "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1250,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1250,
+   "text": "˝’ŐäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1250,
+   "text": "ç°ů÷Ńń"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1250,
+   "text": "›ö•“˛­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1250,
+   "text": "Ő¬ŕĹłĂ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1250,
+   "text": "‡¨Đ™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1250,
+   "text": "ÂěŇ×Îď"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1250,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1250,
+   "text": "Ńż§±óń"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1250,
+   "text": "ęÖÄďäÂ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1250,
+   "text": "ţĐżÉ¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1250,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1250,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1250,
+   "text": "’ľáüáĽ"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1250,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1250,
+   "text": "®¤Ąŕí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1250,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1250,
+   "text": "ÄîřÇĐŞ"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1250,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1250,
+   "text": "Ä§ĆĄä·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1250,
+   "text": "łĄ¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1250,
+   "text": "Ř°ą„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1250,
+   "text": "đĽ‚ęě˙"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1250,
+   "text": "ëÔżüÎř"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1250,
+   "text": "„…Ęźóľ"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1250,
+   "text": "ĺëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1250,
+   "text": "śé­¬’Ţ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1250,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1250,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1250,
+   "text": "‹éű‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1250,
+   "text": "»ýŹËľň"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1250,
+   "text": "ő¬Ă©ęĎ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1250,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1250,
+   "text": "Î˙„ě©ď"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1250,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1250,
+   "text": "‰čń®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1250,
+   "text": "Ô°™ĺ–Ń"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1250,
+   "text": " ’ÔűĂ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1250,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1250,
+   "text": "›ň­ŠÄć"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1250,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1250,
+   "text": "ľ™Ě„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1250,
+   "text": "‡ĚŘî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1250,
+   "text": "ô–·”ŮŐ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1250,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1250,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1250,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1250,
+   "text": "ďÜ„ëĐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1250,
+   "text": "Şşě«î˙"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1250,
+   "text": "ŁáůâÎĆ"
+  },
+  {
+   "data": "",
+   "code_page": 1251,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1251,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1251,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1251,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1251,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1251,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1251,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1251,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1251,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1251,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1251,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1251,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1251,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1251,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1251,
+   "text": "ђўЉE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1251,
+   "text": "cafй crиme"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1251,
+   "text": "undefined Ѓ Ќ Џ ђ ќ in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1251,
+   "text": "Привет мир"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1251,
+   "text": "ГейЬ упх"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1251,
+   "text": "Merhaba dьnya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1251,
+   "text": "щмен"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1251,
+   "text": "гСНИЗ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1251,
+   "text": "Labas pasauli аиж"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1251,
+   "text": "Xin chаo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1251,
+   "text": "КЗСКґХ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1251,
+   "text": "Zaїуіж gкњl№ jaџс"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1251,
+   "text": "ДгєГКАЅз"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1251,
+   "text": "ѕИізЗПјјїд"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1251,
+   "text": "§A¦nҐ@¬Й"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1251,
+   "text": "bad utf-8 Г( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1251,
+   "text": "зђ=!7оµ(ЛС59дz\\$'й$xЕї›Ѕ–F7NЦ=ш# њ_0КЄ—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1251,
+   "text": "№М6Јґ+eу®0Еm›щzd_ЗS”§К$ў2!uDХ™ИЂJ-3¶џI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1251,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1251,
+   "text": "юсёKђЫз¤рђkf?зOЉЏд>§:фчњЂссИaДQx;УУпHґdG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1251,
+   "text": "щчШrлй’Ш24…V,iн)XЎф6кУqn•0µaы2РЌS9…QФ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1251,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1251,
+   "text": "вкEW*Ћ„ЬsUтМЃяg©БmЊqПішFцЁ7гbg‰†ы°f¦=УЂf"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1251,
+   "text": "VlЧц¶…-yхђ[жќJЃn 2љ…lЌчОуљO†АљHh·~З№xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1251,
+   "text": "±•нЛ™И'нлЩ—Йм:&}л™0C¶tyааjlОПµt°k°QўрЯg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1251,
+   "text": "ЁСєTvўur•d5в¦¶µ¬>т^aCю'…)К+UКGp¤zЏЈ1швn"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1251,
+   "text": "bТњґXyЎ5Зп$Оµtь°ZIљџПМCЁїѕ1EЁц^РJЎбЎРж„ъ"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1251,
+   "text": "цsAХЇ°Ёј№ш’*1~гчН€+єј2pZїнRxҐРдЃ¶ћ-'’о4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1251,
+   "text": "ЛнЧҐьЅ"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1251,
+   "text": "‡ЫЯк¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1251,
+   "text": "„¶І¤ЎБ"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1251,
+   "text": "ЊчЬЯЙе"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1251,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1251,
+   "text": "Дћ‰·ЮЇ"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1251,
+   "text": "ТКЬЕ­ф"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1251,
+   "text": "«ЂиЅ±с"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1251,
+   "text": "Е¬Ъиьы"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1251,
+   "text": "ъсЯљж "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1251,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1251,
+   "text": "Ѕ’ХдЛЪ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1251,
+   "text": "з°щчСс"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1251,
+   "text": "›ц•“І­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1251,
+   "text": "Х¬аЕіГ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1251,
+   "text": "‡ЁР™‹Ћ"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1251,
+   "text": "ВмТЧОп"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1251,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1251,
+   "text": "Сї§±ус"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1251,
+   "text": "кЦДпдВ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1251,
+   "text": "юРїЙЁ©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1251,
+   "text": "йЁ€»Ъґ"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1251,
+   "text": "ос†з‘ђ"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1251,
+   "text": "’ѕбьбј"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1251,
+   "text": "НУуђН†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1251,
+   "text": "®¤Ґан­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1251,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1251,
+   "text": "ДошЗРЄ"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1251,
+   "text": "ђрєсї‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1251,
+   "text": "Д§ЖҐд·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1251,
+   "text": "іҐ¶ЧйЂ"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1251,
+   "text": "Ш°№„„Ь"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1251,
+   "text": "рј‚кмя"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1251,
+   "text": "лФїьОш"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1251,
+   "text": "„…Кџуѕ"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1251,
+   "text": "елµЉод"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1251,
+   "text": "њй­¬’Ю"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1251,
+   "text": "«єђб€ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1251,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1251,
+   "text": "‹йы‡Й®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1251,
+   "text": "»эЏЛѕт"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1251,
+   "text": "х¬Г©кП"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1251,
+   "text": "‚КУґЇ€"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1251,
+   "text": "Оя„м©п"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1251,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1251,
+   "text": "‰ис®з›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1251,
+   "text": "Ф°™е–С"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1251,
+   "text": " ’ФыГ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1251,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1251,
+   "text": "›т­ЉДж"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1251,
+   "text": "П€ЦЧ¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1251,
+   "text": "ѕ™М„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1251,
+   "text": "‡МШо„д"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1251,
+   "text": "ф–·”ЩХ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1251,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1251,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1251,
+   "text": "ДЁ€Цю•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1251,
+   "text": "пЬ„лР±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1251,
+   "text": "Єєм«оя"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1251,
+   "text": "ЈбщвОЖ"
+  },
+  {
+   "data": "",
+   "code_page": 1253,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1253,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1253,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1253,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1253,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1253,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1253,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1253,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1253,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1253,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1253,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1253,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1253,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1253,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1253,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1253,
+   "text": "cafι crθme"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1253,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1253,
+   "text": "Οπθβες μθπ"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1253,
+   "text": "Γειά σου"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1253,
+   "text": "Merhaba dόnya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1253,
+   "text": "ωμεν"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1253,
+   "text": "γΡΝΘΗ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1253,
+   "text": "Labas pasauli ΰθζ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1253,
+   "text": "Xin chΰo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1253,
+   "text": "ΚΗΡΚ΄Υ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1253,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1253,
+   "text": "ΔγΊΓΚΐ½η"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1253,
+   "text": "ΎΘ³ηΗΟΌΌΏδ"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1253,
+   "text": "§A¦n¥@¬Ι"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1253,
+   "text": "bad utf-8 Γ( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1253,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1253,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1253,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1253,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1253,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1253,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1253,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1253,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1253,
+   "text": "±•νΛ™Θ'νλΩ—Ιμ:&}λ™0C¶tyΰΰjlΞΟµt°k°QΆπίg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1253,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1253,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1253,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1253,
+   "text": "ΛνΧ¥ό½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1253,
+   "text": "‡Ϋίκ¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1253,
+   "text": "„¶²¤΅Α"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1253,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1253,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1253,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1253,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1253,
+   "text": "«€θ½±ρ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1253,
+   "text": "Ε¬Ϊθόϋ"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1253,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1253,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1253,
+   "text": "½’ΥδΛΪ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1253,
+   "text": "η°ωχΡρ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1253,
+   "text": "›φ•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1253,
+   "text": "Υ¬ΰΕ³Γ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1253,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1253,
+   "text": "ÂìÒ×Îï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1253,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1253,
+   "text": "ΡΏ§±σρ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1253,
+   "text": "κΦΔοδΒ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1253,
+   "text": "ώΠΏΙ¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1253,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1253,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1253,
+   "text": "’ΎαόαΌ"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1253,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1253,
+   "text": "®¤¥ΰν­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1253,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1253,
+   "text": "ÄîøÇÐª"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1253,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1253,
+   "text": "Δ§Ζ¥δ·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1253,
+   "text": "³¥¶Χι€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1253,
+   "text": "Ψ°Ή„„ά"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1253,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1253,
+   "text": "λΤΏόΞψ"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1253,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1253,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1253,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1253,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1253,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1253,
+   "text": "‹ιϋ‡Ι®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1253,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1253,
+   "text": "υ¬Γ©κΟ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1253,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1253,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1253,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1253,
+   "text": "‰θρ®η›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1253,
+   "text": "Τ°™ε–Ρ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1253,
+   "text": " ’ΤϋΓ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1253,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1253,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1253,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1253,
+   "text": "Ύ™Μ„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1253,
+   "text": "‡ΜΨξ„δ"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1253,
+   "text": "τ–·”ΩΥ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1253,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1253,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1253,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1253,
+   "text": "οά„λΠ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1253,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1253,
+   "text": "£αωβΞΖ"
+  },
+  {
+   "data": "",
+   "code_page": 1254,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1254,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1254,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1254,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1254,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1254,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1254,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1254,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1254,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1254,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1254,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1254,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1254,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1254,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1254,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1254,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1254,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1254,
+   "text": "Ïğèâåò ìèğ"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1254,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1254,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1254,
+   "text": "ùìåí"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1254,
+   "text": "ãÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1254,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1254,
+   "text": "Xin chào"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1254,
+   "text": "ÊÇÑÊ´Õ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1254,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1254,
+   "text": "ÄãºÃÊÀ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1254,
+   "text": "¾È³çÇÏ¼¼¿ä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1254,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1254,
+   "text": "bad utf-8 Ã( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1254,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1254,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1254,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1254,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1254,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1254,
+   "text": "ñì|ûT£Ó‹LµTm/ğz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1254,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1254,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1254,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ğßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1254,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1254,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ĞJ¡á¡Ğæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1254,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1254,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1254,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1254,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1254,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1254,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1254,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1254,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1254,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1254,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1254,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1254,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1254,
+   "text": "½’ÕäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1254,
+   "text": "ç°ù÷Ññ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1254,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1254,
+   "text": "Õ¬àÅ³Ã"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1254,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1254,
+   "text": "ÂìÒ×Îï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1254,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1254,
+   "text": "Ñ¿§±óñ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1254,
+   "text": "êÖÄïäÂ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1254,
+   "text": "şĞ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1254,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1254,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1254,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1254,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1254,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1254,
+   "text": "£Í˜ıÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1254,
+   "text": "ÄîøÇĞª"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1254,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1254,
+   "text": "Ä§Æ¥ä·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1254,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1254,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1254,
+   "text": "ğ¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1254,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1254,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1254,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1254,
+   "text": "œé­¬’Ş"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1254,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1254,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1254,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1254,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1254,
+   "text": "õ¬Ã©êÏ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1254,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1254,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1254,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1254,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1254,
+   "text": "Ô°™å–Ñ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1254,
+   "text": " ’ÔûÃ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1254,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1254,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1254,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1254,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1254,
+   "text": "‡ÌØî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1254,
+   "text": "ô–·”ÙÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1254,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1254,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1254,
+   "text": "Ä¨ˆÖş•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1254,
+   "text": "ïÜ„ëĞ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1254,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1254,
+   "text": "£áùâÎÆ"
+  },
+  {
+   "data": "",
+   "code_page": 1255,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1255,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1255,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1255,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1255,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1255,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1255,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1255,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1255,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1255,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1255,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1255,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1255,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1255,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1255,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1255,
+   "text": "cafי crטme"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1255,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1255,
+   "text": "ֿנטגוע לטנ"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1255,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1255,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1255,
+   "text": "שלום"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1255,
+   "text": "דַָֽׁ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1255,
+   "text": "Labas pasauli אטז"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1255,
+   "text": "Xin chאo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1255,
+   "text": "ÊÇÑÊ´Õ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1255,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1255,
+   "text": "ÄãºÃÊÀ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1255,
+   "text": "¾ָ³חַֿ¼¼¿ה"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1255,
+   "text": "§A¦n¥@¬ֹ"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1255,
+   "text": "bad utf-8 ֳ( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1255,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1255,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1255,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1255,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1255,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1255,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1255,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1255,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1255,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1255,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1255,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1255,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1255,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1255,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1255,
+   "text": "„¶²₪¡ֱ"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1255,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1255,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1255,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1255,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1255,
+   "text": "«€ט½±ס"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1255,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1255,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1255,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1255,
+   "text": "½’ÕäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1255,
+   "text": "ח°שקׁס"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1255,
+   "text": "›צ•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1255,
+   "text": "ױ¬אֵ³ֳ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1255,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1255,
+   "text": "ֲלׂ׳־ן"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1255,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1255,
+   "text": "ׁ¿§±ףס"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1255,
+   "text": "ךײִןהֲ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1255,
+   "text": "‏׀¿ֹ¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1255,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1255,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1255,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1255,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1255,
+   "text": "®₪¥אם­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1255,
+   "text": "£ֽ˜‎ױ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1255,
+   "text": "ִמרַ׀×"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1255,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1255,
+   "text": "ִ§ֶ¥ה·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1255,
+   "text": "³¥¶׳י€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1255,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1255,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1255,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1255,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1255,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1255,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1255,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1255,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1255,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1255,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1255,
+   "text": "ץ¬ֳ©ךֿ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1255,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1255,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1255,
+   "text": "ײֹ˜”כױ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1255,
+   "text": "‰טס®ח›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1255,
+   "text": "װ°™ו–ׁ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1255,
+   "text": " ’ÔûÃ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1255,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1255,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1255,
+   "text": "ֿˆײ׳¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1255,
+   "text": "¾™ּ„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1255,
+   "text": "‡ּ״מ„ה"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1255,
+   "text": "ô–·”ÙÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1255,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1255,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1255,
+   "text": "ִ¨ˆײ‏•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1255,
+   "text": "ïÜ„ëÐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1255,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1255,
+   "text": "£בשג־ֶ"
+  },
+  {
+   "data": "",
+   "code_page": 1256,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1256,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1256,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1256,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1256,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1256,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1256,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1256,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1256,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1256,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1256,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1256,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1256,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1256,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1256,
+   "text": "گ¢ٹE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1256,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1256,
+   "text": "undefined پ چ ڈ گ ‌ in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1256,
+   "text": "دًèâهٍ ىèً"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1256,
+   "text": "أهéـ َïُ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1256,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1256,
+   "text": "ùىهي"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1256,
+   "text": "مرحبا"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1256,
+   "text": "Labas pasauli àèو"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1256,
+   "text": "Xin chào"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1256,
+   "text": "تارت´ص"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1256,
+   "text": "Za؟َ³و gêœl¹ jaںٌ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1256,
+   "text": "ؤم؛أتہ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1256,
+   "text": "¾ب³çاد¼¼؟ن"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1256,
+   "text": "§A¦n¥@¬ة"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1256,
+   "text": "bad utf-8 أ( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1256,
+   "text": "çگ=!7îµ(ثر59نz\\$'é$xإ؟›½–F7Nض=ّ# œ_0تھ—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1256,
+   "text": "¹ج6£´+eَ®0إm›ùzd_اS”§ت$¢2!uDص™ب€J-3¶ںI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1256,
+   "text": "WD&xه<§Dثn”*ٹfةî*MeGlّGçُ–*°‚مy‍wµٌ—™+èک"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1256,
+   "text": "‏ٌ¸Kگغç¤ًگkf?çOٹڈن>§:ô÷œ€ٌٌبaؤQx;سسïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1256,
+   "text": "ù÷طrëé’ط24…V,iي)X،ô6êسqn•0µaû2ذچS9…Qش• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1256,
+   "text": "ٌى|ûT£س‹LµTm/ًz¨Gںه¬کuCA,؟JE÷«1ضsK ثج/أ6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1256,
+   "text": "âêEW*ژ„ـsUٍجپےg©ءmŒqد³ّFِ¨7مbg‰†û°f¦=س€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1256,
+   "text": "Vl×ِ¶…-yُگ[و‌Jپn 2ڑ…lچ÷خَڑO†ہڑHh·~ا¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1256,
+   "text": "±•يث™ب'يëظ—ةى:&}ë™0C¶tyààjlخدµt°k°Q¢ًكg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1256,
+   "text": "¨ر؛Tv¢ur•d5â¦¶µ¬>ٍ^aC‏'…)ت+UتGp¤zڈ£1ّân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1256,
+   "text": "bزœ´Xy،5اï$خµtü°ZIڑںدجC¨؟¾1E¨ِ^ذJ،ل،ذو„ْ"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1256,
+   "text": "ِsAص¯°¨¼¹ّ’*1~م÷حˆ+؛¼2pZ؟يRx¥ذنپ¶‍-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1256,
+   "text": "ثي×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1256,
+   "text": "‡غكê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1256,
+   "text": "„¶²¤،ء"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1256,
+   "text": "Œ÷ـكةه"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1256,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1256,
+   "text": "ؤ‍‰·ق¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1256,
+   "text": "زتـإ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1256,
+   "text": "«€è½±ٌ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1256,
+   "text": "إ¬عèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1256,
+   "text": "ٌْكڑو "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1256,
+   "text": "›ّüک،ء"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1256,
+   "text": "½’صنثع"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1256,
+   "text": "ç°ù÷رٌ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1256,
+   "text": "›ِ•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1256,
+   "text": "ص¬àإ³أ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1256,
+   "text": "‡¨ذ™‹ژ"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1256,
+   "text": "آىز×خï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1256,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1256,
+   "text": "ر؟§±ٌَ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1256,
+   "text": "êضؤïنآ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1256,
+   "text": "‏ذ؟ة¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1256,
+   "text": "é¨ˆ»ع´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1256,
+   "text": "îٌ†ç‘گ"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1256,
+   "text": "’¾لüل¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1256,
+   "text": "حسَگح†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1256,
+   "text": "®¤¥àي­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1256,
+   "text": "£حک‎ص¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1256,
+   "text": "ؤîّاذھ"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1256,
+   "text": "گً؛ٌ؟‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1256,
+   "text": "ؤ§ئ¥ن·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1256,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1256,
+   "text": "ط°¹„„ـ"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1256,
+   "text": "ً¼‚êىے"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1256,
+   "text": "ëش؟üخّ"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1256,
+   "text": "„…تںَ¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1256,
+   "text": "هëµٹîن"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1256,
+   "text": "œé­¬’ق"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1256,
+   "text": "«؛گلˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1256,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1256,
+   "text": "‹éû‡ة®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1256,
+   "text": "»‎ڈث¾ٍ"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1256,
+   "text": "ُ¬أ©êد"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1256,
+   "text": "‚تس´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1256,
+   "text": "خے„ى©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1256,
+   "text": "ضةک”ëص"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1256,
+   "text": "‰èٌ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1256,
+   "text": "ش°™ه–ر"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1256,
+   "text": " ’شûأ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1256,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1256,
+   "text": "›ٍ­ٹؤو"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1256,
+   "text": "دˆض×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1256,
+   "text": "¾™ج„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1256,
+   "text": "‡جطî„ن"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1256,
+   "text": "ô–·”ظص"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1256,
+   "text": "عمعک‡،"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1256,
+   "text": "¢َغ کڈ"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1256,
+   "text": "ؤ¨ˆض‏•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1256,
+   "text": "ïـ„ëذ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1256,
+   "text": "ھ؛ى«îے"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1256,
+   "text": "£لùâخئ"
+  },
+  {
+   "data": "",
+   "code_page": 1257,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1257,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1257,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1257,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1257,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1257,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1257,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1257,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1257,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1257,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1257,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1257,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1257,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1257,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1257,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1257,
+   "text": "café crčme"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1257,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1257,
+   "text": "Ļščāåņ ģčš"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1257,
+   "text": "ĆåéÜ óļõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1257,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1257,
+   "text": "łģåķ"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1257,
+   "text": "ćŃĶČĒ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1257,
+   "text": "Labas pasauli ąčę"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1257,
+   "text": "Xin chąo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1257,
+   "text": "ŹĒŃŹ´Õ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1257,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1257,
+   "text": "ÄćŗĆŹĄ½ē"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1257,
+   "text": "¾Č³ēĒĻ¼¼æä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1257,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1257,
+   "text": "bad utf-8 Ć( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1257,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1257,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1257,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1257,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1257,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1257,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1257,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1257,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1257,
+   "text": "±•ķĖ™Č'ķėŁ—Éģ:&}ė™0C¶tyąąjlĪĻµt°k°Q¢šßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1257,
+   "text": "ØŃŗTv¢ur•d5ā¦¶µ¬>ņ^aCž'…)Ź+UŹGp¤z¸£1ųān"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1257,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1257,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1257,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1257,
+   "text": "‡Ūßź¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1257,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1257,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1257,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1257,
+   "text": "Ä˛‰·ŽÆ"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1257,
+   "text": "ŅŹÜÅ­ō"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1257,
+   "text": "«€č½±ń"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1257,
+   "text": "Å¬Śčüū"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1257,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1257,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1257,
+   "text": "½’ÕäĖŚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1257,
+   "text": "ē°ł÷Ńń"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1257,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1257,
+   "text": "Õ¬ąÅ³Ć"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1257,
+   "text": "‡ØŠ™‹ˇ"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1257,
+   "text": "ĀģŅ×Īļ"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1257,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1257,
+   "text": "Ńæ§±óń"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1257,
+   "text": "źÖÄļäĀ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1257,
+   "text": "žŠæÉØ©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1257,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1257,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1257,
+   "text": "’¾įüį¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1257,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1257,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1257,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1257,
+   "text": "ÄīųĒŠŖ"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1257,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1257,
+   "text": "Ä§Æ¥ä·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1257,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1257,
+   "text": "Ų°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1257,
+   "text": "š¼‚źģ˙"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1257,
+   "text": "ėŌæüĪų"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1257,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1257,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1257,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1257,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1257,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1257,
+   "text": "‹éū‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1257,
+   "text": "»ż¸Ė¾ņ"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1257,
+   "text": "õ¬Ć©źĻ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1257,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1257,
+   "text": "Ī˙„ģ©ļ"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1257,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1257,
+   "text": "‰čń®ē›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1257,
+   "text": "Ō°™å–Ń"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1257,
+   "text": " ’ŌūĆ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1257,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1257,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1257,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1257,
+   "text": "¾™Ģ„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1257,
+   "text": "‡ĢŲī„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1257,
+   "text": "ō–·”ŁÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1257,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1257,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1257,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1257,
+   "text": "ļÜ„ėŠ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1257,
+   "text": "Ŗŗģ«ī˙"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1257,
+   "text": "£įłāĪĘ"
+  },
+  {
+   "data": "",
+   "code_page": 1258,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 1258,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 1258,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 1258,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 1258,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 1258,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 1258,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 1258,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 1258,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 1258,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 1258,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 1258,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 1258,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 1258,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 1258,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 1258,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 1258,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 1258,
+   "text": "Ïđèâạ̊ ́èđ"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 1258,
+   "text": "ĂåéÜ óïơ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 1258,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 1258,
+   "text": "ù́åí"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 1258,
+   "text": "ăÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 1258,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 1258,
+   "text": "Xin chào"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 1258,
+   "text": "ÊÇÑÊ´Ơ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 1258,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 1258,
+   "text": "ÄăºĂÊÀ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 1258,
+   "text": "¾È³çÇÏ¼¼¿ä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 1258,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 1258,
+   "text": "bad utf-8 Ă( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 1258,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 1258,
+   "text": "¹̀6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDƠ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 1258,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 1258,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 1258,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 1258,
+   "text": "ñ́|ûT£Ó‹LµTm/đz¨GŸå¬˜uCA,¿JE÷«1ÖsK Ë̀/Ă6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 1258,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 1258,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 1258,
+   "text": "±•íË™È'íëÙ—É́:&}ë™0C¶tyààjlÎÏµt°k°Q¢đßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 1258,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 1258,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 1258,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 1258,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 1258,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 1258,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 1258,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 1258,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 1258,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 1258,
+   "text": "̉ÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 1258,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 1258,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 1258,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 1258,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 1258,
+   "text": "½’ƠäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 1258,
+   "text": "ç°ù÷Ññ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 1258,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 1258,
+   "text": "Ơ¬àÅ³Ă"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 1258,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 1258,
+   "text": "Ấ̉×Îï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 1258,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 1258,
+   "text": "Ñ¿§±óñ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 1258,
+   "text": "êÖÄïäÂ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 1258,
+   "text": "₫Đ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 1258,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 1258,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 1258,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 1258,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 1258,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 1258,
+   "text": "£Í˜ưƠ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 1258,
+   "text": "ÄîøÇĐª"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 1258,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 1258,
+   "text": "Ä§Æ¥ä·"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 1258,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 1258,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 1258,
+   "text": "đ¼‚ếÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 1258,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 1258,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 1258,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 1258,
+   "text": "œé­¬’̃"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 1258,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 1258,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 1258,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 1258,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 1258,
+   "text": "ơ¬Ă©êÏ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 1258,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 1258,
+   "text": "Îÿ„́©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 1258,
+   "text": "ÖÉ˜”ëƠ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 1258,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 1258,
+   "text": "Ô°™å–Ñ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 1258,
+   "text": " ’ÔûĂ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 1258,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 1258,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 1258,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 1258,
+   "text": "¾™̀„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 1258,
+   "text": "‡̀Øî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 1258,
+   "text": "ô–·”ÙƠ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 1258,
+   "text": "ÚăÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 1258,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 1258,
+   "text": "Ä¨ˆÖ₫•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 1258,
+   "text": "ïÜ„ëĐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 1258,
+   "text": "ªº́«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 1258,
+   "text": "£áùâÎÆ"
+  },
+  {
+   "data": "",
+   "code_page": 874,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 874,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 874,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 874,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 874,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 874,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 874,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 874,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 874,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 874,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 874,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 874,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 874,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 874,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 874,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 874,
+   "text": "caf้ cr่me"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 874,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 874,
+   "text": "ฯ๐่โๅ๒ ์่๐"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 874,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 874,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 874,
+   "text": "๙์ๅํ"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 874,
+   "text": "ใัอศว"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 874,
+   "text": "Labas pasauli เ่ๆ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 874,
+   "text": "Xin chเo"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 874,
+   "text": "สวัสดี"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 874,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 874,
+   "text": "ฤใบรสภฝ็"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 874,
+   "text": "พศณ็วฯผผฟไ"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 874,
+   "text": "งAฆnฅ@ฌษ"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 874,
+   "text": "bad utf-8 ร( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 874,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 874,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 874,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 874,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 874,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 874,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 874,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 874,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 874,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 874,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 874,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 874,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 874,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 874,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 874,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 874,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 874,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 874,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 874,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 874,
+   "text": "ซ€่ฝฑ๑"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 874,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 874,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 874,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 874,
+   "text": "ฝ’ีไหฺ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 874,
+   "text": "็ฐ๙๗ั๑"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 874,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 874,
+   "text": "ีฌเลณร"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 874,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 874,
+   "text": "ย์าืฮ๏"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 874,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 874,
+   "text": "ัฟงฑ๓๑"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 874,
+   "text": "๊ึฤ๏ไย"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 874,
+   "text": "þÐ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 874,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 874,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 874,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 874,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 874,
+   "text": "ฎคฅเํญ"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 874,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 874,
+   "text": "ฤ๎๘วะช"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 874,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 874,
+   "text": "ฤงฦฅไท"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 874,
+   "text": "ณฅถื้€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 874,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 874,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 874,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 874,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 874,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 874,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 874,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 874,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 874,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 874,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 874,
+   "text": "๕ฌรฉ๊ฯ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 874,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 874,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 874,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 874,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 874,
+   "text": "Ô°™å–Ñ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 874,
+   "text": " ’ิ๛ร“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 874,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 874,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 874,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 874,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 874,
+   "text": "‡ÌØî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 874,
+   "text": "๔–ท”ูี"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 874,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 874,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 874,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 874,
+   "text": "ïÜ„ëÐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 874,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 874,
+   "text": "ฃแ๙โฮฦ"
+  },
+  {
+   "data": "",
+   "code_page": 932,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 932,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 932,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 932,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 932,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 932,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 932,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 932,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 932,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 932,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 932,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 932,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 932,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 932,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 932,
+   "text": "世界"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 932,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 932,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 932,
+   "text": "Ïðèâåò ìèð"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 932,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 932,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 932,
+   "text": "褊"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 932,
+   "text": "耜ﾍﾈﾇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 932,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 932,
+   "text": "Xin ch瀰"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 932,
+   "text": "ﾊﾇﾑﾊｴﾕ"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 932,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 932,
+   "text": "ÄãºÃÊÀ½ç"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 932,
+   "text": "¾È³çÇÏ¼¼¿ä"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 932,
+   "text": "ｧAｦn･@ｬﾉ"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 932,
+   "text": "bad utf-8 ﾃ( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 932,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 932,
+   "text": "ｹﾌ6｣ｴ+e0ﾅm廂zd_ﾇS肌ﾊ$｢2!uDﾕ卻J-3ｶ櫑3ｮ"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 932,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 932,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 932,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 932,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 932,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 932,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 932,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 932,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 932,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 932,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 932,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 932,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 932,
+   "text": "┯ｲ､｡ﾁ"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 932,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 932,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 932,
+   "text": "ﾄ梔ｷﾞｯ"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 932,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 932,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 932,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 932,
+   "text": "橾ﾟ壽"
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 932,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 932,
+   "text": "ｽ鍔萢ﾚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 932,
+   "text": "ç°ù÷Ññ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 932,
+   "text": "广蕪ｲｭ"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 932,
+   "text": "ﾕｬ倏ｳﾃ"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 932,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 932,
+   "text": "ÂìÒ×Îï"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 932,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 932,
+   "text": "ﾑｿｧｱ"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 932,
+   "text": "êÖÄïäÂ"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 932,
+   "text": "ﾐｿﾉｨｩ"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 932,
+   "text": "鬨綾ﾚｴ"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 932,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 932,
+   "text": "沈磬眈"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 932,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 932,
+   "text": "ｮ､･瑙ｭ"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 932,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 932,
+   "text": "ﾄⅹﾇﾐｪ"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 932,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 932,
+   "text": "ﾄｧﾆ･莵"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 932,
+   "text": "ｳ･ｶﾗ騾"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 932,
+   "text": "ﾘｰｹтﾜ"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 932,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 932,
+   "text": "ëÔ¿üÎø"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 932,
+   "text": "уﾊ灌ｾ"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 932,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 932,
+   "text": "憺ｭｬ釣"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 932,
+   "text": "ｫｺ雪唖"
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 932,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 932,
+   "text": "矩竫ﾉｮ"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 932,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 932,
+   "text": "õ¬Ã©êÏ"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 932,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 932,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 932,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 932,
+   "text": "芽逶"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 932,
+   "text": "ﾔｰ吝毛"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 932,
+   "text": " ’ÔûÃ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 932,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 932,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 932,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 932,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 932,
+   "text": "‡ÌØî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 932,
+   "text": "ｷ匪ﾕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 932,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 932,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 932,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 932,
+   "text": "ïÜ„ëÐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 932,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 932,
+   "text": "｣碼簧ﾆ"
+  },
+  {
+   "data": "",
+   "code_page": 936,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 936,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 936,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 936,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 936,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 936,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 936,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 936,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 936,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 936,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 936,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 936,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 936,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 936,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 936,
+   "text": "悽奅"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 936,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 936,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 936,
+   "text": "Ïðèâåò ìèð"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 936,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 936,
+   "text": "Merhaba d黱ya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 936,
+   "text": "ùìåí"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 936,
+   "text": "ãÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 936,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 936,
+   "text": "Xin ch鄌"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 936,
+   "text": "是咽凑"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 936,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 936,
+   "text": "你好世界"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 936,
+   "text": "救崇窍技夸"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 936,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 936,
+   "text": "bad utf-8 Ã( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 936,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 936,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 936,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 936,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 936,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 936,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 936,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 936,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 936,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 936,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 936,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 936,
+   "text": "鰏A寨皑脊鴴*1~泖蛨+杭2pZ宽Rxバ鋪稙-'掝4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 936,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 936,
+   "text": "囒哧瑩"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 936,
+   "text": "劧菠×"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 936,
+   "text": "岟苓慑"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 936,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 936,
+   "text": "臑壏薤"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 936,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 936,
+   "text": "珋杞瘪"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 936,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 936,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 936,
+   "text": "涾鼧×"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 936,
+   "text": "綊珍粟"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 936,
+   "text": "ç°ù÷Ññ"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 936,
+   "text": "涼晸箔"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 936,
+   "text": "宅嗯趁"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 936,
+   "text": "嚚袡嫀"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 936,
+   "text": "蚂易物"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 936,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 936,
+   "text": "芽П篑"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 936,
+   "text": "曛娘渎"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 936,
+   "text": "þÐ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 936,
+   "text": "楱埢诖"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 936,
+   "text": "铖嗙憪"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 936,
+   "text": "捑狳峒"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 936,
+   "text": "陀髳蛦"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 936,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 936,
+   "text": "Ｍ橗闸"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 936,
+   "text": "ÄîøÇÐª"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 936,
+   "text": "愷厚繎"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 936,
+   "text": "魔匹浞"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 936,
+   "text": "偿蹲閫"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 936,
+   "text": "匕箘勡"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 936,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 936,
+   "text": "朐奎硒"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 936,
+   "text": "剠薀缶"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 936,
+   "text": "咫祳钿"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 936,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 936,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 936,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 936,
+   "text": "嬮麌僧"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 936,
+   "text": "积徦掘"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 936,
+   "text": "醅茅晗"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 936,
+   "text": "偸哟瘓"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 936,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 936,
+   "text": "稚様胝"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 936,
+   "text": "夎癞鐩"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 936,
+   "text": "园欏栄"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 936,
+   "text": "爳喳脫"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 936,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 936,
+   "text": "涷瓓逆"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 936,
+   "text": "蠄肿稏"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 936,
+   "text": "緳虅憰"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 936,
+   "text": "囂仡勪"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 936,
+   "text": "魱窋僬"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 936,
+   "text": "阢跇嚒"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 936,
+   "text": "Ⅲ蹱槒"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 936,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 936,
+   "text": "镘勲斜"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 936,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 936,
+   "text": "£áùâÎÆ"
+  },
+  {
+   "data": "",
+   "code_page": 949,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 949,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 949,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 949,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 949,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 949,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 949,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 949,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 949,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 949,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 949,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 949,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 949,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 949,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 949,
+   "text": "맊둉"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 949,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 949,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 949,
+   "text": "Ïðèâåò ìèð"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 949,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 949,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 949,
+   "text": "盒孼"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 949,
+   "text": "ãÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 949,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 949,
+   "text": "Xin chào"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 949,
+   "text": "角驥닙"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 949,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 949,
+   "text": "콱봤各썹"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 949,
+   "text": "안녕하세요"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 949,
+   "text": "§A¦n¥@¬É"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 949,
+   "text": "bad utf-8 Ã( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 949,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 949,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 949,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 949,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 949,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 949,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 949,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 949,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 949,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 949,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 949,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 949,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 949,
+   "text": "健婁還"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 949,
+   "text": "뉆墅쵑"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 949,
+   "text": "꽫깽≠"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 949,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 949,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 949,
+   "text": "휒돴彬"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 949,
+   "text": "ÒÊÜÅ­ô"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 949,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 949,
+   "text": "클斑曉"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 949,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 949,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 949,
+   "text": "퐩勵倨"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 949,
+   "text": "怜抗難"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 949,
+   "text": "쏐븪껌"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 949,
+   "text": "酪瑄냉"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 949,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 949,
+   "text": "쯧弄膠"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 949,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 949,
+   "text": "肌㎟埰"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 949,
+   "text": "胃쿤惡"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 949,
+   "text": "þÐ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 949,
+   "text": "蟯댗渼"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 949,
+   "text": "前녺몢"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 949,
+   "text": "뮶峀消"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 949,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 949,
+   "text": "®¤¥àí­"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 949,
+   "text": "Ｍ섫螺"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 949,
+   "text": "쿡幣窺"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 949,
+   "text": "먳비퓩"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 949,
+   "text": "침튈衙"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 949,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 949,
+   "text": "莫퉬꾘"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 949,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 949,
+   "text": "戎웠丘"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 949,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 949,
+   "text": "言탨賊"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 949,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 949,
+   "text": "ズ먤닠"
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 949,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 949,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 949,
+   "text": "생뤜얻"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 949,
+   "text": "艸챕尉"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 949,
+   "text": "궹鍛칷"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 949,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 949,
+   "text": "禮삍瀜"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 949,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 949,
+   "text": "蹈쇿뽔"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 949,
+   "text": "젔懶횙"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 949,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 949,
+   "text": "쏌춭쾀"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 949,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 949,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 949,
+   "text": "눶盲꾡"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 949,
+   "text": "ô–·”ÙÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 949,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 949,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 949,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 949,
+   "text": "晶꾨閨"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 949,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 949,
+   "text": "ａ喊廣"
+  },
+  {
+   "data": "",
+   "code_page": 950,
+   "text": ""
+  },
+  {
+   "data": "cGxhaW4gYXNjaWkNCmxpbmUgdHdv",
+   "code_page": 950,
+   "text": "plain ascii\r\nline two"
+  },
+  {
+   "data": "VVRGLTgg4pyTIGNhZsOpIOaXpeacrOiqng==",
+   "code_page": 950,
+   "text": "UTF-8 ✓ café 日本語"
+  },
+  {
+   "data": "77u/Qk9NIFVURi04IOKckw==",
+   "code_page": 950,
+   "text": "BOM UTF-8 ✓"
+  },
+  {
+   "data": "77u/YmFkIP8gdXRmOCBhZnRlciBib20=",
+   "code_page": 950,
+   "text": "bad � utf8 after bom"
+  },
+  {
+   "data": "//5VAFQARgAtADEANgAgAEwARQAgABMn",
+   "code_page": 950,
+   "text": "UTF-16 LE ✓"
+  },
+  {
+   "data": "/v8AVQBUAEYALQAxADYAIABCAEUAICcT",
+   "code_page": 950,
+   "text": "UTF-16 BE ✓"
+  },
+  {
+   "data": "//5vAGQAZAAA",
+   "code_page": 950,
+   "text": "odd�"
+  },
+  {
+   "data": "//4A2GEA",
+   "code_page": 950,
+   "text": "�a"
+  },
+  {
+   "data": "//4AAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABMAAAARQAAACAAAAATJwAA",
+   "code_page": 950,
+   "text": "UTF-32 LE ✓"
+  },
+  {
+   "data": "AAD+/wAAAFUAAABUAAAARgAAAC0AAAAzAAAAMgAAACAAAABCAAAARQAAACAAACcT",
+   "code_page": 950,
+   "text": "UTF-32 BE ✓"
+  },
+  {
+   "data": "//4AAAAAEQBhYg==",
+   "code_page": 950,
+   "text": "��"
+  },
+  {
+   "data": "grGC8YLJgr+CzSCQoopF",
+   "code_page": 950,
+   "text": "こんにちは 世界"
+  },
+  {
+   "data": "ir+OmoK+gq8=",
+   "code_page": 950,
+   "text": "漢字だけ"
+  },
+  {
+   "data": "kKKKRQ==",
+   "code_page": 950,
+   "text": "�¢ŠE"
+  },
+  {
+   "data": "Y2Fm6SBjcuhtZQ==",
+   "code_page": 950,
+   "text": "café crème"
+  },
+  {
+   "data": "dW5kZWZpbmVkIIEgjSCPIJAgnSBpbiAxMjUy",
+   "code_page": 950,
+   "text": "undefined � � � � � in 1252"
+  },
+  {
+   "data": "z/Do4uXyIOzo8A==",
+   "code_page": 950,
+   "text": "Ïðèâåò ìèð"
+  },
+  {
+   "data": "w+Xp3CDz7/U=",
+   "code_page": 950,
+   "text": "ÃåéÜ óïõ"
+  },
+  {
+   "data": "TWVyaGFiYSBk/G55YQ==",
+   "code_page": 950,
+   "text": "Merhaba dünya"
+  },
+  {
+   "data": "+ezl7Q==",
+   "code_page": 950,
+   "text": "╘樇"
+  },
+  {
+   "data": "49HNyMc=",
+   "code_page": 950,
+   "text": "ãÑÍÈÇ"
+  },
+  {
+   "data": "TGFiYXMgcGFzYXVsaSDg6OY=",
+   "code_page": 950,
+   "text": "Labas pasauli àèæ"
+  },
+  {
+   "data": "WGluIGNo4G8=",
+   "code_page": 950,
+   "text": "Xin ch跢"
+  },
+  {
+   "data": "ysfRyrTV",
+   "code_page": 950,
+   "text": "岆捗椎"
+  },
+  {
+   "data": "WmG/87PmIGfqnGy5IGphn/E=",
+   "code_page": 950,
+   "text": "Za¿ó³æ gêœl¹ jaŸñ"
+  },
+  {
+   "data": "xOO6w8rAvec=",
+   "code_page": 950,
+   "text": "斕疑岍賜"
+  },
+  {
+   "data": "vsiz58fPvLy/5A==",
+   "code_page": 950,
+   "text": "寰喟ж撮蹂"
+  },
+  {
+   "data": "p0GmbqVArMk=",
+   "code_page": 950,
+   "text": "你好世界"
+  },
+  {
+   "data": "YmFkIHV0Zi04IMMoIGhlcmU=",
+   "code_page": 950,
+   "text": "bad utf-8 Ã( here"
+  },
+  {
+   "data": "55A9ITfutSjL0TU55HpcJCfpJHjFv5u9lkY3TtY9+COgnF8wyqqXMQ==",
+   "code_page": 950,
+   "text": "ç�=!7îµ(ËÑ59äz\\$'é$xÅ¿›½–F7NÖ=ø# œ_0Êª—1"
+  },
+  {
+   "data": "ucw2o7QrZfOuMMVtm/l6ZF/HU5SnyiSiMiF1RNWZyIBKLTO2n0kzrg==",
+   "code_page": 950,
+   "text": "¹Ì6£´+eó®0Åm›ùzd_ÇS”§Ê$¢2!uDÕ™È€J-3¶ŸI3®"
+  },
+  {
+   "data": "V0QmeOU8p0TLbpQqimbJ7ipNZUds+Efn9ZYqsILjeZ53tfGXmSvomA==",
+   "code_page": 950,
+   "text": "WD&xå<§DËn”*ŠfÉî*MeGløGçõ–*°‚ãyžwµñ—™+è˜"
+  },
+  {
+   "data": "/vG4S5Db56TwkGtmP+dPio/kPqc69PecgPHxyGHEUXg709PvSLRkRw==",
+   "code_page": 950,
+   "text": "þñ¸K�Ûç¤ð�kf?çOŠ�ä>§:ô÷œ€ññÈaÄQx;ÓÓïH´dG"
+  },
+  {
+   "data": "+ffYcuvpktgyNIVWLGntKVih9Dbq03FulTC1Yfsy0I1TOYVR1JWgXA==",
+   "code_page": 950,
+   "text": "ù÷Ørëé’Ø24…V,ií)X¡ô6êÓqn•0µaû2Ð�S9…QÔ• \\"
+  },
+  {
+   "data": "8ex8+1Sj04tMtVRtL/B6qEef5ayYdUNBLL9KRferMdZzSyDLzC/DNg==",
+   "code_page": 950,
+   "text": "ñì|ûT£Ó‹LµTm/ðz¨GŸå¬˜uCA,¿JE÷«1ÖsK ËÌ/Ã6"
+  },
+  {
+   "data": "4upFVyqOhNxzVfLMgf9nqcFtjHHPs/hG9qg342JniYb7sGamPdOAZg==",
+   "code_page": 950,
+   "text": "âêEW*Ž„ÜsUòÌ�ÿg©ÁmŒqÏ³øFö¨7ãbg‰†û°f¦=Ó€f"
+  },
+  {
+   "data": "VmzX9raFLXn1kFvmnUqBbiAymoVsjffO85pPhsCaSGi3fse5eFRLpA==",
+   "code_page": 950,
+   "text": "Vl×ö¶…-yõ�[æ�J�n 2š…l�÷ÎóšO†ÀšHh·~Ç¹xTK¤"
+  },
+  {
+   "data": "sZXty5nIJ+3r2ZfJ7DomfeuZMEO2dHng4Gpszs+1dLBrsFGi8N9nMg==",
+   "code_page": 950,
+   "text": "±•íË™È'íëÙ—Éì:&}ë™0C¶tyààjlÎÏµt°k°Q¢ðßg2"
+  },
+  {
+   "data": "qNG6VHaidXKVZDXipra1rD7yXmF/Q/4nhSnKK1XKR3Ckeo+jMfjibg==",
+   "code_page": 950,
+   "text": "¨ÑºTv¢ur•d5â¦¶µ¬>ò^aCþ'…)Ê+UÊGp¤z�£1øân"
+  },
+  {
+   "data": "YtKctFh5oTXH7yTOtXT8sFpJmp/PzEOov74xRaj2XtBKoeGh0OaE+g==",
+   "code_page": 950,
+   "text": "bÒœ´Xy¡5Çï$Îµtü°ZIšŸÏÌC¨¿¾1E¨ö^ÐJ¡á¡Ðæ„ú"
+  },
+  {
+   "data": "9nNB1a+wqLy5+JIqfzF+4/fNiCu6vDJwWr/tUnil0OSBtp4tJ5LuNA==",
+   "code_page": 950,
+   "text": "ösAÕ¯°¨¼¹ø’*1~ã÷Íˆ+º¼2pZ¿íRx¥Ðä�¶ž-'’î4"
+  },
+  {
+   "data": "y+3Xpfy9",
+   "code_page": 950,
+   "text": "Ëí×¥ü½"
+  },
+  {
+   "data": "h9vf6qyT",
+   "code_page": 950,
+   "text": "‡Ûßê¬“"
+  },
+  {
+   "data": "hLaypKHB",
+   "code_page": 950,
+   "text": "„¶²¤¡Á"
+  },
+  {
+   "data": "jPfc38nl",
+   "code_page": 950,
+   "text": "Œ÷ÜßÉå"
+  },
+  {
+   "data": "6N67yYLQ",
+   "code_page": 950,
+   "text": "鞐ｻﾉひ"
+  },
+  {
+   "data": "xJ6Jt96v",
+   "code_page": 950,
+   "text": "Äž‰·Þ¯"
+  },
+  {
+   "data": "0srcxa30",
+   "code_page": 950,
+   "text": "疺凗哥"
+  },
+  {
+   "data": "q4DovbHx",
+   "code_page": 950,
+   "text": "«€è½±ñ"
+  },
+  {
+   "data": "xaza6Pz7",
+   "code_page": 950,
+   "text": "Å¬Úèüû"
+  },
+  {
+   "data": "+vHfmuag",
+   "code_page": 950,
+   "text": "úñßšæ "
+  },
+  {
+   "data": "m/j8mKHB",
+   "code_page": 950,
+   "text": "›øü˜¡Á"
+  },
+  {
+   "data": "vZLV5Mva",
+   "code_page": 950,
+   "text": "½’ÕäËÚ"
+  },
+  {
+   "data": "57D599Hx",
+   "code_page": 950,
+   "text": "蝪╜桍"
+  },
+  {
+   "data": "m/aVk7Kt",
+   "code_page": 950,
+   "text": "›ö•“²­"
+  },
+  {
+   "data": "1azgxbPD",
+   "code_page": 950,
+   "text": "晙鉣傢"
+  },
+  {
+   "data": "h6jQmYuO",
+   "code_page": 950,
+   "text": "‡¨Ð™‹Ž"
+  },
+  {
+   "data": "wuzS187v",
+   "code_page": 950,
+   "text": "鎳眢昜"
+  },
+  {
+   "data": "quDlgsrI",
+   "code_page": 950,
+   "text": "ｪ瑯ぬﾈ"
+  },
+  {
+   "data": "0b+nsfPx",
+   "code_page": 950,
+   "text": "捁妤鵨"
+  },
+  {
+   "data": "6tbE7+TC",
+   "code_page": 950,
+   "text": "縚矓鞃"
+  },
+  {
+   "data": "/tC/yaip",
+   "code_page": 950,
+   "text": "þÐ¿É¨©"
+  },
+  {
+   "data": "6aiIu9q0",
+   "code_page": 950,
+   "text": "é¨ˆ»Ú´"
+  },
+  {
+   "data": "7vGG55GQ",
+   "code_page": 950,
+   "text": "îñ†ç‘�"
+  },
+  {
+   "data": "kr7h/OG8",
+   "code_page": 950,
+   "text": "’¾áüá¼"
+  },
+  {
+   "data": "zdPzkM2G",
+   "code_page": 950,
+   "text": "ÍÓó�Í†"
+  },
+  {
+   "data": "rqSl4O2t",
+   "code_page": 950,
+   "text": "恕丞磾"
+  },
+  {
+   "data": "o82Y/dWi",
+   "code_page": 950,
+   "text": "£Í˜ýÕ¢"
+  },
+  {
+   "data": "xO74x9Cq",
+   "code_page": 950,
+   "text": "癩醾衁"
+  },
+  {
+   "data": "kPC68b+R",
+   "code_page": 950,
+   "text": "�ðºñ¿‘"
+  },
+  {
+   "data": "xKfGpeS3",
+   "code_page": 950,
+   "text": "藹ぁ銩"
+  },
+  {
+   "data": "s6W21+mA",
+   "code_page": 950,
+   "text": "³¥¶×é€"
+  },
+  {
+   "data": "2LC5hITc",
+   "code_page": 950,
+   "text": "Ø°¹„„Ü"
+  },
+  {
+   "data": "8LyC6uz/",
+   "code_page": 950,
+   "text": "ð¼‚êìÿ"
+  },
+  {
+   "data": "69S//M74",
+   "code_page": 950,
+   "text": "郺錫昮"
+  },
+  {
+   "data": "hIXKn/O+",
+   "code_page": 950,
+   "text": "„…ÊŸó¾"
+  },
+  {
+   "data": "5eu1iu7k",
+   "code_page": 950,
+   "text": "åëµŠîä"
+  },
+  {
+   "data": "nOmtrJLe",
+   "code_page": 950,
+   "text": "œé­¬’Þ"
+  },
+  {
+   "data": "q7qQ4Yig",
+   "code_page": 950,
+   "text": "«º�áˆ "
+  },
+  {
+   "data": "xIfYj8aE",
+   "code_page": 950,
+   "text": "ć؏Ƅ"
+  },
+  {
+   "data": "i+n7h8mu",
+   "code_page": 950,
+   "text": "‹éû‡É®"
+  },
+  {
+   "data": "u/2Py77y",
+   "code_page": 950,
+   "text": "»ý�Ë¾ò"
+  },
+  {
+   "data": "9azDqerP",
+   "code_page": 950,
+   "text": "鶿矇縌"
+  },
+  {
+   "data": "gsrTtK+I",
+   "code_page": 950,
+   "text": "‚ÊÓ´¯ˆ"
+  },
+  {
+   "data": "zv+E7Knv",
+   "code_page": 950,
+   "text": "Îÿ„ì©ï"
+  },
+  {
+   "data": "1smYlOvV",
+   "code_page": 950,
+   "text": "ÖÉ˜”ëÕ"
+  },
+  {
+   "data": "iejxrueb",
+   "code_page": 950,
+   "text": "‰èñ®ç›"
+  },
+  {
+   "data": "1LCZ5ZbR",
+   "code_page": 950,
+   "text": "Ô°™å–Ñ"
+  },
+  {
+   "data": "oJLU+8OT",
+   "code_page": 950,
+   "text": " ’ÔûÃ“"
+  },
+  {
+   "data": "kPOC2om3",
+   "code_page": 950,
+   "text": "浅ぼ温"
+  },
+  {
+   "data": "m/KtisTm",
+   "code_page": 950,
+   "text": "›ò­ŠÄæ"
+  },
+  {
+   "data": "z4jW17aW",
+   "code_page": 950,
+   "text": "ÏˆÖ×¶–"
+  },
+  {
+   "data": "vpnMhJGV",
+   "code_page": 950,
+   "text": "¾™Ì„‘•"
+  },
+  {
+   "data": "h8zY7oTk",
+   "code_page": 950,
+   "text": "‡ÌØî„ä"
+  },
+  {
+   "data": "9Ja3lNnV",
+   "code_page": 950,
+   "text": "ô–·”ÙÕ"
+  },
+  {
+   "data": "2uPamIeh",
+   "code_page": 950,
+   "text": "ÚãÚ˜‡¡"
+  },
+  {
+   "data": "ovPboJiP",
+   "code_page": 950,
+   "text": "¢óÛ ˜�"
+  },
+  {
+   "data": "xKiI1v6V",
+   "code_page": 950,
+   "text": "Ä¨ˆÖþ•"
+  },
+  {
+   "data": "79yE69Cx",
+   "code_page": 950,
+   "text": "ïÜ„ëÐ±"
+  },
+  {
+   "data": "qrrsq+7/",
+   "code_page": 950,
+   "text": "ªºì«îÿ"
+  },
+  {
+   "data": "o+H54s7G",
+   "code_page": 950,
+   "text": "€╣恇"
+  }
+ ],
+ "parse": [
+  {
+   "content": "",
+   "synced": false,
+   "lines": []
+  },
+  {
+   "content": "[ar:Artist]\n[ti:Title]\n[00:01.00]Hello\n[00:01.10]Bonjour\n[00:05.00]\n[00:03.00][00:07.00]Again\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1000,
+     "main": "Hello",
+     "sub": "Bonjour"
+    },
+    {
+     "time_ms": 3000,
+     "main": "Again",
+     "sub": ""
+    },
+    {
+     "time_ms": 5000,
+     "main": "♪",
+     "sub": ""
+    },
+    {
+     "time_ms": 7000,
+     "main": "Again",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "﻿[00:00.00]a\n[00:00.10]b\n[00:00.20]c\n[00:00.151]d\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 0,
+     "main": "a",
+     "sub": "b"
+    },
+    {
+     "time_ms": 151,
+     "main": "d",
+     "sub": "c"
+    }
+   ]
+  },
+  {
+   "content": "[00:02.00]Line\n[00:02.00]Translation\n[00:02.00]Third\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 2000,
+     "main": "Line",
+     "sub": "Translation"
+    },
+    {
+     "time_ms": 2000,
+     "main": "Third",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[1:02.5]x\n[01:02:34]y\n[01:02,345]z\n[001:02.123456]w\n[100:00]v\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 62123,
+     "main": "w",
+     "sub": ""
+    },
+    {
+     "time_ms": 62340,
+     "main": "y",
+     "sub": "z"
+    },
+    {
+     "time_ms": 62500,
+     "main": "x",
+     "sub": ""
+    },
+    {
+     "time_ms": 6000000,
+     "main": "v",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "First plain line\n\n   Second  \r\n[ar:x]\n third",
+   "synced": false,
+   "lines": [
+    {
+     "time_ms": 0,
+     "main": "First plain line",
+     "sub": ""
+    },
+    {
+     "time_ms": 0,
+     "main": "Second",
+     "sub": ""
+    },
+    {
+     "time_ms": 0,
+     "main": "[ar:x]",
+     "sub": ""
+    },
+    {
+     "time_ms": 0,
+     "main": "third",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[00:01.00]a[00:02.00]b\n  [00:03.00]  spaced  \n[00:04.00] ♪ \n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1000,
+     "main": "b",
+     "sub": ""
+    },
+    {
+     "time_ms": 2000,
+     "main": "b",
+     "sub": ""
+    },
+    {
+     "time_ms": 3000,
+     "main": "spaced",
+     "sub": ""
+    },
+    {
+     "time_ms": 4000,
+     "main": "♪",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[00:01]one\r[00:02]two\r\n[00:03]three\u000bfour\u001c[00:05]five [00:06]six",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1000,
+     "main": "one",
+     "sub": ""
+    },
+    {
+     "time_ms": 2000,
+     "main": "two",
+     "sub": ""
+    },
+    {
+     "time_ms": 3000,
+     "main": "three",
+     "sub": ""
+    },
+    {
+     "time_ms": 5000,
+     "main": "five",
+     "sub": ""
+    },
+    {
+     "time_ms": 6000,
+     "main": "six",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[００:０１.５０]full width\n[٠٠:٠٢]arabic digits\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1500,
+     "main": "full width",
+     "sub": ""
+    },
+    {
+     "time_ms": 2000,
+     "main": "arabic digits",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[00:10.00]late\n[00:01.00]early\n[00:01.149]pair\n[00:01.300]alone\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1000,
+     "main": "early",
+     "sub": "pair"
+    },
+    {
+     "time_ms": 1300,
+     "main": "alone",
+     "sub": ""
+    },
+    {
+     "time_ms": 10000,
+     "main": "late",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "no stamps [here]\n[x:y]\n",
+   "synced": false,
+   "lines": [
+    {
+     "time_ms": 0,
+     "main": "no stamps [here]",
+     "sub": ""
+    },
+    {
+     "time_ms": 0,
+     "main": "[x:y]",
+     "sub": ""
+    }
+   ]
+  },
+  {
+   "content": "[00:01.00]\n[00:01.00]\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 1000,
+     "main": "♪",
+     "sub": "♪"
+    }
+   ]
+  },
+  {
+   "content": "[00:00.995]round\n[00:00.0005]tiny\n",
+   "synced": true,
+   "lines": [
+    {
+     "time_ms": 0,
+     "main": "tiny",
+     "sub": ""
+    },
+    {
+     "time_ms": 995,
+     "main": "round",
+     "sub": ""
+    }
+   ]
+  }
+ ],
+ "stamps": [
+  {
+   "line": "[01:02]a",
+   "ms": [
+    62000
+   ],
+   "end": 7
+  },
+  {
+   "line": "[1:02.5]a",
+   "ms": [
+    62500
+   ],
+   "end": 8
+  },
+  {
+   "line": "[01:02:34]a",
+   "ms": [
+    62340
+   ],
+   "end": 10
+  },
+  {
+   "line": "[01:02,345]a",
+   "ms": [
+    62345
+   ],
+   "end": 11
+  },
+  {
+   "line": "[ar:Someone]",
+   "ms": [],
+   "end": 0
+  },
+  {
+   "line": "[00:00.0005]",
+   "ms": [
+    0
+   ],
+   "end": 12
+  },
+  {
+   "line": "[00:00.0015]",
+   "ms": [
+    2
+   ],
+   "end": 12
+  },
+  {
+   "line": "[999:59.999999]",
+   "ms": [
+    60000000
+   ],
+   "end": 15
+  },
+  {
+   "line": "[1000:00]x",
+   "ms": [],
+   "end": 0
+  },
+  {
+   "line": "[01:2]a",
+   "ms": [
+    62000
+   ],
+   "end": 6
+  },
+  {
+   "line": "[0:00.1][0:00.12][0:00.123]x",
+   "ms": [
+    100,
+    120,
+    123
+   ],
+   "end": 27
+  }
+ ],
+ "fmt_lrc_time": [
+  {
+   "ms": 0,
+   "text": "00:00.00"
+  },
+  {
+   "ms": -5,
+   "text": "00:00.00"
+  },
+  {
+   "ms": 4,
+   "text": "00:00.00"
+  },
+  {
+   "ms": 5,
+   "text": "00:00.00"
+  },
+  {
+   "ms": 6,
+   "text": "00:00.01"
+  },
+  {
+   "ms": 15,
+   "text": "00:00.02"
+  },
+  {
+   "ms": 25,
+   "text": "00:00.02"
+  },
+  {
+   "ms": 994,
+   "text": "00:00.99"
+  },
+  {
+   "ms": 995,
+   "text": "00:01.00"
+  },
+  {
+   "ms": 1005,
+   "text": "00:01.00"
+  },
+  {
+   "ms": 61234,
+   "text": "01:01.23"
+  },
+  {
+   "ms": 61235,
+   "text": "01:01.24"
+  },
+  {
+   "ms": 61225,
+   "text": "01:01.22"
+  },
+  {
+   "ms": 59999,
+   "text": "01:00.00"
+  },
+  {
+   "ms": 3599995,
+   "text": "60:00.00"
+  },
+  {
+   "ms": 6000000,
+   "text": "100:00.00"
+  }
+ ],
+ "clean_query": [
+  {
+   "text": "01 Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01 Song",
+   "from_filename": false,
+   "cleaned": "01 Song"
+  },
+  {
+   "text": "01. Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01. Song",
+   "from_filename": false,
+   "cleaned": "01. Song"
+  },
+  {
+   "text": "01 - Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01 - Song",
+   "from_filename": false,
+   "cleaned": "01 - Song"
+  },
+  {
+   "text": "1-03 Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "1-03 Song",
+   "from_filename": false,
+   "cleaned": "1-03 Song"
+  },
+  {
+   "text": "01_Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01_Song",
+   "from_filename": false,
+   "cleaned": "01_Song"
+  },
+  {
+   "text": "01.Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01.Song",
+   "from_filename": false,
+   "cleaned": "01.Song"
+  },
+  {
+   "text": "Song (2)",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song (2)",
+   "from_filename": false,
+   "cleaned": "Song (2)"
+  },
+  {
+   "text": "01 - ",
+   "from_filename": true,
+   "cleaned": "-"
+  },
+  {
+   "text": "01 - ",
+   "from_filename": false,
+   "cleaned": "01 -"
+  },
+  {
+   "text": "1234 Song",
+   "from_filename": true,
+   "cleaned": "1234 Song"
+  },
+  {
+   "text": "1234 Song",
+   "from_filename": false,
+   "cleaned": "1234 Song"
+  },
+  {
+   "text": "123 Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "123 Song",
+   "from_filename": false,
+   "cleaned": "123 Song"
+  },
+  {
+   "text": "12-345 Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "12-345 Song",
+   "from_filename": false,
+   "cleaned": "12-345 Song"
+  },
+  {
+   "text": "1.2 Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "1.2 Song",
+   "from_filename": false,
+   "cleaned": "1.2 Song"
+  },
+  {
+   "text": "7 Rings",
+   "from_filename": true,
+   "cleaned": "Rings"
+  },
+  {
+   "text": "7 Rings",
+   "from_filename": false,
+   "cleaned": "7 Rings"
+  },
+  {
+   "text": "99 Luftballons",
+   "from_filename": true,
+   "cleaned": "Luftballons"
+  },
+  {
+   "text": "99 Luftballons",
+   "from_filename": false,
+   "cleaned": "99 Luftballons"
+  },
+  {
+   "text": "Song [FLAC]",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song [FLAC]",
+   "from_filename": false,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song [hq]",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song [hq]",
+   "from_filename": false,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song [Mp3] [WAV]",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song [Mp3] [WAV]",
+   "from_filename": false,
+   "cleaned": "Song"
+  },
+  {
+   "text": " 50 Cent [MP3] ",
+   "from_filename": true,
+   "cleaned": "50 Cent"
+  },
+  {
+   "text": " 50 Cent [MP3] ",
+   "from_filename": false,
+   "cleaned": "50 Cent"
+  },
+  {
+   "text": "01  -  Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01  -  Song",
+   "from_filename": false,
+   "cleaned": "01  -  Song"
+  },
+  {
+   "text": "01 -Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01 -Song",
+   "from_filename": false,
+   "cleaned": "01 -Song"
+  },
+  {
+   "text": "01- Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01- Song",
+   "from_filename": false,
+   "cleaned": "01- Song"
+  },
+  {
+   "text": "01　Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01　Song",
+   "from_filename": false,
+   "cleaned": "01　Song"
+  },
+  {
+   "text": "０１ Song",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "０１ Song",
+   "from_filename": false,
+   "cleaned": "０１ Song"
+  },
+  {
+   "text": "01 (2)",
+   "from_filename": true,
+   "cleaned": ""
+  },
+  {
+   "text": "01 (2)",
+   "from_filename": false,
+   "cleaned": "01 (2)"
+  },
+  {
+   "text": "Song (2) (3)",
+   "from_filename": true,
+   "cleaned": "Song (2)"
+  },
+  {
+   "text": "Song (2) (3)",
+   "from_filename": false,
+   "cleaned": "Song (2) (3)"
+  },
+  {
+   "text": "Song(2)",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song(2)",
+   "from_filename": false,
+   "cleaned": "Song(2)"
+  },
+  {
+   "text": "Song (2)\n",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "Song (2)\n",
+   "from_filename": false,
+   "cleaned": "Song (2)"
+  },
+  {
+   "text": "Song (a)",
+   "from_filename": true,
+   "cleaned": "Song (a)"
+  },
+  {
+   "text": "Song (a)",
+   "from_filename": false,
+   "cleaned": "Song (a)"
+  },
+  {
+   "text": "01 - 02 Song",
+   "from_filename": true,
+   "cleaned": "02 Song"
+  },
+  {
+   "text": "01 - 02 Song",
+   "from_filename": false,
+   "cleaned": "01 - 02 Song"
+  },
+  {
+   "text": "1-1-1 Song",
+   "from_filename": true,
+   "cleaned": "1 Song"
+  },
+  {
+   "text": "1-1-1 Song",
+   "from_filename": false,
+   "cleaned": "1-1-1 Song"
+  },
+  {
+   "text": "01",
+   "from_filename": true,
+   "cleaned": "01"
+  },
+  {
+   "text": "01",
+   "from_filename": false,
+   "cleaned": "01"
+  },
+  {
+   "text": "01 ",
+   "from_filename": true,
+   "cleaned": "01"
+  },
+  {
+   "text": "01 ",
+   "from_filename": false,
+   "cleaned": "01"
+  },
+  {
+   "text": "-01 Song",
+   "from_filename": true,
+   "cleaned": "-01 Song"
+  },
+  {
+   "text": "-01 Song",
+   "from_filename": false,
+   "cleaned": "-01 Song"
+  },
+  {
+   "text": "01 - Song (12)",
+   "from_filename": true,
+   "cleaned": "Song"
+  },
+  {
+   "text": "01 - Song (12)",
+   "from_filename": false,
+   "cleaned": "01 - Song (12)"
+  },
+  {
+   "text": "Song [FLAC",
+   "from_filename": true,
+   "cleaned": "Song [FLAC"
+  },
+  {
+   "text": "Song [FLAC",
+   "from_filename": false,
+   "cleaned": "Song [FLAC"
+  },
+  {
+   "text": "Ünïcödé Song (2)",
+   "from_filename": true,
+   "cleaned": "Ünïcödé Song"
+  },
+  {
+   "text": "Ünïcödé Song (2)",
+   "from_filename": false,
+   "cleaned": "Ünïcödé Song (2)"
+  },
+  {
+   "text": "",
+   "from_filename": true,
+   "cleaned": ""
+  },
+  {
+   "text": "",
+   "from_filename": false,
+   "cleaned": ""
+  }
+ ],
+ "same_text": [
+  {
+   "a": "Hello, World!",
+   "b": "hello world",
+   "same": true
+  },
+  {
+   "a": "Straße",
+   "b": "STRASSE",
+   "same": true
+  },
+  {
+   "a": "Hello",
+   "b": "Hallo",
+   "same": false
+  },
+  {
+   "a": "a_b",
+   "b": "ab",
+   "same": true
+  },
+  {
+   "a": "",
+   "b": "!!!",
+   "same": true
+  },
+  {
+   "a": "日本語",
+   "b": "日本語。",
+   "same": true
+  },
+  {
+   "a": "Ⅻ",
+   "b": "ⅻ",
+   "same": true
+  },
+  {
+   "a": "naïve",
+   "b": "naive",
+   "same": false
+  },
+  {
+   "a": "Mr. Brightside",
+   "b": "mr brightside",
+   "same": true
+  },
+  {
+   "a": "ΣΊΣΥΦΟΣ",
+   "b": "σίσυφος",
+   "same": true
+  },
+  {
+   "a": "½",
+   "b": "1/2",
+   "same": false
+  },
+  {
+   "a": "रामायण",
+   "b": "रमयण",
+   "same": true
+  },
+  {
+   "a": "ﬁne",
+   "b": "FINE",
+   "same": true
+  },
+  {
+   "a": "x²",
+   "b": "x2",
+   "same": false
+  }
+ ],
+ "album_order": [
+  {
+   "root": "/music/Album",
+   "songs": [
+    {
+     "path": "/music/Album/CD10/01 Song.mp3",
+     "track": 1,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/CD2/02 Song.mp3",
+     "track": 2,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/CD2/01 Song.mp3",
+     "track": 1,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/b.flac",
+     "track": null,
+     "disc": 2
+    },
+    {
+     "path": "/music/Album/a.flac",
+     "track": 10,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/c.flac",
+     "track": 9,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/Track 10.ogg",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/track 9.ogg",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/Ärger.opus",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/ärger 2.opus",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/disc 1/x.m4a",
+     "track": 3,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/Disc 1/y.m4a",
+     "track": 2,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/007.wav",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/7.wav",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/6.wav",
+     "track": null,
+     "disc": null
+    }
+   ],
+   "order": [
+    5,
+    4,
+    14,
+    12,
+    13,
+    7,
+    6,
+    9,
+    8,
+    3,
+    2,
+    1,
+    0,
+    11,
+    10
+   ]
+  },
+  {
+   "root": null,
+   "songs": [
+    {
+     "path": "/music/Album/CD10/01 Song.mp3",
+     "track": 1,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/CD2/02 Song.mp3",
+     "track": 2,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/CD2/01 Song.mp3",
+     "track": 1,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/b.flac",
+     "track": null,
+     "disc": 2
+    },
+    {
+     "path": "/music/Album/a.flac",
+     "track": 10,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/c.flac",
+     "track": 9,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/Track 10.ogg",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/track 9.ogg",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/Ärger.opus",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/ärger 2.opus",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/disc 1/x.m4a",
+     "track": 3,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/Disc 1/y.m4a",
+     "track": 2,
+     "disc": 1
+    },
+    {
+     "path": "/music/Album/007.wav",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/7.wav",
+     "track": null,
+     "disc": null
+    },
+    {
+     "path": "/music/Album/6.wav",
+     "track": null,
+     "disc": null
+    }
+   ],
+   "order": [
+    5,
+    4,
+    14,
+    12,
+    13,
+    7,
+    6,
+    9,
+    8,
+    3,
+    2,
+    1,
+    0,
+    11,
+    10
+   ]
+  },
+  {
+   "root": null,
+   "songs": [
+    {
+     "path": "/b/Album/02.mp3",
+     "track": 2,
+     "disc": null
+    },
+    {
+     "path": "/a/Other/01.mp3",
+     "track": 1,
+     "disc": null
+    },
+    {
+     "path": "/a/Other/10.mp3",
+     "track": null,
+     "disc": null
+    }
+   ],
+   "order": [
+    1,
+    2,
+    0
+   ]
+  }
+ ],
+ "lrclib": [
+  {
+   "name": "exact synced",
+   "title": "Song",
+   "artist": "Artist",
+   "duration_sec": 215,
+   "title_from_tags": true,
+   "get": {
+    "syncedLyrics": "[00:01.00]a",
+    "plainLyrics": "a",
+    "duration": 215.5
+   },
+   "search": null,
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&artist_name=Artist&duration=215"
+   ],
+   "query_title": "Song",
+   "query_artist": "Artist",
+   "result": {
+    "lyrics": "[00:01.00]a",
+    "message": "Synced lyrics downloaded from LRCLIB.",
+    "trusted": true,
+    "lrclib_duration_sec": 216
+   }
+  },
+  {
+   "name": "exact plain, no length",
+   "title": "Song",
+   "artist": "Artist",
+   "duration_sec": 0,
+   "title_from_tags": true,
+   "get": {
+    "syncedLyrics": null,
+    "plainLyrics": "words",
+    "duration": 200
+   },
+   "search": null,
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&artist_name=Artist"
+   ],
+   "query_title": "Song",
+   "query_artist": "Artist",
+   "result": {
+    "lyrics": "words",
+    "message": "Plain lyrics downloaded from LRCLIB.",
+    "trusted": false,
+    "lrclib_duration_sec": 200
+   }
+  },
+  {
+   "name": "get 404, search match",
+   "title": "01 - My Song (2)",
+   "artist": "The Band",
+   "duration_sec": 200,
+   "title_from_tags": false,
+   "get": null,
+   "search": [
+    {
+     "trackName": "Other",
+     "artistName": "The Band",
+     "duration": 200,
+     "syncedLyrics": "[00:01.00]x"
+    },
+    {
+     "trackName": "my song!",
+     "artistName": "the band",
+     "duration": 203.9,
+     "syncedLyrics": "[00:01.00]y"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=My+Song&artist_name=The+Band&duration=200",
+    "https://lrclib.net/api/search?q=My+Song+The+Band"
+   ],
+   "query_title": "My Song",
+   "query_artist": "The Band",
+   "result": {
+    "lyrics": "[00:01.00]y",
+    "message": "Synced lyrics matched on LRCLIB.",
+    "trusted": true,
+    "lrclib_duration_sec": 204
+   }
+  },
+  {
+   "name": "search other version",
+   "title": "My Song",
+   "artist": "The Band",
+   "duration_sec": 200,
+   "title_from_tags": true,
+   "get": {
+    "syncedLyrics": "",
+    "plainLyrics": ""
+   },
+   "search": [
+    {
+     "trackName": "My Song",
+     "artistName": "The Band",
+     "duration": 205,
+     "syncedLyrics": "[00:01.00]x"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=My+Song&artist_name=The+Band&duration=200",
+    "https://lrclib.net/api/search?q=My+Song+The+Band"
+   ],
+   "query_title": "My Song",
+   "query_artist": "The Band",
+   "result": {
+    "lyrics": "[00:01.00]x",
+    "message": "Synced lyrics found on LRCLIB (maybe another version).",
+    "trusted": false,
+    "lrclib_duration_sec": 205
+   }
+  },
+  {
+   "name": "search plain trusted",
+   "title": "My Song",
+   "artist": "The Band",
+   "duration_sec": 200,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    "junk",
+    {
+     "trackName": "My Song",
+     "artistName": "The Band",
+     "duration": "199",
+     "plainLyrics": "w"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=My+Song&artist_name=The+Band&duration=200",
+    "https://lrclib.net/api/search?q=My+Song+The+Band"
+   ],
+   "query_title": "My Song",
+   "query_artist": "The Band",
+   "result": {
+    "lyrics": "w",
+    "message": "Plain lyrics found on LRCLIB.",
+    "trusted": true,
+    "lrclib_duration_sec": 199
+   }
+  },
+  {
+   "name": "search plain untrusted",
+   "title": "My Song",
+   "artist": "Unknown Artist",
+   "duration_sec": 0,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    {
+     "trackName": "My Song",
+     "duration": 0,
+     "plainLyrics": "w"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=My+Song",
+    "https://lrclib.net/api/search?q=My+Song"
+   ],
+   "query_title": "My Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "w",
+    "message": "Plain lyrics found on LRCLIB.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "nothing",
+   "title": "Nope",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": [],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Nope&duration=100",
+    "https://lrclib.net/api/search?q=Nope"
+   ],
+   "query_title": "Nope",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "search not a list",
+   "title": "Nope",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": {
+    "error": "x"
+   },
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Nope&duration=100",
+    "https://lrclib.net/api/search?q=Nope"
+   ],
+   "query_title": "Nope",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "search fails",
+   "title": "Nope",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": null,
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Nope&duration=100",
+    "https://lrclib.net/api/search?q=Nope"
+   ],
+   "query_title": "Nope",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "bad get duration",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": {
+    "plainLyrics": "a",
+    "duration": "x"
+   },
+   "search": [
+    {
+     "trackName": "Song",
+     "duration": 100,
+     "plainLyrics": "from search"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=100",
+    "https://lrclib.net/api/search?q=Song"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "from search",
+    "message": "Plain lyrics found on LRCLIB.",
+    "trusted": true,
+    "lrclib_duration_sec": 100
+   }
+  },
+  {
+   "name": "bool duration",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 1,
+   "title_from_tags": true,
+   "get": {
+    "plainLyrics": "a",
+    "duration": true
+   },
+   "search": null,
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=1"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "a",
+    "message": "Plain lyrics downloaded from LRCLIB.",
+    "trusted": true,
+    "lrclib_duration_sec": 1
+   }
+  },
+  {
+   "name": "track name not text",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    {
+     "trackName": 5,
+     "duration": 100,
+     "syncedLyrics": "[00:01.00]s"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=100",
+    "https://lrclib.net/api/search?q=Song"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "synced not text",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": {
+    "syncedLyrics": 5
+   },
+   "search": null,
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=100",
+    "https://lrclib.net/api/search?q=Song"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "unmatched synced not text",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    {
+     "trackName": "Other",
+     "duration": 1,
+     "syncedLyrics": 7
+    },
+    {
+     "trackName": "Song",
+     "duration": 100,
+     "plainLyrics": "p"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=100",
+    "https://lrclib.net/api/search?q=Song"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "infinite duration",
+   "title": "Song",
+   "artist": "",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    {
+     "trackName": "Song",
+     "duration": "inf",
+     "plainLyrics": "p"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&duration=100",
+    "https://lrclib.net/api/search?q=Song"
+   ],
+   "query_title": "Song",
+   "query_artist": "",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  },
+  {
+   "name": "artist mismatch",
+   "title": "Song",
+   "artist": "A",
+   "duration_sec": 100,
+   "title_from_tags": true,
+   "get": null,
+   "search": [
+    {
+     "trackName": "Song",
+     "artistName": "B",
+     "duration": 100,
+     "syncedLyrics": "[00:01.00]s"
+    }
+   ],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Song&artist_name=A&duration=100",
+    "https://lrclib.net/api/search?q=Song+A"
+   ],
+   "query_title": "Song",
+   "query_artist": "A",
+   "result": {
+    "lyrics": "[00:01.00]s",
+    "message": "Synced lyrics found on LRCLIB (maybe another version).",
+    "trusted": false,
+    "lrclib_duration_sec": 100
+   }
+  },
+  {
+   "name": "unicode query",
+   "title": "Café & Co",
+   "artist": "A/B",
+   "duration_sec": 215,
+   "title_from_tags": true,
+   "get": null,
+   "search": [],
+   "urls": [
+    "https://lrclib.net/api/get?track_name=Caf%C3%A9+%26+Co&artist_name=A%2FB&duration=215",
+    "https://lrclib.net/api/search?q=Caf%C3%A9+%26+Co+A%2FB"
+   ],
+   "query_title": "Café & Co",
+   "query_artist": "A/B",
+   "result": {
+    "lyrics": "",
+    "message": "No lyrics found online.",
+    "trusted": false,
+    "lrclib_duration_sec": 0
+   }
+  }
+ ]
+}
