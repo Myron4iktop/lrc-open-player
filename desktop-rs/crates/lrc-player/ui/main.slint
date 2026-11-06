@@ -11,7 +11,7 @@ import { MediaIcon } from "icons.slint";
 import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
-export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
+export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -65,6 +65,16 @@ export component MainWindow inherits Window {
     in property <string> theme-key: "dark";
     in property <string> accent-key: "coral";
     in property <[image]> accent-icons;
+    // --- Visualizer and tray ---
+    in property <string> visualizer-mode: "off";
+    // The spectrum, drawn by Rust into the bottom of the lyrics area.
+    in property <image> viz-frame;
+    in property <color> viz-accent;
+    in property <float> viz-alpha;
+    out property <length> lyrics-width: lyrics-area.width;
+    out property <length> lyrics-height: lyrics-area.height;
+    in property <bool> close-to-tray;
+    in property <bool> tray-available;
 
     callback open-file();
     callback open-album();
@@ -89,6 +99,9 @@ export component MainWindow inherits Window {
     callback queue-play(int);
     callback line-clicked(int);
     callback toggle-fullscreen();
+    callback set-visualizer(string);
+    callback cycle-visualizer();
+    callback set-close-to-tray(bool);
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -201,6 +214,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "m" {
                     root.toggle-mute();
+                    return accept;
+                }
+                if k == "v" {
+                    root.cycle-visualizer();
                     return accept;
                 }
             }
@@ -400,17 +417,26 @@ export component MainWindow inherits Window {
                                     title: "Visualizer";
                                     MenuItem {
                                         title: "Off";
-                                        checked: true;
+                                        checked: root.visualizer-mode == "off";
+                                        activated => {
+                                            root.set-visualizer("off");
+                                        }
                                     }
 
                                     MenuItem {
                                         title: "Spectrum bars";
-                                        enabled: false;
+                                        checked: root.visualizer-mode == "bars";
+                                        activated => {
+                                            root.set-visualizer("bars");
+                                        }
                                     }
 
                                     MenuItem {
                                         title: "Soft wave";
-                                        enabled: false;
+                                        checked: root.visualizer-mode == "wave";
+                                        activated => {
+                                            root.set-visualizer("wave");
+                                        }
                                     }
                                 }
 
@@ -418,7 +444,11 @@ export component MainWindow inherits Window {
 
                                 MenuItem {
                                     title: "Keep playing in tray when closed";
-                                    enabled: false;
+                                    enabled: root.tray-available;
+                                    checked: root.close-to-tray;
+                                    activated => {
+                                        root.set-close-to-tray(!root.close-to-tray);
+                                    }
                                 }
 
                                 MenuItem {
@@ -780,6 +810,16 @@ export component MainWindow inherits Window {
             // ------------------------------------------------------------------
             lyrics-area := Rectangle {
                 horizontal-stretch: 1;
+
+                // `VisualizerBackdrop`: behind the lyrics, at the bottom.
+                if root.visualizer-mode != "off": Image {
+                    x: 0;
+                    width: parent.width;
+                    height: self.source.height * 1phx;
+                    y: parent.height - self.height;
+                    source: root.viz-frame;
+                    image-fit: fill;
+                }
 
                 if root.lyrics-message != "": VerticalLayout {
                     padding-left: 10px;

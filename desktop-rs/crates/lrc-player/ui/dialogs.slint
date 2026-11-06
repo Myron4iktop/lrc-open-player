@@ -4,8 +4,10 @@
 // - `QuestionDialog`: the offer to save lyrics found online (`_offer_to_save_online_lyrics`),
 //   which needs its own button texts and a default button that a system message box
 //   can't give.
+// - `ErrorDialog`: an unexpected error (`install_error_handler`), with its details
+//   behind "Show Details…" as in a QMessageBox.
 
-import { ScrollView } from "std-widgets.slint";
+import { ScrollView, TextEdit } from "std-widgets.slint";
 import { Theme } from "theme.slint";
 import { PushButton } from "widgets.slint";
 
@@ -196,6 +198,106 @@ export component QuestionDialog inherits Window {
                     text: root.no-text;
                     clicked => {
                         root.answered(false);
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component ErrorDialog inherits Window {
+    title: "LRC Open Player";
+    icon: @image-url("../../../../desktop/favicon.ico");
+    preferred-width: 480px;
+    min-width: 380px;
+    background: Theme.dialog-bg;
+    default-font-family: "Segoe UI";
+    in property <string> summary;
+    in property <string> details;
+    in-out property <bool> details-shown;
+    callback dismiss();
+
+    forward-focus: keys;
+    keys := FocusScope {
+        key-pressed(event) => {
+            if event.text == Key.Escape || event.text == Key.Return {
+                root.dismiss();
+                return accept;
+            }
+            reject
+        }
+
+        VerticalLayout {
+            padding: 22px;
+            spacing: 14px;
+
+            HorizontalLayout {
+                spacing: 14px;
+                // The exclamation mark of QMessageBox.Icon.Warning.
+                Rectangle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 16px;
+                    background: Theme.warn-bg;
+                    border-width: 1px;
+                    border-color: Theme.warn-text;
+                    Text {
+                        text: "!";
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: Theme.warn-text;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 10px;
+                    horizontal-stretch: 1;
+                    Text {
+                        text: "Something went wrong, but the player is still running.";
+                        wrap: word-wrap;
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: Theme.text;
+                    }
+
+                    if root.summary != "": Text {
+                        text: root.summary;
+                        wrap: word-wrap;
+                        font-size: 13px;
+                        color: Theme.text-soft;
+                    }
+                }
+            }
+
+            if root.details-shown: TextEdit {
+                height: 200px;
+                text: root.details;
+                read-only: true;
+                wrap: no-wrap;
+                font-size: 12px;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                PushButton {
+                    min-width: 120px;
+                    text: root.details-shown ? "Hide Details…" : "Show Details…";
+                    clicked => {
+                        root.details-shown = !root.details-shown;
+                    }
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+
+                PushButton {
+                    min-width: 90px;
+                    text: "OK";
+                    clicked => {
+                        root.dismiss();
                     }
                 }
             }
