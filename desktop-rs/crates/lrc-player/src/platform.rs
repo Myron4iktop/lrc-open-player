@@ -128,3 +128,32 @@ mod win {
 
 #[cfg(windows)]
 pub use win::{set_app_user_model_id, set_icons_from_exe};
+
+/// Moves the window back onto a screen if the remembered position is off every one
+/// (a monitor unplugged since), as Qt's `restoreGeometry` does.
+pub fn keep_on_screen(ui: &MainWindow) {
+    ui.window().with_winit_window(|w| {
+        let Ok(pos) = w.outer_position() else { return };
+        let size = w.outer_size();
+        let monitors: Vec<_> = w.available_monitors().collect();
+        if monitors.is_empty() {
+            return;
+        }
+        // At least a 100 px corner of the title bar must be on some monitor.
+        let visible = monitors.iter().any(|m| {
+            let (mp, ms) = (m.position(), m.size());
+            let left = pos.x.max(mp.x);
+            let right = (pos.x + size.width as i32).min(mp.x + ms.width as i32);
+            let top = pos.y.max(mp.y);
+            let bottom = (pos.y + 100).min(mp.y + ms.height as i32);
+            right - left >= 100 && bottom > top
+        });
+        if !visible {
+            let target = w.primary_monitor().or_else(|| monitors.first().cloned());
+            if let Some(m) = target {
+                let mp = m.position();
+                w.set_outer_position(winit::dpi::PhysicalPosition::new(mp.x + 40, mp.y + 40));
+            }
+        }
+    });
+}

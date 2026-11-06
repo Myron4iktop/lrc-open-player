@@ -27,13 +27,14 @@ rubato = "5"
 # The lock-free buffer between the decode thread and the output callback.
 rtrb = "0.4"
 rfd = "0.17"
+serde_json = "1"
 
 # The same winit that Slint uses, for dropped files, the window handle and the taskbar
 # icon. Keep its minor version in step with Slint's.
 winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_UI_Shell"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_System_Registry", "Win32_UI_Shell"] }
 
 [build-dependencies]
 slint-build.workspace = true

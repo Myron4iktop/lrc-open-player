@@ -136,6 +136,33 @@ pub fn parse(content: &str) -> Lyrics {
     }
 }
 
+/// The lyrics on screen as text again (`current_lyrics_text`): LRC with a stamp on every
+/// line, and the translation as a second line with the same stamp, when they are synced;
+/// otherwise one line each. ♪ goes back to an empty stamped line. "" when there are none.
+pub fn to_text(lines: &[LyricLine], synced: bool) -> String {
+    if lines.is_empty() {
+        return String::new();
+    }
+    let mut out: Vec<String> = Vec::new();
+    for line in lines {
+        if synced {
+            let stamp = format!("[{}]", fmt_lrc_time(line.time_ms));
+            let main = if line.main == EMPTY_LINE_MARK {
+                ""
+            } else {
+                &line.main
+            };
+            out.push(format!("{stamp}{main}"));
+            if !line.sub.is_empty() {
+                out.push(format!("{stamp}{}", line.sub));
+            }
+        } else {
+            out.push(line.main.clone());
+        }
+    }
+    out.join("\n") + "\n"
+}
+
 /// True if two lines only differ in case, spacing or punctuation (`_same_text`).
 pub fn same_text(a: &str, b: &str) -> bool {
     fn norm(t: &str) -> String {
@@ -241,5 +268,19 @@ mod tests {
         assert!(same_text("Straße", "STRASSE"));
         assert!(!same_text("Hello", "Hallo"));
         assert!(same_text("a_b", "ab"));
+    }
+
+    #[test]
+    fn lyrics_back_to_text() {
+        let synced = parse("[00:01.00]Hello\n[00:01.05]Hola\n[00:03.50]\n[01:02.34]End");
+        assert_eq!(
+            to_text(&synced.lines, true),
+            "[00:01.00]Hello\n[00:01.00]Hola\n[00:03.50]\n[01:02.34]End\n"
+        );
+        let plain = parse("One\n\n  Two  \n");
+        assert_eq!(to_text(&plain.lines, false), "One\nTwo\n");
+        assert_eq!(to_text(&[], true), "");
+        // Reading the text back gives the same lines.
+        assert_eq!(parse(&to_text(&synced.lines, true)).lines, synced.lines);
     }
 }

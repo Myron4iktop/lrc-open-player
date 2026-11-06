@@ -41,7 +41,7 @@ pub fn specs_text(info: &TrackInfo) -> String {
 }
 
 /// A float as Python's `str()` shows it: "44.1", "48.0".
-fn py_float(x: f64) -> String {
+pub(crate) fn py_float(x: f64) -> String {
     // Debug prints the shortest text that reads back as the same number, with ".0" for
     // whole numbers, like Python's repr for the values a sample rate can have.
     format!("{x:?}")
@@ -222,6 +222,207 @@ pub fn drop_plan(paths: &[PathBuf], has_track: bool) -> Option<DropPlan> {
 }
 
 // ---------------------------------------------------------------------------------------
+// Lyrics flow (`search_lyrics_online`, `_on_online_lyrics_fetched`,
+// `_offer_to_save_online_lyrics`, `embed_lyrics_in_file`)
+// ---------------------------------------------------------------------------------------
+
+/// Shown while LRCLIB is asked.
+pub const SEARCHING_TEXT: &str = "Searching online lyrics (LRCLIB)...";
+/// Shown when neither the song nor LRCLIB has lyrics.
+pub const NO_LYRICS_TEXT: &str =
+    "No lyrics found (local or online). Use Lyrics ▾ → Load LRC file to add them manually.";
+/// The box after a manual search finds nothing, when the song has lyrics of its own.
+pub const LRCLIB_HAS_NONE_TEXT: &str = "LRCLIB has no lyrics for this song.";
+/// The title of the search's message boxes.
+pub const SEARCH_TITLE: &str = "Search online";
+/// The title of the embed message boxes.
+pub const EMBED_TITLE: &str = "Embed lyrics";
+/// "Embed lyrics in file…" with nothing shown.
+pub const NOTHING_TO_EMBED_TEXT: &str = "There are no lyrics to embed for this song.";
+
+/// What to do once LRCLIB has answered with lyrics (`_on_online_lyrics_fetched`), after
+/// they are shown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AfterFetch {
+    /// Nothing more: plain lyrics, or an automatic search that must not replace or keep
+    /// anything.
+    ShowOnly,
+    /// Save them as the song's .lrc quietly, so it opens instantly next time.
+    Cache,
+    /// Ask whether to save them ([`save_offer`]).
+    Offer,
+}
+
+/// The rules after lyrics arrive: plain lyrics are only shown; a trusted match is cached
+/// as a .lrc when that can't overwrite anything and the song has no lyrics of its own;
+/// otherwise a manual search asks and an automatic one only shows them.
+pub fn after_fetch(
+    synced: bool,
+    trusted: bool,
+    has_lrc_file: bool,
+    has_embedded: bool,
+    manual: bool,
+) -> AfterFetch {
+    if !synced {
+        AfterFetch::ShowOnly
+    } else if trusted && !has_lrc_file && !has_embedded {
+        AfterFetch::Cache
+    } else if manual {
+        AfterFetch::Offer
+    } else {
+        AfterFetch::ShowOnly
+    }
+}
+
+/// The question after a manual search (`_offer_to_save_online_lyrics`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SaveOffer {
+    pub question: String,
+    /// The notes under the question, one paragraph each.
+    pub notes: Vec<String>,
+    pub yes: &'static str,
+    pub no: &'static str,
+    /// The safe answer is the default when something of the user's would be replaced.
+    pub default_no: bool,
+}
+
+impl SaveOffer {
+    /// "Keep mine" puts the user's own lyrics back on screen.
+    pub fn no_keeps_mine(&self) -> bool {
+        self.no == "Keep mine"
+    }
+
+    /// The question and its notes as one text, the way a message box without an
+    /// "informative text" line shows them.
+    pub fn full_text(&self) -> String {
+        let mut parts = vec![self.question.clone()];
+        parts.extend(self.notes.iter().cloned());
+        parts.join("\n\n")
+    }
+}
+
+/// `m:ss` of whole seconds, as the offer writes song lengths.
+fn mins(s: i64) -> String {
+    format!("{}:{:02}", s.div_euclid(60), s.rem_euclid(60))
+}
+
+/// The offer to save lyrics LRCLIB found, for the .lrc called `lrc_name`.
+///
+/// `lrclib_length` is LRCLIB's length for its entry and `my_length` the song's, both in
+/// whole seconds (0 when unknown).
+pub fn save_offer(
+    lrc_name: &str,
+    trusted: bool,
+    lrclib_length: i64,
+    my_length: i64,
+    has_lrc_file: bool,
+    has_embedded: bool,
+) -> SaveOffer {
+    let mut notes = Vec::new();
+    if !trusted {
+        if lrclib_length != 0 && my_length != 0 {
+            notes.push(format!(
+                "LRCLIB only has these lyrics for a {} version of the song (this file is {}), so they may not line up.",
+                mins(lrclib_length),
+                mins(my_length)
+            ));
+        } else {
+            notes.push(
+                "They come from a loose search, so they may belong to another version of the song."
+                    .to_owned(),
+            );
+        }
+    }
+    let (question, yes, no) = if has_lrc_file {
+        notes.push("Your current file will be overwritten.".to_owned());
+        (
+            format!("Replace “{lrc_name}” with the lyrics from LRCLIB?"),
+            "Replace",
+            "Keep mine",
+        )
+    } else if has_embedded {
+        notes.push(
+            "The player shows a .lrc file instead of the lyrics stored in the song.".to_owned(),
+        );
+        (
+            format!("Save these lyrics as “{lrc_name}”?"),
+            "Save",
+            "Keep mine",
+        )
+    } else {
+        (
+            format!("Save these lyrics as “{lrc_name}”?"),
+            "Save",
+            "Don't save",
+        )
+    };
+    SaveOffer {
+        question,
+        notes,
+        yes,
+        no,
+        default_no: has_lrc_file || has_embedded,
+    }
+}
+
+/// "Couldn't save “x.lrc”:\n<reason>" after the offer's Save fails.
+pub fn save_failed_text(lrc_name: &str, error: &str) -> String {
+    format!("Couldn't save “{lrc_name}”:\n{error}")
+}
+
+/// The question before lyrics are written into a song.
+pub fn embed_question(song_name: &str) -> String {
+    format!(
+        "Write these lyrics into “{song_name}”?\n\n\
+         They'll travel with the song when you share it. \
+         Playback pauses for a moment while the file is updated."
+    )
+}
+
+/// After the lyrics were written into the song.
+pub fn embed_done_text(song_name: &str) -> String {
+    format!("The lyrics are now inside “{song_name}”.")
+}
+
+/// When writing them failed.
+pub fn embed_failed_text(song_name: &str, error: &str) -> String {
+    format!("Couldn't update “{song_name}”:\n{error}")
+}
+
+/// The song's .lrc: the same path with `.lrc` for its extension (`_lrc_path_for`).
+pub fn lrc_path_for(song: &Path) -> PathBuf {
+    song.with_extension("lrc")
+}
+
+// ---------------------------------------------------------------------------------------
+// Track details (`MetadataDialog`)
+// ---------------------------------------------------------------------------------------
+
+/// The rows of the Track Details window, in order.
+pub fn details_fields(info: &TrackInfo) -> Vec<(&'static str, String)> {
+    vec![
+        ("Title", info.title.clone()),
+        ("Artist", info.artist.clone()),
+        ("Album", info.album.clone()),
+        ("Album Artist", info.album_artist.clone()),
+        ("Track Number", info.track_number.clone()),
+        ("Disc Number", info.disc_number.clone()),
+        ("Bitrate", format!("{} kbps", info.bitrate_kbps)),
+        (
+            "Sample Rate",
+            format!("{} kHz", py_float(info.sample_rate_khz)),
+        ),
+        ("Bit Depth", format!("{} bit", info.bits_per_sample)),
+        ("Channels", format!("{} ch", info.channels)),
+        ("Genre", info.genre.clone()),
+        ("Year", info.year.clone()),
+        ("Duration", info.duration_str.clone()),
+        ("MIME-type", info.mime_type.clone()),
+        ("File Path", info.file_path.to_string_lossy().into_owned()),
+    ]
+}
+
+// ---------------------------------------------------------------------------------------
 // Shortcuts
 // ---------------------------------------------------------------------------------------
 
@@ -366,5 +567,127 @@ mod tests {
         }
         assert_eq!(block.matches("<tr>").count(), SHORTCUTS.len());
         assert!(block.contains(SHORTCUTS_FOOTER));
+    }
+
+    #[test]
+    fn after_fetch_rules() {
+        use AfterFetch::*;
+        // Plain lyrics are only shown.
+        assert_eq!(after_fetch(false, true, false, false, true), ShowOnly);
+        // A trusted match is kept when nothing of the user's is there.
+        assert_eq!(after_fetch(true, true, false, false, false), Cache);
+        assert_eq!(after_fetch(true, true, false, false, true), Cache);
+        // Never quietly over a .lrc or embedded lyrics.
+        assert_eq!(after_fetch(true, true, true, false, false), ShowOnly);
+        assert_eq!(after_fetch(true, true, false, true, false), ShowOnly);
+        assert_eq!(after_fetch(true, true, true, false, true), Offer);
+        // A doubtful match: asked about only after a manual search.
+        assert_eq!(after_fetch(true, false, false, false, false), ShowOnly);
+        assert_eq!(after_fetch(true, false, false, false, true), Offer);
+    }
+
+    #[test]
+    fn save_offer_texts() {
+        let o = save_offer("Song.lrc", true, 200, 200, false, false);
+        assert_eq!(o.question, "Save these lyrics as “Song.lrc”?");
+        assert_eq!((o.yes, o.no, o.default_no), ("Save", "Don't save", false));
+        assert!(o.notes.is_empty());
+        assert!(!o.no_keeps_mine());
+        assert_eq!(o.full_text(), "Save these lyrics as “Song.lrc”?");
+
+        let o = save_offer("Song.lrc", false, 185, 242, true, false);
+        assert_eq!(
+            o.question,
+            "Replace “Song.lrc” with the lyrics from LRCLIB?"
+        );
+        assert_eq!((o.yes, o.no, o.default_no), ("Replace", "Keep mine", true));
+        assert_eq!(
+            o.notes,
+            [
+                "LRCLIB only has these lyrics for a 3:05 version of the song (this file is 4:02), so they may not line up.",
+                "Your current file will be overwritten.",
+            ]
+        );
+        assert!(o.no_keeps_mine());
+
+        let o = save_offer("Song.lrc", false, 0, 242, false, true);
+        assert_eq!(o.question, "Save these lyrics as “Song.lrc”?");
+        assert_eq!((o.yes, o.no, o.default_no), ("Save", "Keep mine", true));
+        assert_eq!(
+            o.notes,
+            [
+                "They come from a loose search, so they may belong to another version of the song.",
+                "The player shows a .lrc file instead of the lyrics stored in the song.",
+            ]
+        );
+        assert_eq!(
+            o.full_text(),
+            "Save these lyrics as “Song.lrc”?\n\nThey come from a loose search, so they may belong to another version of the song.\n\nThe player shows a .lrc file instead of the lyrics stored in the song."
+        );
+    }
+
+    #[test]
+    fn embed_texts() {
+        assert_eq!(
+            embed_question("a.mp3"),
+            "Write these lyrics into “a.mp3”?\n\nThey'll travel with the song when you share it. Playback pauses for a moment while the file is updated."
+        );
+        assert_eq!(
+            embed_done_text("a.mp3"),
+            "The lyrics are now inside “a.mp3”."
+        );
+        assert_eq!(
+            embed_failed_text("a.mp3", "Busy"),
+            "Couldn't update “a.mp3”:\nBusy"
+        );
+        assert_eq!(
+            save_failed_text("a.lrc", "Denied"),
+            "Couldn't save “a.lrc”:\nDenied"
+        );
+        assert_eq!(
+            lrc_path_for(Path::new("/m/a.b.flac")),
+            Path::new("/m/a.b.lrc")
+        );
+        assert_eq!(
+            lrc_path_for(Path::new("/m/noext")),
+            Path::new("/m/noext.lrc")
+        );
+    }
+
+    #[test]
+    fn details_rows() {
+        let mut info = TrackInfo::defaults(Path::new("/m/01 Song.flac"));
+        info.sample_rate_khz = 44.1;
+        info.bitrate_kbps = 900;
+        let rows = details_fields(&info);
+        let labels: Vec<_> = rows.iter().map(|r| r.0).collect();
+        assert_eq!(
+            labels,
+            [
+                "Title",
+                "Artist",
+                "Album",
+                "Album Artist",
+                "Track Number",
+                "Disc Number",
+                "Bitrate",
+                "Sample Rate",
+                "Bit Depth",
+                "Channels",
+                "Genre",
+                "Year",
+                "Duration",
+                "MIME-type",
+                "File Path",
+            ]
+        );
+        assert_eq!(rows[0].1, "01 Song");
+        assert_eq!(rows[6].1, "900 kbps");
+        assert_eq!(rows[7].1, "44.1 kHz");
+        assert_eq!(rows[8].1, "16 bit");
+        assert_eq!(rows[9].1, "2 ch");
+        assert_eq!(rows[14].1, "/m/01 Song.flac");
+        info.sample_rate_khz = 48.0;
+        assert_eq!(details_fields(&info)[7].1, "48.0 kHz");
     }
 }

@@ -12,6 +12,7 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
+export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -69,6 +70,9 @@ export component MainWindow inherits Window {
     callback open-file();
     callback open-album();
     callback load-lrc();
+    callback search-online();
+    callback embed-lyrics();
+    callback show-details();
     callback show-shortcuts();
     callback set-theme(string);
     callback set-accent(string);
@@ -142,6 +146,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "l" && !event.modifiers.shift {
                     root.load-lrc();
+                    return accept;
+                }
+                if k == "i" && !event.modifiers.shift && root.has-track {
+                    root.show-details();
                     return accept;
                 }
             }
@@ -260,15 +268,19 @@ export component MainWindow inherits Window {
                                 widest-shortcut: "Ctrl+Shift+T";
                                 entries: [
                                     { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
-                                    { id: "search", title: "Search online (LRCLIB)", disabled: true },
+                                    { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
                                     { id: "-" },
                                     { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: true },
                                     { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: true },
-                                    { id: "embed", title: "Embed lyrics in file…", disabled: true },
+                                    { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
                                 ];
                                 activated(id) => {
                                     if id == "lrc" {
                                         root.load-lrc();
+                                    } else if id == "search" {
+                                        root.search-online();
+                                    } else if id == "embed" {
+                                        root.embed-lyrics();
                                     }
                                 }
                             }
@@ -289,7 +301,7 @@ export component MainWindow inherits Window {
                                 widest-shortcut: "Ctrl+I";
                                 check-col: true;
                                 entries: [
-                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: true },
+                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: !root.has-track },
                                     { id: "-" },
                                     { id: "theme", title: "Theme", sub: 1 },
                                     { id: "accent", title: "Accent color", sub: 2 },
@@ -323,6 +335,8 @@ export component MainWindow inherits Window {
                                 activated(id) => {
                                     if id == "shortcuts" {
                                         root.show-shortcuts();
+                                    } else if id == "details" {
+                                        root.show-details();
                                     } else if id == "theme:dark" || id == "theme:light" {
                                         root.set-theme(id == "theme:dark" ? "dark" : "light");
                                     } else if id == "accent:coral" {
