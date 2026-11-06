@@ -4,11 +4,15 @@
 
 slint::include_modules!();
 
+mod audio;
+mod debug_window;
+
 fn main() -> Result<(), slint::PlatformError> {
     #[cfg(windows)]
     win::set_app_user_model_id();
 
     let window = MainWindow::new()?;
+    let _ticker = debug_window::attach(&window);
     window.show()?;
     #[cfg(windows)]
     win::set_icons_from_exe(&window);

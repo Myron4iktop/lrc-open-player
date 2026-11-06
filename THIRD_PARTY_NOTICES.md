@@ -35,6 +35,13 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [regex](https://github.com/rust-lang/regex) | Matching timestamps and tags | MIT or Apache-2.0 |
 | [caseless](https://github.com/unicode-rs/rust-caseless) | Comparing text without case, like Python's `casefold` | MIT |
 | [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song safely | MIT or Apache-2.0 |
+| [Symphonia](https://github.com/pdeljanov/Symphonia) | Decoding audio | MPL-2.0 |
+| [symphonia-adapter-libopus](https://github.com/aschey/symphonia-adapters) | Opus decoding for Symphonia | MIT or Apache-2.0 |
+| [libopus](https://opus-codec.org/) (through [opusic-sys](https://github.com/DoumanAsh/opusic-sys)) | Decoding Opus | BSD-3-Clause |
+| [cpal](https://github.com/RustAudio/cpal) | Audio output | Apache-2.0 |
+| [Rubato](https://github.com/HEnquist/rubato) (with [audioadapter](https://github.com/HEnquist/audioadapter-rs), [RustFFT](https://github.com/ejmahler/RustFFT) and [RealFFT](https://github.com/HEnquist/realfft)) | Resampling to the output's rate | MIT; MIT or Apache-2.0 |
+| [rtrb](https://github.com/mgeier/rtrb) | Passing audio to the output without locks | MIT or Apache-2.0 |
+| [rfd](https://github.com/PolyMeilex/rfd) | File dialogs | MIT |
 | [windows](https://github.com/microsoft/windows-rs) | Windows APIs | MIT or Apache-2.0 |
 | [winresource](https://github.com/BenjaminRi/winresource) (build only) | Putting the icon into the `.exe` | MIT |
 
