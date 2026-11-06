@@ -11,6 +11,7 @@ import { MediaIcon } from "icons.slint";
 import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
+export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -68,6 +69,9 @@ export component MainWindow inherits Window {
     callback open-file();
     callback open-album();
     callback load-lrc();
+    callback search-online();
+    callback embed-lyrics();
+    callback show-details();
     callback show-shortcuts();
     callback set-theme(string);
     callback set-accent(string);
@@ -141,6 +145,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "l" && !event.modifiers.shift {
                     root.load-lrc();
+                    return accept;
+                }
+                if k == "i" && !event.modifiers.shift && root.has-track {
+                    root.show-details();
                     return accept;
                 }
             }
@@ -259,7 +267,10 @@ export component MainWindow inherits Window {
 
                                 MenuItem {
                                     title: "Search online (LRCLIB)";
-                                    enabled: false;
+                                    enabled: root.has-track;
+                                    activated => {
+                                        root.search-online();
+                                    }
                                 }
 
                                 MenuSeparator { }
@@ -276,7 +287,10 @@ export component MainWindow inherits Window {
 
                                 MenuItem {
                                     title: "Embed lyrics in file…";
-                                    enabled: false;
+                                    enabled: root.has-track;
+                                    activated => {
+                                        root.embed-lyrics();
+                                    }
                                 }
                             }
 
@@ -296,7 +310,10 @@ export component MainWindow inherits Window {
                             Menu {
                                 MenuItem {
                                     title: "Track details…";
-                                    enabled: false;
+                                    enabled: root.has-track;
+                                    activated => {
+                                        root.show-details();
+                                    }
                                 }
 
                                 MenuSeparator { }

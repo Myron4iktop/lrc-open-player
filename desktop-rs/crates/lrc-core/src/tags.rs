@@ -1144,6 +1144,22 @@ impl fmt::Display for EmbedError {
 
 impl std::error::Error for EmbedError {}
 
+impl EmbedError {
+    /// The song is still held open by something (the player letting go of it, a virus
+    /// scanner), so trying again in a moment may work. Python's `PermissionError`, which
+    /// on Windows also covers a file in use by another program.
+    pub fn is_busy(&self) -> bool {
+        match self {
+            Self::Io(e) => {
+                e.kind() == io::ErrorKind::PermissionDenied
+                    // ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
+                    || (cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 33)))
+            }
+            _ => false,
+        }
+    }
+}
+
 impl From<io::Error> for EmbedError {
     fn from(e: io::Error) -> Self {
         Self::Io(e)

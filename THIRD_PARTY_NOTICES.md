@@ -31,11 +31,11 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [ureq](https://github.com/algesten/ureq) | Looking up lyrics on LRCLIB | MIT or Apache-2.0 |
 | [rustls](https://github.com/rustls/rustls), [ring](https://github.com/briansmith/ring) | Secure connections | Apache-2.0, ISC or MIT; Apache-2.0 and ISC |
 | [webpki-roots](https://github.com/rustls/webpki-roots) | Fallback list of trusted certificates | CDLA-Permissive-2.0 |
-| [serde_json](https://github.com/serde-rs/json) | Reading LRCLIB's answers | MIT or Apache-2.0 |
+| [serde_json](https://github.com/serde-rs/json) | Reading LRCLIB's answers and the settings file | MIT or Apache-2.0 |
 | [regex](https://github.com/rust-lang/regex) | Matching timestamps and tags | MIT or Apache-2.0 |
 | [caseless](https://github.com/unicode-rs/rust-caseless) | Comparing text without case, like Python's `casefold` | MIT |
 | [fastrand](https://github.com/smol-rs/fastrand) | Shuffle order | MIT or Apache-2.0 |
-| [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song safely | MIT or Apache-2.0 |
+| [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song, and the settings file, safely | MIT or Apache-2.0 |
 | [Symphonia](https://github.com/pdeljanov/Symphonia) | Decoding audio | MPL-2.0 |
 | [symphonia-adapter-libopus](https://github.com/aschey/symphonia-adapters) | Opus decoding for Symphonia | MIT or Apache-2.0 |
 | [libopus](https://opus-codec.org/) (through [opusic-sys](https://github.com/DoumanAsh/opusic-sys)) | Decoding Opus | BSD-3-Clause |

@@ -12,6 +12,9 @@
 //! - [`queue`]: the playlist, shuffle, repeat, next and previous.
 //! - [`window`]: the main window's texts and rules, such as which lyric line is playing.
 //! - [`theme`]: the dark and light palettes for every accent color.
+//! - [`settings`]: the remembered settings file, and the one-time import from the
+//!   Python app's registry values.
+//! - [`session`]: what is saved between runs and how the last playlist comes back.
 //!
 //! The AI alignment module (`align`) arrives in M7.
 
@@ -23,6 +26,8 @@ mod mpeg;
 mod ogg;
 pub mod py;
 pub mod queue;
+pub mod session;
+pub mod settings;
 pub mod tags;
 pub mod text;
 pub mod theme;

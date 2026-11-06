@@ -4,9 +4,9 @@ A native Rust rewrite of the Windows player in `desktop/`. It is not finished ye
 
 ## Layout
 
-- `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order and the LRCLIB lookup. No UI and no Windows APIs, so it is tested on Linux.
+- `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order, the LRCLIB lookup, and the rules for the settings and session. No UI and no Windows APIs, so it is tested on Linux.
 - `crates/lrc-romaji`: Japanese to romaji (from M5).
-- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), and `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files. Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start.
+- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files, and `src/session.rs` keeps the settings file. Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start, instead of the last session.
 
 ## Building
 
@@ -31,3 +31,7 @@ cargo test -p lrc-player
 The `lrc-core` tests compare against results written by the Python player itself, through `tools/make_fixtures.py` (see `tools/README.md`). CI also makes tagged test songs in all six formats with ffmpeg and checks that mutagen reads back the lyrics `lrc-core` writes. The LRCLIB test needs the internet, so it only runs by hand: `cargo test -p lrc-core -- --ignored`.
 
 On Linux, building the player needs the ALSA headers (`libasound2-dev`) and CMake for libopus. The `lrc-player` tests decode the CI test songs (set `LRC_MEDIA_FIXTURES` as for `lrc-core`). One more test plays through a real sound device, so it only runs by hand: `cargo test -p lrc-player -- --ignored`.
+
+## Settings
+
+The Rust build keeps its settings in `%APPDATA%\LRCOpenPlayer\settings.json`, with the same key names as the Python app (`ui/theme`, `playback/last_track`, …). The first time it starts, it copies the Python app's settings from `HKEY_CURRENT_USER\Software\LRCPlayer\MinimalistLRCPlayer` (all but the window position, a Qt blob). After that the two apps keep their own settings, and the Rust build never writes to the registry. Delete `settings.json` to import again.

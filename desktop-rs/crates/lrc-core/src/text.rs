@@ -294,6 +294,26 @@ pub fn read_lyrics_file(path: impl AsRef<Path>) -> Result<String, LyricsFileErro
     Ok(decode_lyrics_bytes(&data))
 }
 
+/// Writes a .lrc file (`_write_lrc`): UTF-8, with a newline at the end. On Windows the
+/// Python app writes in text mode, which turns every `\n` into `\r\n`; so does this.
+///
+/// The error is the short reason the Python app shows, such as "Permission denied".
+pub fn write_lrc(path: impl AsRef<Path>, text: &str) -> Result<(), String> {
+    write_lrc_with(path.as_ref(), text, cfg!(windows))
+}
+
+/// [`write_lrc`] with the line endings chosen: `crlf` as Python's text mode on Windows.
+pub fn write_lrc_with(path: &Path, text: &str, crlf: bool) -> Result<(), String> {
+    let mut text = text.to_owned();
+    if !text.ends_with('\n') {
+        text.push('\n');
+    }
+    if crlf {
+        text = text.replace('\n', "\r\n");
+    }
+    std::fs::write(path, text.as_bytes()).map_err(|e| strerror(&e).unwrap_or_else(|| e.to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -349,5 +369,25 @@ mod tests {
         );
         std::fs::write(&path, vec![b'a'; LYRICS_FILE_LIMIT as usize]).unwrap();
         assert!(read_lyrics_file(&path).is_ok());
+    }
+
+    #[test]
+    fn writes_lrc_files_like_python() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Song.lrc");
+        write_lrc_with(&path, "[00:01.00]Hi\n[00:02.00]Ho", false).unwrap();
+        assert_eq!(
+            std::fs::read(&path).unwrap(),
+            b"[00:01.00]Hi\n[00:02.00]Ho\n"
+        );
+        write_lrc_with(&path, "[00:01.00]Hi\n", true).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), b"[00:01.00]Hi\r\n");
+        write_lrc_with(&path, "a\r\nb", true).unwrap();
+        // Python's text mode doesn't look at what's before a \n.
+        assert_eq!(std::fs::read(&path).unwrap(), b"a\r\r\nb\r\n");
+        write_lrc_with(&path, "é", false).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), "é\n".as_bytes());
+        let err = write_lrc_with(&dir.path().join("no/such/dir.lrc"), "x", false).unwrap_err();
+        assert_eq!(err, "No such file or directory");
     }
 }
