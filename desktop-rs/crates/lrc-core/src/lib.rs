@@ -15,6 +15,8 @@
 //! - [`settings`]: the remembered settings file, and the one-time import from the
 //!   Python app's registry values.
 //! - [`session`]: what is saved between runs and how the last playlist comes back.
+//! - [`system`]: the tray menu's texts, the media flyout's fields and the error message's rules.
+//! - [`visualizer`]: the spectrum behind the lyrics: FFT, bands and their shapes.
 //!
 //! The AI alignment module (`align`) arrives in M7.
 
@@ -28,9 +30,11 @@ pub mod py;
 pub mod queue;
 pub mod session;
 pub mod settings;
+pub mod system;
 pub mod tags;
 pub mod text;
 pub mod theme;
+pub mod visualizer;
 pub mod window;
 
 /// The name shown in the title bar and in message boxes (`APP_TITLE` in `lrcplayer.py`).

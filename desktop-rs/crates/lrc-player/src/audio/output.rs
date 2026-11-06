@@ -1,8 +1,8 @@
 //! The output stream: the cpal callback that plays the decoded samples and keeps the clock.
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::mpsc::Sender;
+use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, OutputCallbackInfo, SampleFormat, SizedSample, StreamConfig};
@@ -22,6 +22,49 @@ pub struct Shared {
     pub seg_gen: AtomicU64,
     /// Written by the callback: a generation whose audio ran out with nothing after it.
     pub ended_gen: AtomicU64,
+    /// Set by the UI while the visualizer is on: where the callback sends mono copies.
+    pub viz: Mutex<Option<VizTap>>,
+    /// Whether `viz` is worth looking at, so the callback doesn't lock for nothing.
+    pub viz_on: AtomicBool,
+}
+
+/// A block of mono samples the output played, in [`VizTap::samples`] (`QAudioBuffer`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct VizBlock {
+    /// The song position of its first sample, in microseconds.
+    pub start_us: u64,
+    pub frames: usize,
+    pub rate: u32,
+}
+
+/// The sending end of the visualizer's feed. A block's samples go in before its
+/// header, so a reader that sees the header can always read them all. When the reader
+/// falls behind, blocks are dropped whole.
+pub struct VizTap {
+    pub samples: rtrb::Producer<f32>,
+    pub blocks: rtrb::Producer<VizBlock>,
+}
+
+/// The receiving end of [`VizTap`], kept by the UI.
+pub struct VizFeed {
+    pub samples: rtrb::Consumer<f32>,
+    pub blocks: rtrb::Consumer<VizBlock>,
+}
+
+/// A feed that holds about a second of audio at any output rate.
+pub fn viz_channel() -> (VizTap, VizFeed) {
+    let (sp, sc) = rtrb::RingBuffer::new(1 << 18);
+    let (bp, bc) = rtrb::RingBuffer::new(512);
+    (
+        VizTap {
+            samples: sp,
+            blocks: bp,
+        },
+        VizFeed {
+            samples: sc,
+            blocks: bc,
+        },
+    )
 }
 
 impl Shared {
@@ -172,6 +215,12 @@ impl Callback {
         }
 
         let mut written = 0;
+        // Never waits: if the UI is swapping the tap right now, this block isn't shown.
+        let mut tap = if self.shared.viz_on.load(Ordering::Relaxed) {
+            self.shared.viz.try_lock().ok()
+        } else {
+            None
+        };
         if self.shared.playing.load(Ordering::Relaxed) {
             let gain = f32::from_bits(self.shared.gain.load(Ordering::Relaxed));
             while written < data.len() {
@@ -187,6 +236,11 @@ impl Callback {
                 if want > 0 {
                     if let Ok(chunk) = samples.read_chunk(want) {
                         let (a, b) = chunk.as_slices();
+                        if let Some(Some(tap)) = tap.as_deref_mut() {
+                            let start_us =
+                                seg.base_us + self.played * 1_000_000 / u64::from(self.rate.max(1));
+                            send_mono(tap, a, b, self.channels, start_us, self.rate);
+                        }
                         for (o, &s) in data[written..].iter_mut().zip(a.iter().chain(b)) {
                             *o = s * gain;
                         }
@@ -223,6 +277,32 @@ impl Callback {
             .map_or(self.last_gen, |s| s.generation);
         self.shared.seg_gen.store(generation, Ordering::Release);
     }
+}
+
+/// Passes a mono copy of interleaved samples (`a` then `b`) to the visualizer, before
+/// the volume is applied, as Qt's `QAudioBufferOutput` sees the decoded audio.
+fn send_mono(tap: &mut VizTap, a: &[f32], b: &[f32], channels: usize, start_us: u64, rate: u32) {
+    let frames = (a.len() + b.len()) / channels.max(1);
+    if frames == 0 || tap.samples.slots() < frames || tap.blocks.slots() == 0 {
+        return;
+    }
+    let mut frame_sum = 0.0;
+    let mut n = 0;
+    let scale = 1.0 / channels.max(1) as f32;
+    for &s in a.iter().chain(b) {
+        frame_sum += s;
+        n += 1;
+        if n == channels.max(1) {
+            let _ = tap.samples.push(frame_sum * scale);
+            frame_sum = 0.0;
+            n = 0;
+        }
+    }
+    let _ = tap.blocks.push(VizBlock {
+        start_us,
+        frames,
+        rate,
+    });
 }
 
 #[cfg(test)]
@@ -372,6 +452,61 @@ mod tests {
         assert!(buf[20..].iter().all(|&s| s == -0.5));
         assert_eq!(pos_ms(&shared), 10);
         assert_eq!(shared.ended_gen.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn the_visualizer_gets_mono_stamped_with_the_song_position() {
+        let (mut cb, mut tx, shared) = callback();
+        let (tap, mut feed) = viz_channel();
+        *shared.viz.lock().unwrap() = Some(tap);
+        shared.viz_on.store(true, Ordering::Relaxed);
+        shared.playing.store(true, Ordering::Relaxed);
+        shared.gain.store(0.5f32.to_bits(), Ordering::Relaxed);
+        let (mut p, c) = rtrb::RingBuffer::new(64);
+        for i in 0..20 {
+            // Left 0.2, right 0.4 (then 0.6/0.8 for the second half).
+            let base = if i < 10 { 0.2 } else { 0.6 };
+            p.push(base).unwrap();
+            p.push(base + 0.2).unwrap();
+        }
+        tx.push(Segment {
+            generation: 1,
+            base_us: 7_000_000,
+            samples: Some(c),
+            done: Arc::new(AtomicBool::new(false)),
+            immediate: true,
+        })
+        .ok()
+        .unwrap();
+        let mut buf = vec![0.0; 20]; // 10 frames
+        cb.fill(&mut buf, 0);
+        cb.fill(&mut buf, 5_000);
+        let first = feed.blocks.pop().unwrap();
+        let second = feed.blocks.pop().unwrap();
+        assert_eq!(
+            first,
+            VizBlock {
+                start_us: 7_000_000,
+                frames: 10,
+                rate: RATE
+            }
+        );
+        // Stamped with when it plays in the song, not with the latency the clock subtracts.
+        assert_eq!(second.start_us, 7_010_000);
+        let mono: Vec<f32> = (0..20).map(|_| feed.samples.pop().unwrap()).collect();
+        assert!(
+            mono[..10].iter().all(|&s| (s - 0.3).abs() < 1e-6),
+            "{mono:?}"
+        );
+        assert!(
+            mono[10..].iter().all(|&s| (s - 0.7).abs() < 1e-6),
+            "before the volume"
+        );
+
+        // Switched off: nothing more is sent.
+        shared.viz_on.store(false, Ordering::Relaxed);
+        cb.fill(&mut buf, 0);
+        assert!(feed.blocks.pop().is_err());
     }
 
     #[test]

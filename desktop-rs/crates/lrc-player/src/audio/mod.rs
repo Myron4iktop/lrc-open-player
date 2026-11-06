@@ -27,6 +27,7 @@ use std::thread::JoinHandle;
 
 use engine::{Cmd, Engine, EngineEvent};
 use output::Shared;
+pub use output::VizFeed;
 
 /// Like `QMediaPlayer.PlaybackState`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -245,6 +246,25 @@ impl Player {
         if looping != self.looping {
             self.looping = looping;
             self.send(Cmd::SetLooping(looping));
+        }
+    }
+
+    /// Starts sending mono copies of what is played to the visualizer
+    /// (`setAudioBufferOutput`). Replaces any earlier feed.
+    pub fn attach_visualizer(&self) -> VizFeed {
+        let (tap, feed) = output::viz_channel();
+        if let Ok(mut slot) = self.shared.viz.lock() {
+            *slot = Some(tap);
+        }
+        self.shared.viz_on.store(true, Ordering::Relaxed);
+        feed
+    }
+
+    /// Stops the visualizer's feed (`setAudioBufferOutput(None)`).
+    pub fn detach_visualizer(&self) {
+        self.shared.viz_on.store(false, Ordering::Relaxed);
+        if let Ok(mut slot) = self.shared.viz.lock() {
+            *slot = None;
         }
     }
 
