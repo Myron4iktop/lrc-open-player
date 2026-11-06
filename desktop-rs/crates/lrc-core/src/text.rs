@@ -199,9 +199,8 @@ fn decode_single_byte(data: &[u8], upper: &[u16; 128], replace: bool) -> Option<
 /// UTF-32 with replacement characters, as Python's `errors="replace"` gives.
 fn decode_utf32(data: &[u8], big_endian: bool) -> String {
     let mut out = String::with_capacity(data.len() / 4);
-    let mut chunks = data.chunks_exact(4);
-    for chunk in &mut chunks {
-        let bytes = [chunk[0], chunk[1], chunk[2], chunk[3]];
+    let (chunks, rest) = data.as_chunks::<4>();
+    for &bytes in chunks {
         let value = if big_endian {
             u32::from_be_bytes(bytes)
         } else {
@@ -209,7 +208,7 @@ fn decode_utf32(data: &[u8], big_endian: bool) -> String {
         };
         out.push(char::from_u32(value).unwrap_or('\u{fffd}'));
     }
-    if !chunks.remainder().is_empty() {
+    if !rest.is_empty() {
         out.push('\u{fffd}');
     }
     out
