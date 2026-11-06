@@ -59,11 +59,14 @@ jobs:
     needs: fixtures
     runs-on: ubuntu-latest
     env:
-      LRC_MEDIA_FIXTURES: ${{ runner.temp }}/media
       LRC_REQUIRE_MEDIA_FIXTURES: "1"
-      LRC_EMBED_OUT: ${{ runner.temp }}/media/embedded
     steps:
       - uses: actions/checkout@v5
+      # The runner context isn't available in a job's env, so the paths are set here.
+      - name: Point the tests at the test songs
+        run: |
+          echo "LRC_MEDIA_FIXTURES=$RUNNER_TEMP/media" >> "$GITHUB_ENV"
+          echo "LRC_EMBED_OUT=$RUNNER_TEMP/media/embedded" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -93,10 +96,12 @@ jobs:
     needs: fixtures
     runs-on: windows-latest
     env:
-      LRC_MEDIA_FIXTURES: ${{ runner.temp }}/media
       LRC_REQUIRE_MEDIA_FIXTURES: "1"
     steps:
       - uses: actions/checkout@v5
+      - name: Point the tests at the test songs
+        shell: bash
+        run: echo "LRC_MEDIA_FIXTURES=$RUNNER_TEMP/media" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
