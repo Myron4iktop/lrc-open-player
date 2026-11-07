@@ -1144,6 +1144,22 @@ impl fmt::Display for EmbedError {
 
 impl std::error::Error for EmbedError {}
 
+impl EmbedError {
+    /// The song is still held open by something (the player letting go of it, a virus
+    /// scanner), so trying again in a moment may work. Python's `PermissionError`, which
+    /// on Windows also covers a file in use by another program.
+    pub fn is_busy(&self) -> bool {
+        match self {
+            Self::Io(e) => {
+                e.kind() == io::ErrorKind::PermissionDenied
+                    // ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
+                    || (cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 33)))
+            }
+            _ => false,
+        }
+    }
+}
+
 impl From<io::Error> for EmbedError {
     fn from(e: io::Error) -> Self {
         Self::Io(e)
@@ -1201,17 +1217,21 @@ pub fn write_embedded_lyrics(path: &Path, text: &str) -> Result<(), EmbedError> 
         .extension()
         .map(|e| format!(".{}", e.to_string_lossy()))
         .unwrap_or_default();
-    // Closed right away: copying onto a file that is still open fails on Windows. The
-    // path is deleted when `tmp` is dropped, unless it was swapped in.
-    let tmp = tempfile::Builder::new()
-        .prefix(".embedding_")
-        .suffix(&suffix)
-        .tempfile_in(&dir)?
-        .into_temp_path();
-    std::fs::copy(path, &tmp)?;
+    // A plain copy (not a temp file created first): `fs::copy` gives it the song's own
+    // attributes, so nothing marks the swapped-in song as temporary. Deleted on drop,
+    // unless it was swapped in.
+    let guard = loop {
+        let name = format!(".embedding_{}{suffix}", fastrand::u64(..));
+        let candidate = dir.join(name);
+        if !candidate.exists() {
+            break TempCopy(candidate);
+        }
+    };
+    let tmp = guard.0.as_path();
+    std::fs::copy(path, tmp)?;
 
     let options = WriteOptions::default();
-    match open_audio(&tmp)? {
+    match open_audio(tmp)? {
         Audio::Mp4(mut f) => {
             if f.ilst().is_none() {
                 f.set_ilst(Ilst::default());
@@ -1219,7 +1239,7 @@ pub fn write_embedded_lyrics(path: &Path, text: &str) -> Result<(), EmbedError> 
             let ilst = f.ilst_mut().expect("just added");
             let ident = AtomIdent::Fourcc(*b"\xa9lyr");
             ilst.replace_atom(Atom::new(ident, AtomData::UTF8(text.to_owned())));
-            ilst.save_to_path(&tmp, options).map_err(embed_error)?;
+            ilst.save_to_path(tmp, options).map_err(embed_error)?;
         }
         Audio::Mpeg(mut f, _) => {
             if f.id3v2().is_none() {
@@ -1227,7 +1247,7 @@ pub fn write_embedded_lyrics(path: &Path, text: &str) -> Result<(), EmbedError> 
             }
             let tag = f.id3v2_mut().expect("just added");
             set_id3_lyrics(tag, text);
-            tag.save_to_path(&tmp, options).map_err(embed_error)?;
+            tag.save_to_path(tmp, options).map_err(embed_error)?;
         }
         Audio::Wav(mut f) => {
             if f.id3v2().is_none() {
@@ -1235,7 +1255,7 @@ pub fn write_embedded_lyrics(path: &Path, text: &str) -> Result<(), EmbedError> 
             }
             let tag = f.id3v2_mut().expect("just added");
             set_id3_lyrics(tag, text);
-            tag.save_to_path(&tmp, options).map_err(embed_error)?;
+            tag.save_to_path(tmp, options).map_err(embed_error)?;
         }
         Audio::Flac(mut f) => {
             if f.vorbis_comments().is_none() {
@@ -1243,25 +1263,58 @@ pub fn write_embedded_lyrics(path: &Path, text: &str) -> Result<(), EmbedError> 
             }
             set_vorbis_lyrics(f.vorbis_comments_mut().expect("just added"), text);
             // Saved as a whole file, so the FLAC picture blocks are written back too.
-            f.save_to_path(&tmp, options).map_err(embed_error)?;
+            f.save_to_path(tmp, options).map_err(embed_error)?;
         }
         Audio::Vorbis(mut f) => {
             set_vorbis_lyrics(f.vorbis_comments_mut(), text);
             f.vorbis_comments()
-                .save_to_path(&tmp, options)
+                .save_to_path(tmp, options)
                 .map_err(embed_error)?;
         }
         Audio::Opus(mut f, _) => {
             set_vorbis_lyrics(f.vorbis_comments_mut(), text);
             f.vorbis_comments()
-                .save_to_path(&tmp, options)
+                .save_to_path(tmp, options)
                 .map_err(embed_error)?;
         }
     }
 
-    if open_audio(&tmp).is_err() {
+    if open_audio(tmp).is_err() {
         return Err(EmbedError::ReadBack);
     }
-    tmp.persist(path).map_err(|e| EmbedError::Io(e.error))?;
+    swap_in(tmp, path)?;
     Ok(())
+}
+
+/// The copy being written, removed if it isn't swapped in.
+struct TempCopy(PathBuf);
+
+impl Drop for TempCopy {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+/// Puts the written copy in place of the song (`os.replace`).
+///
+/// On Windows, replacing a file by renaming fails ("Access is denied") while anything
+/// still has the song open, even a handle that allows it, unless the rename can use
+/// POSIX semantics. When the rename is refused, the copy's bytes are written over the
+/// song instead: that only needs other handles to allow writing, which players and
+/// indexers usually do. The copy has already been read back, so it is complete.
+fn swap_in(tmp: &Path, path: &Path) -> io::Result<()> {
+    match std::fs::rename(tmp, path) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == io::ErrorKind::PermissionDenied => {
+            let mut src = File::open(tmp)?;
+            // Opening fails before truncating if another program forbids writing.
+            let mut dst = std::fs::OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .open(path)?;
+            io::copy(&mut src, &mut dst)?;
+            dst.sync_all()
+        }
+        Err(e) => Err(e),
+    }
 }
