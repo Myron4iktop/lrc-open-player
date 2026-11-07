@@ -12,8 +12,16 @@ build = "build.rs"
 name = "LRCOpenPlayer"
 path = "src/main.rs"
 
+# The dictionary romaji uses: UniDic (cutlet's) or IPADIC (the Android app's). Build the
+# IPADIC one with `--no-default-features --features ipadic`.
+[features]
+default = ["unidic"]
+unidic = ["lrc-romaji/unidic"]
+ipadic = ["lrc-romaji/ipadic"]
+
 [dependencies]
 lrc-core.workspace = true
+lrc-romaji.workspace = true
 slint.workspace = true
 # Lets Slint decode `desktop/favicon.ico` for the window icon (it reads PNG and JPEG only by default).
 image = { version = "0.25", default-features = false, features = ["ico"] }

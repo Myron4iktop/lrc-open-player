@@ -45,6 +45,11 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [rfd](https://github.com/PolyMeilex/rfd) | File dialogs | MIT |
 | [windows](https://github.com/microsoft/windows-rs) | Windows APIs | MIT or Apache-2.0 |
 | [winresource](https://github.com/BenjaminRi/winresource) (build only) | Putting the icon into the `.exe` | MIT |
+| [Lindera](https://github.com/lindera/lindera) | Splitting Japanese into words | MIT |
+| [UniDic](https://clrd.ninjal.ac.jp/unidic/) (unidic-mecab 2.1.2, embedded by default) | Japanese dictionary | BSD-3-Clause, LGPL-2.1 or GPL-2.0 |
+| [IPADIC](https://taku910.github.io/mecab/) (mecab-ipadic 2.7.0, embedded in the `ipadic` build) | Japanese dictionary | IPADIC license |
+| [cutlet](https://github.com/polm/cutlet) (its rules and kana tables, ported to Rust) | Japanese to romaji | MIT |
+| [unicode-normalization](https://github.com/unicode-rs/unicode-normalization) | Normalizing Japanese text before romaji | MIT or Apache-2.0 |
 
 ## LRC Companion (Android)
 

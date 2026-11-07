@@ -7,6 +7,18 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
-# Lindera and its embedded dictionary arrive in M5. It downloads the dictionary while
-# building, so this crate is left out of `default-members` and out of the core test job.
+# Lindera embeds its dictionary in the binary and downloads it while building, so this
+# crate stays out of `default-members` and out of the core test job. Pick one dictionary:
+# `unidic` (the default; the family cutlet uses) or `ipadic` (the Android app's).
+[features]
+default = ["unidic"]
+unidic = ["lindera/embed-unidic"]
+ipadic = ["lindera/embed-ipadic"]
+
 [dependencies]
+lrc-core.workspace = true
+lindera = { version = "6.2", default-features = false }
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+serde_json = "1"

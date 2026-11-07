@@ -46,6 +46,8 @@ jobs:
       - run: pip install -r tools/requirements.txt
       - name: Check that tests/fixtures/pure.json matches the Python app
         run: python tools/make_fixtures.py pure --check
+      - name: Check that the romaji samples match the Python app's cutlet
+        run: python tools/make_fixtures.py romaji crates/lrc-romaji/tests/fixtures/lrc crates/lrc-romaji/tests/fixtures/romaji.json --check
       - name: Make tagged songs in all six formats
         run: python tools/make_fixtures.py media "$RUNNER_TEMP/media"
       - uses: actions/upload-artifact@v4
@@ -84,6 +86,17 @@ jobs:
       - run: cargo test -p lrc-core --locked
       # Decoding and seeking in every format, resampling and the output clock (no sound device needed).
       - run: cargo test -p lrc-player --locked
+      # Romaji with each dictionary. Lindera downloads it while building.
+      - run: cargo test -p lrc-romaji --locked
+      - run: cargo test -p lrc-romaji --locked --no-default-features --features ipadic
+      - name: Compare the romaji with cutlet's, for both dictionaries
+        run: |
+          for dict in unidic ipadic; do
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cargo run -q -p lrc-romaji --release --locked --no-default-features --features "$dict" \
+              --example compare -- crates/lrc-romaji/tests/fixtures/romaji.json | tee -a "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -119,8 +132,26 @@ jobs:
       - run: cargo test -p lrc-core --locked
       - run: cargo test -p lrc-player --locked
       - run: cargo build -p lrc-player --release --locked
+      - name: Keep the UniDic build
+        shell: bash
+        run: mkdir -p out/unidic && cp target/release/LRCOpenPlayer.exe out/unidic/
+      # The same player with IPADIC for romaji, to compare (decision 2 in the port plan).
+      - run: cargo build -p lrc-player --release --locked --no-default-features --features ipadic
+      - name: Record the size of each build
+        shell: bash
+        run: |
+          mkdir -p out/ipadic && cp target/release/LRCOpenPlayer.exe out/ipadic/
+          for dict in unidic ipadic; do
+            bytes=$(stat -c %s "out/$dict/LRCOpenPlayer.exe")
+            echo "LRCOpenPlayer.exe with $dict: $bytes bytes ($((bytes / 1048576)) MB)" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: LRCOpenPlayer
-          path: desktop-rs/target/release/LRCOpenPlayer.exe
+          path: desktop-rs/out/unidic/LRCOpenPlayer.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LRCOpenPlayer-ipadic
+          path: desktop-rs/out/ipadic/LRCOpenPlayer.exe
           if-no-files-found: error
