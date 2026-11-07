@@ -761,6 +761,7 @@ export component TranslationDialog inherits Window {
 
                                 Text {
                                     horizontal-stretch: 1;
+                                    preferred-width: 0px;
                                     text: "Sung line";
                                     color: Theme.muted;
                                     font-size: 12px;
@@ -770,6 +771,7 @@ export component TranslationDialog inherits Window {
 
                                 Text {
                                     horizontal-stretch: 1;
+                                    preferred-width: 0px;
                                     text: "Translation";
                                     color: Theme.muted;
                                     font-size: 12px;
@@ -827,6 +829,8 @@ export component TranslationDialog inherits Window {
 
                                         Rectangle {
                                             horizontal-stretch: 1;
+                                            min-width: 0px;
+                                            preferred-width: 0px;
                                             Text {
                                                 width: 100%;
                                                 text: row.sung;
@@ -855,20 +859,25 @@ export component TranslationDialog inherits Window {
 
                                         Rectangle {
                                             horizontal-stretch: 1;
-                                            min-height: root.editing == i ? 28px : 0px;
-                                            if root.editing != i: Text {
-                                                // Explicit: inside `if`, a percentage width is lost and the
-                                                // text was centred.
-                                                x: 0px;
-                                                y: 0px;
+                                            min-width: 0px;
+                                            preferred-width: 0px;
+                                            // The text sits in a layout, not under `if`, so it is
+                                            // left-aligned and its wrapped height makes the row taller.
+                                            VerticalLayout {
                                                 width: parent.width;
-                                                text: row.translation;
-                                                color: sel ? Theme.sel-text : row.repeat ? Theme.faint : Theme.text-soft;
-                                                font-size: 13px;
-                                                wrap: word-wrap;
-                                                vertical-alignment: top;
+                                                Text {
+                                                    min-height: root.editing == i ? 28px : 0px;
+                                                    opacity: root.editing == i ? 0 : 1;
+                                                    text: row.translation;
+                                                    color: sel ? Theme.sel-text : row.repeat ? Theme.faint : Theme.text-soft;
+                                                    font-size: 13px;
+                                                    wrap: word-wrap;
+                                                    horizontal-alignment: left;
+                                                    vertical-alignment: top;
+                                                }
                                             }
-                                            if root.editing != i: TouchArea {
+                                            TouchArea {
+                                                enabled: root.editing != i;
                                                 clicked => {
                                                     root.selected = i;
                                                     keys.focus();
@@ -885,7 +894,9 @@ export component TranslationDialog inherits Window {
                                             }
                                             if root.editing == i: field := LineEdit {
                                                 x: 0px;
+                                                y: 0px;
                                                 width: parent.width;
+                                                height: parent.height;
                                                 text: row.translation;
                                                 font-size: 13px;
                                                 init => {
