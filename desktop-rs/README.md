@@ -5,7 +5,7 @@ A native Rust rewrite of the Windows player in `desktop/`. It is not finished ye
 ## Layout
 
 - `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order, the LRCLIB lookup, and the rules for the settings and session. No UI and no Windows APIs, so it is tested on Linux.
-- `crates/lrc-romaji`: Japanese to romaji (from M5).
+- `crates/lrc-romaji`: Japanese to romaji. It ports the Python app's cutlet rules and splits words with Lindera, which embeds its Japanese dictionary in the `.exe`: UniDic by default (cutlet's dictionary), or IPADIC (the Android app's) with `--no-default-features --features ipadic`.
 - `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files, and `src/session.rs` keeps the settings file. Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start, instead of the last session.
 
 ## Building
@@ -19,6 +19,8 @@ cargo build --release -p lrc-player
 
 The finished program is `desktop-rs/target/release/LRCOpenPlayer.exe`. Every pull request also builds it on GitHub: open the run under **Actions → desktop-rs** and download the `LRCOpenPlayer` artifact.
 
+Lindera downloads its dictionary from lindera.dev while building `lrc-romaji` (and so `lrc-player`), so that build needs the internet. `cargo test -p lrc-core` doesn't.
+
 Checks that CI runs:
 
 ```
@@ -26,6 +28,16 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test -p lrc-core
 cargo test -p lrc-player
+cargo test -p lrc-romaji
+cargo test -p lrc-romaji --no-default-features --features ipadic
+```
+
+To see how close the romaji is to the Python app's on your own lyrics, run the Python app's converter over a folder of `.lrc` files, then compare:
+
+```
+python tools/make_fixtures.py romaji "D:\Music" romaji.json
+cargo run -p lrc-romaji --release --example compare -- romaji.json
+cargo run -p lrc-romaji --release --no-default-features --features ipadic --example compare -- romaji.json
 ```
 
 The `lrc-core` tests compare against results written by the Python player itself, through `tools/make_fixtures.py` (see `tools/README.md`). CI also makes tagged test songs in all six formats with ffmpeg and checks that mutagen reads back the lyrics `lrc-core` writes. The LRCLIB test needs the internet, so it only runs by hand: `cargo test -p lrc-core -- --ignored`.

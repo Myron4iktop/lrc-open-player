@@ -1,0 +1,621 @@
+{
+ "cutlet": "0.5.2",
+ "unidic_lite": "1.0.8",
+ "lines": [
+  {
+   "file": "sample-1.lrc",
+   "text": "そう僕らは今",
+   "romaji": "Sou bokura wa ima"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "ただ君との未来を",
+   "romaji": "Tada kimi to no mirai wo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "消えてしまった夢の続きを",
+   "romaji": "Kiete shimatta yume no tsuzuki wo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "止まった時計の針が動き出す",
+   "romaji": "Tomatta tokei no hari ga ugoki dasu"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "僕らは歩いていく",
+   "romaji": "Bokura wa aruite iku"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "「愛してる」って言った",
+   "romaji": "\"aishiteru\" tte itta"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "Hello 世界 I'm here",
+   "romaji": "Hello sekai I'm here"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "こんにちは、世界！",
+   "romaji": "Konnichiha, sekai!"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "夜空に輝く星たちよ",
+   "romaji": "Yozora ni kagayaku hoshitachi yo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "どこまでも走っていこう",
+   "romaji": "Doko made mo hashitte ikou"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "涙の数だけ強くなれる",
+   "romaji": "Namida no kazu dake tsuyoku nareru"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "明日はきっと晴れるから",
+   "romaji": "Asu wa kitto harerukara"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "忘れないで、あの日の約束",
+   "romaji": "Wasurenaide, ano hi no yakusoku"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "ありがとう　さよなら",
+   "romaji": "Arigatou sayonara"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "君の笑顔が見たくて",
+   "romaji": "Kimi no egao ga mitakute"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "ずっとずっと一緒にいたい",
+   "romaji": "Zutto zutto issho ni itai"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "風が吹いて花が咲く",
+   "romaji": "Kaze ga fuite hana ga saku"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "東京の街に雪が降る",
+   "romaji": "Tokyo no machi ni yuki ga furu"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "Oh yeah 今夜は眠れない",
+   "romaji": "Oh yeah kon'ya wa nemurenai"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "もう一度だけ会いたいよ",
+   "romaji": "Mou ichi do dake aitai yo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "僕はここにいるよ",
+   "romaji": "Boku wa koko ni iru yo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "心の中で叫んでいた",
+   "romaji": "Kokoro no naka de sakende ita"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "キミのことが好きだった",
+   "romaji": "Kimi no koto ga suki datta"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "ラララ　歌おう",
+   "romaji": "Rarara utaou"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "青い空の下で",
+   "romaji": "Aoi sora no shita de"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "遠く離れていても",
+   "romaji": "Tooku hanarete ite mo"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "信じることを諦めないで",
+   "romaji": "Shinjiru koto wo akiramenaide"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "時間よ止まれ",
+   "romaji": "Jikan yo tomare"
+  },
+  {
+   "file": "sample-1.lrc",
+   "text": "光の中へ飛び込んでいけ",
+   "romaji": "Hikari no naka e tobikonde ike"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "桜の花びらが舞い散る季節",
+   "romaji": "Sakura no hanabira ga maichiru kisetsu"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "君と出会ったあの春の日",
+   "romaji": "Kimi to deatta ano haru no hi"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "夢を見ていたんだ",
+   "romaji": "Yume wo mite ita n da"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "甘くて切ないメロディー",
+   "romaji": "Amakute setsunai merodii"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "胸がドキドキしてる",
+   "romaji": "Mune ga dokidoki shiteru"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "私たちの物語は終わらない",
+   "romaji": "Watakushitachi no monogatari wa owaranai"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "大切なものは目に見えない",
+   "romaji": "Taisetsu na mono wa me ni mienai"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "一人じゃないって気づいたんだ",
+   "romaji": "Hitori ja nai tte kizuita n da"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "優しい嘘をついた",
+   "romaji": "Yasashii uso wo tsuita"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "真っ白な世界で",
+   "romaji": "Masshiro na sekai de"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "どうして泣いているの？",
+   "romaji": "Dou shite naite iru no?"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "運命なんて信じない",
+   "romaji": "Unmei nante shinjinai"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "ねえ、聞こえる？",
+   "romaji": "Nee, kikoeru?"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "さあ、行こう！",
+   "romaji": "Saa, ikou!"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "永遠に続く道",
+   "romaji": "Eien ni tsuzuku michi"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "月が綺麗ですね",
+   "romaji": "Tsuki ga kirei desu ne"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "楽しかった日々を思い出す",
+   "romaji": "Tanoshikatta hibi wo omoidasu"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "君がいない毎日は寂しい",
+   "romaji": "Kimi ga inai mainichi wa sabishii"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "思い出の写真を見つめて",
+   "romaji": "Omoide no shashin wo mitsumete"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "もっと強くなりたい",
+   "romaji": "Motto tsuyoku naritai"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "新しい朝が来た",
+   "romaji": "Atarashii asa ga kita"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "ふたりで見た景色",
+   "romaji": "Futari de mita keshiki"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "届かない想いを抱いて",
+   "romaji": "Todokanai omoi wo idaite"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "言葉にできない気持ち",
+   "romaji": "Kotoba ni dekinai kimochi"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "ぎゅっと抱きしめて",
+   "romaji": "Gyut to dakishimete"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "ちょっと待って",
+   "romaji": "Chotto matte"
+  },
+  {
+   "file": "sample-2.lrc",
+   "text": "しょうがないじゃん",
+   "romaji": "Shou ga nai jan"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "Let's go! 未来へ",
+   "romaji": "Let's go! mirai e"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ドアを開けて外へ出よう",
+   "romaji": "Doa wo akete soto e deyou"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "コーヒーを飲みながら",
+   "romaji": "Koohii wo nominagara"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "チョコレートケーキが食べたい",
+   "romaji": "Chokoreeto keeki ga tabetai"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "スーパースターになるんだ",
+   "romaji": "Suupaasutaa ni naru n da"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ヴァイオリンの音色",
+   "romaji": "Vaiorin no neiro"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ファンタジーの世界",
+   "romaji": "Fantajii no sekai"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ティーカップに紅茶を",
+   "romaji": "Tii kappu ni koucha wo"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ウェディングドレス",
+   "romaji": "Edingu doresu"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "パーティーは終わった",
+   "romaji": "Paatii wa owatta"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "2人の距離",
+   "romaji": "2nin no kyori"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "100年後の君へ",
+   "romaji": "100 nengo no kimi e"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "1、2、3で飛び出せ",
+   "romaji": "1, 2, 3 de tobidase"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "田中さんと山田さん",
+   "romaji": "Tanakasan to Yamadasan"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "大阪から京都へ",
+   "romaji": "Osaka kara Kyoto e"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "日本の夏",
+   "romaji": "Nippon no natsu"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "お母さんの手料理",
+   "romaji": "Ohahasan no te ryouri"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "お願い、神様",
+   "romaji": "Onegai, kamisama"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "私、頑張るから",
+   "romaji": "Watakushi, ganbarukara"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "今日も明日も明後日も",
+   "romaji": "Kyou mo asu mo myougonichi mo"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "眠れない夜は",
+   "romaji": "Nemurenai yoru wa"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "行かないで",
+   "romaji": "Ikanaide"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "逃げちゃいけない",
+   "romaji": "Nigecha ikenai"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "分かってるよ",
+   "romaji": "Wakatteru yo"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "見つけてくれてありがとう",
+   "romaji": "Mitsukete kurete arigatou"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "走れ走れ",
+   "romaji": "Hashire hashire"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "何度でも立ち上がる",
+   "romaji": "Nan do de mo tachiagaru"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "僕たちは生きている",
+   "romaji": "Bokutachi wa ikite iru"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "生まれ変わっても",
+   "romaji": "Umarekawatte mo"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "人生は一度きり",
+   "romaji": "Jinsei wa ichi do kiri"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "夢を大きく持とう",
+   "romaji": "Yume wo ookiku motou"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ｶﾀｶﾅ　ﾊﾝｶｸ",
+   "romaji": "Katakanahan Kaku"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "Ｆｕｌｌ ｗｉｄｔｈ 文字",
+   "romaji": "Full width moji"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "あぁ、もう嫌だ",
+   "romaji": "A, mou iya da"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "ええっ？本当に？",
+   "romaji": "Ee?? hontou ni?"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "わーい！やったー！",
+   "romaji": "Waai! yattaa!"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "うわぁぁぁ",
+   "romaji": "Uwaaa"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "そっか、そうなんだ",
+   "romaji": "Sok ka, sou na n da"
+  },
+  {
+   "file": "sample-3.lrc",
+   "text": "だって好きなんだもん",
+   "romaji": "Da tte suki na n da mon"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "空を見上げれば",
+   "romaji": "Sora wo miagereba"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "星が瞬いている",
+   "romaji": "Hoshi ga shibatataite iru"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "君の名前を呼んだ",
+   "romaji": "Kimi no namae wo yonda"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "静かな夜に",
+   "romaji": "Shizuka na yoru ni"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "戦うことを選んだ",
+   "romaji": "Tatakau koto wo eranda"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "この手で守りたい",
+   "romaji": "Kono te de mamoritai"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "世界中の誰よりも",
+   "romaji": "Sekaichuu no dare yori mo"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "きっと君は来ない",
+   "romaji": "Kitto kimi wa konai"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "一人きりの帰り道",
+   "romaji": "Hitori kiri no kaerimichi"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "雨が上がったら",
+   "romaji": "Ame ga agattara"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "虹が見えるだろう",
+   "romaji": "Niji ga mierudarou"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "私の願いを聞いて",
+   "romaji": "Watakushi no negai wo kiite"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "止まらないで",
+   "romaji": "Tomaranaide"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "あと少しだけ",
+   "romaji": "Ato sukoshi dake"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "前を向いて",
+   "romaji": "Mae wo muite"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "どんなに離れてても",
+   "romaji": "Donna ni hanaretete mo"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "心はそばにいるよ",
+   "romaji": "Kokoro wa soba ni iru yo"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "追いかけて追いかけて",
+   "romaji": "Oikakete oikakete"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "手を伸ばせば届きそう",
+   "romaji": "Te wo nobaseba todoki sou"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "影を踏まないように",
+   "romaji": "Kage wo fumanai you ni"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "炎のように燃えて",
+   "romaji": "Honoo no you ni moete"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "鳥になって飛んでいきたい",
+   "romaji": "Tori ni natte tonde ikitai"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "海の向こうに",
+   "romaji": "Umi no mukou ni"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "懐かしい歌が聞こえる",
+   "romaji": "Natsukashii uta ga kikoeru"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "思いっきり笑って",
+   "romaji": "Omoikkiri waratte"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "やっぱり君が好き",
+   "romaji": "Yappari kimi ga suki"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "言ったでしょ？",
+   "romaji": "Ittadesho?"
+  },
+  {
+   "file": "sample-4.lrc",
+   "text": "気持ちいい風",
+   "romaji": "Kimochi ii kaze"
+  }
+ ]
+}

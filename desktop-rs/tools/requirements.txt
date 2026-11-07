@@ -2,3 +2,5 @@
 # the Python app does. Keep these inside the ranges in desktop/requirements.txt.
 PyQt6==6.12.0
 mutagen==1.48.1
+cutlet==0.5.2
+unidic-lite==1.0.8
