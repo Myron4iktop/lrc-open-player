@@ -132,26 +132,13 @@ jobs:
       - run: cargo test -p lrc-core --locked
       - run: cargo test -p lrc-player --locked
       - run: cargo build -p lrc-player --release --locked
-      - name: Keep the UniDic build
-        shell: bash
-        run: mkdir -p out/unidic && cp target/release/LRCOpenPlayer.exe out/unidic/
-      # The same player with IPADIC for romaji, to compare (decision 2 in the port plan).
-      - run: cargo build -p lrc-player --release --locked --no-default-features --features ipadic
-      - name: Record the size of each build
+      - name: Record the size of the exe
         shell: bash
         run: |
-          mkdir -p out/ipadic && cp target/release/LRCOpenPlayer.exe out/ipadic/
-          for dict in unidic ipadic; do
-            bytes=$(stat -c %s "out/$dict/LRCOpenPlayer.exe")
-            echo "LRCOpenPlayer.exe with $dict: $bytes bytes ($((bytes / 1048576)) MB)" | tee -a "$GITHUB_STEP_SUMMARY"
-          done
+          bytes=$(stat -c %s target/release/LRCOpenPlayer.exe)
+          echo "LRCOpenPlayer.exe: $bytes bytes ($((bytes / 1048576)) MB)" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: LRCOpenPlayer
-          path: desktop-rs/out/unidic/LRCOpenPlayer.exe
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
-          name: LRCOpenPlayer-ipadic
-          path: desktop-rs/out/ipadic/LRCOpenPlayer.exe
+          path: desktop-rs/target/release/LRCOpenPlayer.exe
           if-no-files-found: error

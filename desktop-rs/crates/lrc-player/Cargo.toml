@@ -12,8 +12,9 @@ build = "build.rs"
 name = "LRCOpenPlayer"
 path = "src/main.rs"
 
-# The dictionary romaji uses: UniDic (cutlet's) or IPADIC (the Android app's). Build the
-# IPADIC one with `--no-default-features --features ipadic`.
+# The dictionary romaji uses. Releases use UniDic, cutlet's dictionary, so the romaji reads
+# like the Python app's (decision 2 in the port plan). IPADIC (the Android app's) is kept
+# for comparing: `--no-default-features --features ipadic`.
 [features]
 default = ["unidic"]
 unidic = ["lrc-romaji/unidic"]

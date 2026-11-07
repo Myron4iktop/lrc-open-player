@@ -17,7 +17,7 @@ cd desktop-rs
 cargo build --release -p lrc-player
 ```
 
-The finished program is `desktop-rs/target/release/LRCOpenPlayer.exe`. Every pull request also builds it on GitHub: open the run under **Actions → desktop-rs** and download the `LRCOpenPlayer` artifact (`LRCOpenPlayer-ipadic` is the same player with the IPADIC dictionary for romaji).
+The finished program is `desktop-rs/target/release/LRCOpenPlayer.exe`. Every pull request also builds it on GitHub: open the run under **Actions → desktop-rs** and download the `LRCOpenPlayer` artifact.
 
 Lindera downloads its dictionary from lindera.dev while building `lrc-romaji` (and so `lrc-player`), so that build needs the internet. `cargo test -p lrc-core` doesn't.
 
