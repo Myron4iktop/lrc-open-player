@@ -10,17 +10,34 @@ use slint::winit_030::{EventResult, WinitWindowAccessor, winit};
 use crate::MainWindow;
 use crate::app::App;
 
-/// Passes files dragged over the window to the app (`dragEnterEvent`, `dropEvent`).
+/// Watches the window's system events: files dragged over it and the window coming back
+/// from the taskbar.
 ///
-/// winit reports each file on its own: `HoveredFile` for every file being dragged, then
-/// `DroppedFile` for each one, or `HoveredFileCancelled` when the drag leaves.
-pub fn hook_file_drops(ui: &MainWindow, app: &Rc<RefCell<App>>) {
+/// Drops go to the app (`dragEnterEvent`, `dropEvent`). winit reports each file on its
+/// own: `HoveredFile` for every file being dragged, then `DroppedFile` for each one, or
+/// `HoveredFileCancelled` when the drag leaves.
+pub fn hook_window_events(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     let weak_app = Rc::downgrade(app);
     let weak_ui = ui.as_weak();
     ui.window().on_winit_window_event(move |_, event| {
         let (Some(app), Some(ui)) = (weak_app.upgrade(), weak_ui.upgrade()) else {
             return EventResult::Propagate;
         };
+        match event {
+            winit::event::WindowEvent::Occluded(false)
+            | winit::event::WindowEvent::Focused(true) => {
+                repaint_all(&ui);
+                // Once more after Windows has finished restoring the window.
+                let weak = ui.as_weak();
+                slint::Timer::single_shot(std::time::Duration::from_millis(150), move || {
+                    if let Some(ui) = weak.upgrade() {
+                        repaint_all(&ui);
+                    }
+                });
+            }
+            winit::event::WindowEvent::Resized(_) => repaint_all(&ui),
+            _ => {}
+        }
         let Ok(mut app) = app.try_borrow_mut() else {
             return EventResult::Propagate;
         };
@@ -32,6 +49,15 @@ pub fn hook_file_drops(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         }
         EventResult::Propagate
     });
+}
+
+/// Makes the next frame repaint the whole window (see `repaint-count` in main.slint).
+///
+/// After the window is restored from the taskbar, the renderer sometimes drew only the
+/// parts it thought had changed into a fresh buffer, and the rest showed the desktop.
+fn repaint_all(ui: &MainWindow) {
+    ui.set_repaint_count(ui.get_repaint_count().wrapping_add(1));
+    ui.window().request_redraw();
 }
 
 /// Matches the Windows title bar to the theme (`_apply_title_bar`; Windows 10 2004+ and 11).

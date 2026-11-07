@@ -29,7 +29,7 @@ fn main() -> Result<(), slint::PlatformError> {
     #[cfg(windows)]
     platform::set_icons_from_exe(&window);
     platform::apply_title_bar(&window, window.global::<Theme>().get_dark());
-    platform::hook_file_drops(&window, &app);
+    platform::hook_window_events(&window, &app);
     window.invoke_focus_window();
     // Developer aid in debug builds only: `LRC_DEV_OPEN=<folder or song>` opens it at
     // start, for checking the window without a file dialog.
