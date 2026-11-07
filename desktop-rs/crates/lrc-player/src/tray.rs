@@ -51,7 +51,10 @@ mod none {
     pub struct Tray;
 
     impl Tray {
-        pub fn new(_texts: TrayTexts, _on_command: impl Fn(TrayCommand) + 'static) -> Option<Self> {
+        pub fn new(
+            _texts: TrayTexts,
+            _on_command: impl Fn(TrayCommand) + Send + 'static,
+        ) -> Option<Self> {
             None
         }
         pub fn update(&self, _: TrayTexts, _: bool) {}
