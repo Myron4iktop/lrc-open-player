@@ -1,8 +1,10 @@
-//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py, minus what later
-//! milestones bring (romaji, editors).
+//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py, minus romaji (M5).
+//! The lyrics editors and the AI settings window are in [`editors`].
 //!
 //! The rules live in `lrc-core` (`queue`, `window`, `lrc`, `theme`) and are tested there;
 //! this file wires them to the Slint window and the audio engine.
+
+mod editors;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -121,6 +123,10 @@ pub struct App {
     window_hidden: bool,
     /// Quit was asked for: closing the window really quits (`_quitting`).
     quit_requested: bool,
+    /// "Sync lyrics", "Add translation" and "AI alignment", while open.
+    sync: Option<editors::SyncWindow>,
+    translate: Option<editors::TranslateWindow>,
+    ai_window: Option<editors::AiWindow>,
 }
 
 /// The timers the app runs on; keep them alive as long as the window.
@@ -172,6 +178,9 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         close_to_tray: false,
         window_hidden: false,
         quit_requested: false,
+        sync: None,
+        translate: None,
+        ai_window: None,
     }));
     APP.with(|a| *a.borrow_mut() = Rc::downgrade(&app));
     // Before the settings come back, which turn close-to-tray on only if there is a tray.
@@ -308,6 +317,9 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     let weak = Rc::downgrade(app);
     ui.on_embed_lyrics(move || embed_shown_lyrics(&weak));
     on!(on_show_shortcuts, |a, _ui| a.show_shortcuts());
+    on!(on_open_sync, |a, ui| a.open_sync_dialog(ui));
+    on!(on_open_translation, |a, ui| a.open_translation_dialog(ui));
+    on!(on_open_ai_settings, |a, ui| a.open_ai_settings(ui));
     on!(on_set_theme, |a, ui, theme| {
         let accent = a.accent;
         a.apply_theme(ui, &theme, accent, true)
@@ -362,9 +374,12 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     let weak = Rc::downgrade(app);
     ui.window().on_close_requested(move || {
         // Either way the window goes; only a real close stops the event loop.
-        let mut to_tray = false;
+        let to_tray = with_app_ret(&weak, |a, _ui| a.close_to_tray()).unwrap_or(false);
+        // Unsaved edits: the user may choose to keep editing.
+        if !to_tray && !editors::try_close_editors() {
+            return slint::CloseRequestResponse::KeepWindowShown;
+        }
         with_app(&weak, |a, ui| {
-            to_tray = a.close_to_tray();
             if to_tray {
                 a.close_to_tray_now(ui);
             } else {
@@ -575,6 +590,7 @@ impl App {
         if let Some(dialog) = &self.question {
             fill_theme(&dialog.global::<Theme>(), &p);
         }
+        self.theme_editors(&p);
         ui.invoke_sync_color_scheme();
         ui.set_theme_key(self.theme.into());
         ui.set_accent_key(self.accent.into());
@@ -1576,6 +1592,7 @@ impl App {
         if let Some(dialog) = &self.question {
             let _ = dialog.hide();
         }
+        self.close_editors();
     }
 
     // -------------------------------------------------------------------------
@@ -1651,9 +1668,11 @@ impl App {
                     }
                 }
                 Event::StateChanged(state) => self.playback_state_changed(&ui, state),
-                // `_on_media_status_changed`: no editors yet (M7), so nothing holds a song.
+                // `_on_media_status_changed`.
                 Event::EndOfMedia => {
-                    if self.queue.repeat() == Repeat::Track {
+                    if self.editor_open() {
+                        // stay on the song whose lyrics are being edited
+                    } else if self.queue.repeat() == Repeat::Track {
                         self.player.seek(0);
                         self.player.play();
                     } else if self.queue.has_next() {
@@ -1852,7 +1871,14 @@ impl App {
                     self.set_repeat(ui, r, true);
                 }
                 TrayItem::Window => self.toggle_window(ui),
-                TrayItem::Quit => self.quit_app(ui),
+                TrayItem::Quit => {
+                    // Asked after this callback, so the app isn't borrowed while asking.
+                    Timer::single_shot(Duration::ZERO, || {
+                        if editors::try_close_editors() {
+                            app_call(|a, ui| a.quit_app(ui));
+                        }
+                    });
+                }
             },
         }
     }

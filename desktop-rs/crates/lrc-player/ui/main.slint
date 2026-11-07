@@ -12,6 +12,7 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
 export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
+export { SyncDialog, SyncRowData, TranslationDialog, TranslationRowData, AiSettingsDialog, AnswerDialog } from "editors.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -102,6 +103,9 @@ export component MainWindow inherits Window {
     callback set-visualizer(string);
     callback cycle-visualizer();
     callback set-close-to-tray(bool);
+    callback open-sync();
+    callback open-translation();
+    callback open-ai-settings();
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -162,6 +166,14 @@ export component MainWindow inherits Window {
                 }
                 if k == "i" && !event.modifiers.shift && root.has-track {
                     root.show-details();
+                    return accept;
+                }
+                if k == "t" && event.modifiers.shift && root.has-track {
+                    root.open-translation();
+                    return accept;
+                }
+                if k == "t" && root.has-track {
+                    root.open-sync();
                     return accept;
                 }
             }
@@ -294,12 +306,18 @@ export component MainWindow inherits Window {
 
                                 MenuItem {
                                     title: "Sync lyrics…";
-                                    enabled: false;
+                                    enabled: root.has-track;
+                                    activated => {
+                                        root.open-sync();
+                                    }
                                 }
 
                                 MenuItem {
                                     title: "Add translation…";
-                                    enabled: false;
+                                    enabled: root.has-track;
+                                    activated => {
+                                        root.open-translation();
+                                    }
                                 }
 
                                 MenuItem {
@@ -453,7 +471,9 @@ export component MainWindow inherits Window {
 
                                 MenuItem {
                                     title: "AI alignment…";
-                                    enabled: false;
+                                    activated => {
+                                        root.open-ai-settings();
+                                    }
                                 }
 
                                 MenuItem {

@@ -145,5 +145,49 @@ pub fn window_handle(ui: &MainWindow) -> Option<isize> {
 
 /// `raise_()` and `activateWindow()`: brings the window back in front of the others.
 pub fn bring_to_front(ui: &MainWindow) {
-    ui.window().with_winit_window(|w| w.focus_window());
+    raise(ui.window());
+}
+
+/// `raise_()` + `activateWindow()` for any window (the editors).
+pub fn raise(window: &slint::Window) {
+    window.with_winit_window(|w| w.focus_window());
+}
+
+/// `QDesktopServices.openUrl`: opens a web page in the default browser.
+pub fn open_url(url: &str) {
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Shell::ShellExecuteW;
+        use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+        use windows::core::HSTRING;
+        // SAFETY: plain strings in, nothing kept.
+        unsafe {
+            ShellExecuteW(
+                None,
+                &HSTRING::from("open"),
+                &HSTRING::from(url),
+                None,
+                None,
+                SW_SHOWNORMAL,
+            );
+        }
+    }
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let _ = std::process::Command::new("xdg-open").arg(url).spawn();
+}
+
+/// The encryption for saved API keys: DPAPI on Windows, none elsewhere (keys saved
+/// encrypted then read as empty, as in the Python app).
+pub fn cipher() -> Option<&'static dyn lrc_core::ai::Cipher> {
+    #[cfg(windows)]
+    {
+        static DPAPI: crate::win::dpapi::Dpapi = crate::win::dpapi::Dpapi;
+        Some(&DPAPI)
+    }
+    #[cfg(not(windows))]
+    {
+        None
+    }
 }
