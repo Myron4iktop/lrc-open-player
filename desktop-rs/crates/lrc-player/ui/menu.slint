@@ -1,0 +1,276 @@
+// The drop-down menus of the Open, Lyrics and View buttons, drawn like the app's QMenu
+// stylesheet (`app_stylesheet`): a dark box with rounded highlights, keyboard shortcuts on
+// the right, check marks, accent swatches and submenus.
+//
+// Slint's own ContextMenuArea becomes a light native menu on Windows and can't show
+// shortcuts, so these are drawn here.
+
+import { Theme } from "theme.slint";
+
+export struct MenuEntry {
+    // What `activated` reports. "-" makes a separator.
+    id: string,
+    title: string,
+    // The key shown on the right, such as "Ctrl+L". Only shown; the window handles the key.
+    shortcut: string,
+    disabled: bool,
+    checkable: bool,
+    checked: bool,
+    // Shown in the check column instead of a check mark (the accent swatches).
+    icon: image,
+    // 1-based index into the menu's `subs` for an entry that opens a submenu; 0 for none.
+    sub: int,
+}
+
+// One menu box: `QMenu { padding: 6px }` with `QMenu::item { padding: 7px 28px 7px 14px }`.
+component MenuBox inherits Rectangle {
+    in property <[MenuEntry]> entries;
+    // The longest shortcut text, so the shortcuts line up in one column as Qt's do.
+    in property <string> widest-shortcut;
+    in property <int> open-sub;
+    out property <int> hovered: -1;
+    callback activated(MenuEntry);
+    // An entry with a submenu wants it open: its index and its y in this box.
+    callback sub-wanted(int, length);
+    callback sub-unwanted();
+
+    // A column for check marks and icons, which Qt adds when a menu has either.
+    in property <bool> check-col;
+    property <length> shortcut-width: root.widest-shortcut == "" ? 0px : sw.preferred-width;
+
+    background: Theme.menu;
+    border-width: 1px;
+    border-color: Theme.menu-border;
+    border-radius: 8px;
+
+    sw := Text {
+        visible: false;
+        text: root.widest-shortcut;
+        font-size: 13px;
+    }
+
+    // Clicks on separators and disabled entries do nothing, as in Qt.
+    TouchArea { }
+
+    VerticalLayout {
+        padding: 7px;
+
+        for entry[index] in root.entries: Rectangle {
+            property <bool> separator: entry.id == "-";
+            property <bool> lit: !separator && !entry.disabled && (touch.has-hover || (root.open-sub == entry.sub && entry.sub > 0));
+            min-height: separator ? 11px : 32px;
+            border-radius: 5px;
+            background: lit ? Theme.sel : transparent;
+
+            HorizontalLayout {
+                padding-left: separator ? 8px : root.check-col ? 6px : 14px;
+                padding-right: separator ? 8px : 10px;
+                spacing: 0;
+
+                if separator: Rectangle {
+                    Rectangle {
+                        height: 1px;
+                        background: Theme.divider;
+                    }
+                }
+
+                if !separator && root.check-col: Rectangle {
+                    width: 28px;
+                    if entry.icon.width > 0: Image {
+                        source: entry.icon;
+                        width: 16px;
+                        height: 16px;
+                    }
+                    if entry.icon.width == 0 && entry.checked: Path {
+                        // The check mark.
+                        width: 11px;
+                        height: 9px;
+                        viewbox-width: 11;
+                        viewbox-height: 9;
+                        stroke: lit ? Theme.sel-text : entry.disabled ? Theme.text-disabled : Theme.text-soft;
+                        stroke-width: 1.6px;
+                        commands: "M 1 4.5 L 4 7.5 L 10 1";
+                    }
+                }
+
+                if !separator: Text {
+                    text: entry.title;
+                    font-size: 13px;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    color: entry.disabled ? Theme.text-disabled : lit ? Theme.sel-text : Theme.text-soft;
+                }
+
+                if !separator: Rectangle {
+                    width: root.shortcut-width > 0 ? root.shortcut-width + 36px : 18px;
+                    Text {
+                        x: parent.width - root.shortcut-width;
+                        text: entry.shortcut;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                        color: entry.disabled ? Theme.text-disabled : lit ? Theme.sel-text : Theme.text-soft;
+                    }
+
+                    if entry.sub > 0: Path {
+                        // The submenu arrow.
+                        x: parent.width - 6px;
+                        width: 5px;
+                        height: 9px;
+                        viewbox-width: 5;
+                        viewbox-height: 9;
+                        stroke: entry.disabled ? Theme.text-disabled : lit ? Theme.sel-text : Theme.text-soft;
+                        stroke-width: 1.4px;
+                        commands: "M 0.5 0.5 L 4.5 4.5 L 0.5 8.5";
+                    }
+                }
+            }
+
+            touch := TouchArea {
+                enabled: !separator && !entry.disabled;
+                changed has-hover => {
+                    if self.has-hover {
+                        root.hovered = index;
+                        if entry.sub > 0 {
+                            root.sub-wanted(entry.sub, parent.y);
+                        } else {
+                            root.sub-unwanted();
+                        }
+                    }
+                }
+                clicked => {
+                    if entry.sub > 0 {
+                        root.sub-wanted(entry.sub, parent.y);
+                    } else {
+                        root.activated(entry);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// A button's drop-down menu. Call `open()` with where it should appear, relative to this
+// element; picking an entry reports its id through `activated` and closes the menu.
+//
+// A submenu is drawn in the same popup, to the right of the menu, so one click outside
+// closes both, as in Qt. The popup keeps room for it (`sub-room`), and a click in that
+// room while it's empty closes the menu like any click outside.
+export component DropMenu {
+    in property <[MenuEntry]> entries;
+    in property <[[MenuEntry]]> subs;
+    in property <string> widest-shortcut;
+    in property <bool> check-col;
+    in property <[bool]> sub-check-col;
+    // The room kept right of and below the menu for its submenus.
+    in property <length> sub-room-width: 200px;
+    in property <length> sub-room-height: 140px;
+    callback activated(string);
+
+    property <length> px;
+    property <length> py;
+    property <int> open-sub;
+    property <int> want-sub;
+    property <length> sub-y;
+    property <length> want-y;
+
+    width: 0;
+    height: 0;
+
+    public function open(x: length, y: length) {
+        root.px = x;
+        root.py = y;
+        root.open-sub = 0;
+        root.want-sub = 0;
+        popup.show();
+    }
+
+    function pick(entry: MenuEntry) {
+        popup.close();
+        root.open-sub = 0;
+        root.activated(entry.id);
+    }
+
+    function dismiss() {
+        popup.close();
+        root.open-sub = 0;
+    }
+
+    popup := PopupWindow {
+        x: root.px;
+        y: root.py;
+        width: main-box.preferred-width + (root.subs.length > 0 ? root.sub-room-width : 0);
+        height: main-box.preferred-height + (root.subs.length > 0 ? root.sub-room-height : 0);
+        close-policy: close-on-click-outside;
+
+        TouchArea {
+            clicked => {
+                root.dismiss();
+            }
+        }
+
+        // Escape closes the menu.
+        FocusScope {
+            init => {
+                self.focus();
+            }
+            key-pressed(event) => {
+                if event.text == Key.Escape {
+                    root.dismiss();
+                    return accept;
+                }
+                reject
+            }
+        }
+
+        main-box := MenuBox {
+            x: 0;
+            y: 0;
+            width: self.preferred-width;
+            height: self.preferred-height;
+            entries: root.entries;
+            widest-shortcut: root.widest-shortcut;
+            check-col: root.check-col;
+            open-sub: root.open-sub;
+            activated(entry) => {
+                root.pick(entry);
+            }
+            sub-wanted(sub, y) => {
+                root.want-sub = sub;
+                root.want-y = y;
+                sub-timer.running = true;
+            }
+            sub-unwanted => {
+                root.want-sub = 0;
+                sub-timer.running = true;
+            }
+        }
+
+        // Qt opens and closes submenus after the pointer rests a moment.
+        sub-timer := Timer {
+            interval: 150ms;
+            running: false;
+            triggered => {
+                self.running = false;
+                root.open-sub = root.want-sub;
+                root.sub-y = root.want-y;
+            }
+        }
+
+        if root.open-sub > 0: sub-box := MenuBox {
+            x: main-box.width - 4px;
+            y: root.sub-y;
+            width: self.preferred-width;
+            height: self.preferred-height;
+            entries: root.subs[root.open-sub - 1];
+            check-col: root.sub-check-col[root.open-sub - 1];
+            activated(entry) => {
+                root.pick(entry);
+            }
+            // Keeps the submenu open while the pointer is on it.
+            sub-wanted(sub, y) => { }
+            sub-unwanted => {
+                sub-timer.running = false;
+            }
+        }
+    }
+}

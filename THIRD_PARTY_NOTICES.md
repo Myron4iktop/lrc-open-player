@@ -24,7 +24,7 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | Project | Used for | License |
 | --- | --- | --- |
 | [Slint](https://slint.dev/) | Window and user interface | GPL-3.0 (one of its license options) |
-| [winit](https://github.com/rust-windowing/winit) | Window icon on Windows | Apache-2.0 |
+| [winit](https://github.com/rust-windowing/winit) | Window icon, title bar and dropped files | Apache-2.0 |
 | [image](https://github.com/image-rs/image) | Reading the app icon and cover art | MIT or Apache-2.0 |
 | [Lofty](https://github.com/Serial-ATA/lofty-rs) | Reading and writing tags | MIT or Apache-2.0 |
 | [encoding_rs](https://github.com/hsivonen/encoding_rs) | Reading lyrics files in older code pages | (MIT or Apache-2.0) and BSD-3-Clause |
@@ -34,6 +34,7 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [serde_json](https://github.com/serde-rs/json) | Reading LRCLIB's answers | MIT or Apache-2.0 |
 | [regex](https://github.com/rust-lang/regex) | Matching timestamps and tags | MIT or Apache-2.0 |
 | [caseless](https://github.com/unicode-rs/rust-caseless) | Comparing text without case, like Python's `casefold` | MIT |
+| [fastrand](https://github.com/smol-rs/fastrand) | Shuffle order | MIT or Apache-2.0 |
 | [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song safely | MIT or Apache-2.0 |
 | [Symphonia](https://github.com/pdeljanov/Symphonia) | Decoding audio | MPL-2.0 |
 | [symphonia-adapter-libopus](https://github.com/aschey/symphonia-adapters) | Opus decoding for Symphonia | MIT or Apache-2.0 |

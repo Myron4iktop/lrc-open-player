@@ -1,0 +1,109 @@
+// One lyric line with its translation: `LyricCard` in lrcplayer.py.
+//
+// The playing line is bigger and fully opaque; the others are smaller and faded. Opacity
+// and padding move over 300 ms with an out-cubic curve, as the Python app's animations do.
+
+import { Theme } from "theme.slint";
+
+export struct LyricLineData {
+    main: string,
+    sub: string,
+    active: bool,
+}
+
+export component LyricCard {
+    in property <string> main;
+    in property <string> sub;
+    in property <bool> active;
+    in property <bool> synced;
+    in property <bool> fullscreen;
+    // Bumped by the window after a fullscreen switch: the playing line scrolls back to
+    // the middle (`_rescale_cards`).
+    in property <int> rescale-count;
+    callback clicked();
+    callback double-clicked();
+    // Asks the window to scroll so this card is in the middle: its y and height.
+    callback scroll-request(length, length);
+
+    // Sizes: the Python app sets points (22 pt is 29.33 px at 96 DPI).
+    property <float> pt: 96 / 72;
+    property <length> main-size: !root.synced ? 16px * pt
+        : root.active ? (root.fullscreen ? 26px : 22px) * pt
+        : (root.fullscreen ? 19px : 16px) * pt;
+    property <length> sub-size: root.active ? (root.fullscreen ? 17px : 15px) * pt
+        : (root.fullscreen ? 14px : 12px) * pt;
+    property <length> pad-y: !root.synced ? 6px
+        : root.active ? (root.fullscreen ? 30px : 22px)
+        : (root.fullscreen ? 8px : 5px);
+
+    animate pad-y {
+        duration: 300ms;
+        // QEasingCurve.OutCubic, 1 - (1 - t)³, as a bezier.
+        easing: cubic-bezier(0.33, 1, 0.68, 1);
+    }
+
+    opacity: !root.synced || root.active ? 1 : Theme.inactive-opacity;
+    animate opacity {
+        duration: 300ms;
+        // QEasingCurve.OutCubic, 1 - (1 - t)³, as a bezier.
+        easing: cubic-bezier(0.33, 1, 0.68, 1);
+    }
+
+    VerticalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: root.pad-y;
+        padding-bottom: root.pad-y;
+        spacing: root.active ? 8px : 4px;
+
+        Text {
+            text: root.main;
+            wrap: word-wrap;
+            font-size: root.main-size;
+            font-weight: root.synced && root.active ? 700 : 400;
+            color: !root.synced ? Theme.lyric-plain : root.active ? Theme.lyric-active : Theme.lyric-inactive;
+        }
+
+        if root.synced && root.sub != "": Text {
+            text: root.sub;
+            wrap: word-wrap;
+            font-size: root.sub-size;
+            font-weight: root.active ? 600 : 400;
+            color: root.active ? Theme.lyric-active-sub : Theme.lyric-inactive-sub;
+        }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+        double-clicked => {
+            root.double-clicked();
+        }
+    }
+
+    // `QTimer.singleShot(25, ...)` before scrolling, so the new sizes are laid out.
+    scroll-timer := Timer {
+        interval: 25ms;
+        running: false;
+        triggered => {
+            self.running = false;
+            if root.active {
+                root.scroll-request(root.y, root.height);
+            }
+        }
+    }
+
+    changed active => {
+        if root.active && root.synced {
+            scroll-timer.running = true;
+        }
+    }
+
+    changed rescale-count => {
+        if root.active && root.synced {
+            scroll-timer.running = true;
+        }
+    }
+}

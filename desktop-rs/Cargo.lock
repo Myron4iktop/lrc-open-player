@@ -2788,6 +2788,7 @@ dependencies = [
  "base64 0.22.1",
  "caseless",
  "encoding_rs",
+ "fastrand",
  "image",
  "lofty",
  "regex",

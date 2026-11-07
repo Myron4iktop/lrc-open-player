@@ -9,6 +9,9 @@
 //! - [`tags`]: tags, covers and embedded lyrics of a song, and writing lyrics into it.
 //! - [`library`]: album scans, natural sort and search text.
 //! - [`lrclib`]: the LRCLIB lookup and the rules that pick an answer.
+//! - [`queue`]: the playlist, shuffle, repeat, next and previous.
+//! - [`window`]: the main window's texts and rules, such as which lyric line is playing.
+//! - [`theme`]: the dark and light palettes for every accent color.
 //!
 //! The AI alignment module (`align`) arrives in M7.
 
@@ -19,8 +22,11 @@ pub mod lrclib;
 mod mpeg;
 mod ogg;
 pub mod py;
+pub mod queue;
 pub mod tags;
 pub mod text;
+pub mod theme;
+pub mod window;
 
 /// The name shown in the title bar and in message boxes (`APP_TITLE` in `lrcplayer.py`).
 pub const APP_TITLE: &str = "LRC Open Player";

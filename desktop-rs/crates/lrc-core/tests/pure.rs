@@ -215,3 +215,77 @@ fn lrclib_lookup_matches_python() {
         })
     });
 }
+
+#[test]
+fn palettes_match_python() {
+    check_all("palette", |c| {
+        let theme = s(&c["theme"]);
+        let accent = s(&c["accent"]);
+        let got = lrc_core::theme::build_palette(theme, accent);
+        let want = c["palette"].as_object().unwrap();
+        let mut diffs = Vec::new();
+        for (name, value) in want {
+            match name.as_str() {
+                "dark" => {
+                    if value.as_bool() != Some(got.dark) {
+                        diffs.push(format!("dark: python {value}, rust {}", got.dark));
+                    }
+                }
+                "inactive_opacity" | "viz_alpha" => {
+                    let mine = if name == "inactive_opacity" {
+                        got.inactive_opacity
+                    } else {
+                        got.viz_alpha
+                    };
+                    if value.as_f64() != Some(mine) {
+                        diffs.push(format!("{name}: python {value}, rust {mine}"));
+                    }
+                }
+                _ => {
+                    let mine = got
+                        .colors
+                        .iter()
+                        .find(|(n, _)| n == name)
+                        .map(|(_, c)| c.as_str());
+                    if mine != value.as_str() {
+                        diffs.push(format!("{name}: python {value}, rust {mine:?}"));
+                    }
+                }
+            }
+        }
+        // Nothing extra on the Rust side either.
+        for (name, _) in &got.colors {
+            if !want.contains_key(*name) {
+                diffs.push(format!("{name}: not in the Python palette"));
+            }
+        }
+        (!diffs.is_empty()).then(|| format!("{theme}/{accent}:\n  {}", diffs.join("\n  ")))
+    });
+}
+
+#[test]
+fn window_texts_match_python() {
+    let cases = &PURE["window_text"];
+    let mut failures = Vec::new();
+    for c in cases["format_time"].as_array().unwrap() {
+        let ms = c["ms"].as_u64().unwrap();
+        let got = lrc_core::window::format_time(ms);
+        if got != s(&c["text"]) {
+            failures.push(format!(
+                "format_time({ms}): python {}, rust {got}",
+                s(&c["text"])
+            ));
+        }
+    }
+    for c in cases["offset"].as_array().unwrap() {
+        let ms = c["ms"].as_i64().unwrap();
+        let got = lrc_core::window::offset_text(ms);
+        if got != s(&c["text"]) {
+            failures.push(format!(
+                "offset_text({ms}): python {}, rust {got}",
+                s(&c["text"])
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
