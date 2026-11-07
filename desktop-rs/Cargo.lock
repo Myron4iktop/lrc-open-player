@@ -2793,6 +2793,8 @@ dependencies = [
  "lofty",
  "regex",
  "rustfft",
+ "rustls",
+ "rustls-platform-verifier",
  "serde_json",
  "tempfile",
  "ureq",

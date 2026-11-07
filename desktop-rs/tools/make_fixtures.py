@@ -339,6 +339,174 @@ def lrclib_cases():
     return cases
 
 
+# ---------------------------------------------------------------------------------------
+# Translation alignment, the AI server's texts and the two editors
+# ---------------------------------------------------------------------------------------
+ALIGN_LINES = [
+    "[Verse]", "【サビ】", "(Verse 2)", "(Chorus x2)", "(x2)", "( × 3 )", "Chorus x2", "Repeat chorus:",
+    "PRE-CHORUS", "Bridge 2:", "(come on)", "Bridge over water", "Intro", "rap", "[00:01.00]stamped",
+    "[ti:Title]", "  spaced  ", "♪", "[00:02.00]♪", "I'm provoked by the sun, my body heats",
+    "one, two, three, four", "a,b", "a、 b、 c", "x; y: z，w", "1, 2, 3, 4, 5, 6, 7, 8, 9",
+    "a, b, c, d, e, f, g, h", "trailing,  ", ", leading", "sun,　moon", "tab,\tsep",
+    "line break", "verse", "(spoken)", "(Verse 2", "[Chorus] text",
+]
+
+ALIGN_TRANSLATIONS = [
+    "[Verse]", "I can hear your voice", "from beyond", "the distant sky",
+    "The night is ending, and the light shines in", "one, two, three", "(x2)", "Last line",
+]
+
+ALIGN_ANSWERS = [
+    "O1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2",
+    "<think>let me see O1: T9</think>\nO1: T2\nO2: T3-T4\nO3: T6.1-3\nO4: T6.1-T6.2\nO5: T5\nO6: T1",
+    "reasoning text</think>O1 → T2\n**O2**: T3, T4\n- O3 = n/a\n> O4 -> T5.2 (the rest)\nO5: T5.1 // note",
+    "O1: T2\nO2: T3\nO3: <think>still",
+    "Answer:\n`O1: T2`\n•  O2 – T3 to T4\nO 3 : T6.2\no4: t6.3\nO5: T6.1.\nO6: T99\nO7: T2\nO0: T2",
+    "O1: T1.1-T1.999999999\nO2: T5.1-T5.999999999999999999999\nO3: T2-T9\nO4: T4-T2\nO5: T6.3-T6.1",
+    "O1: T2 \"I can hear\"\nO2: T3 «from»\nO3: T4 # x\nO4: nothing\nO5: skip\nO6: —",
+    "O1:\nT2\nO2: T3\r\nO3: T4\r\n",
+    "O１: T２\nO2: T٣",
+    "no answer at all",
+    "",
+    "O1: T5.1\nO2: T5.1\nO3: T6.2",
+    "O1: T6.2\nO2: none\nO3: T6.3",
+    "O1: T8 T7 T8\nO1: T3\nO2: T2.5\nO3: T5.3",
+]
+
+THINK_SAMPLES = [
+    "<think>a</think>b", "<THINK>a</Think>b<think>c</think>d", "x</think>y</think>z", "pre<think>open",
+    "İ</think>after", "plain", "<think>never closed", "a</THINK>b<THINK>c",
+]
+
+AI_URLS = [
+    "localhost:1234", " http://127.0.0.1:1234/v1/chat/completions/ ", "http://x:11434/api",
+    "http://x:11434/api/", "", "   ", "HTTPS://Host/v1/models?x=1", "http://h/v1/completions",
+    "h:8080/v1/models/", "http://h/custom/path//", "http://h/chat/completions", "https://openrouter.ai/api/v1",
+    "http://[::1]:1234", "http://h/v1#frag", "http://h?q=1", "ftp://h", "http://user@h:1/x/COMPLETIONS",
+    "http://h/v1/chat/completions/models", "\thttp://h/v1",
+]
+
+HTTP_ERRORS = [
+    (401, b'{"error": {"message": "bad key"}}', "/models", ""),
+    (403, b"", "/models", ""),
+    (402, b'{"error": {"message": "Insufficient credits"}}', "/chat/completions", "m"),
+    (402, b"", "/chat/completions", "m"),
+    (429, b"busy", "/chat/completions", "m"),
+    (404, b'{"error": "model not found"}', "/chat/completions", "qwen"),
+    (400, b'{"error": {"message": "Unknown MODEL x"}}', "/chat/completions", "x"),
+    (400, b'{"error": {"message": "Unknown MODEL x"}}', "/chat/completions", ""),
+    (404, b"Not Found", "/models", ""),
+    (500, b'{"message": "boom"}', "/models", ""),
+    (500, b"  " + b"x" * 300 + b"  ", "/models", ""),
+    (500, b"[1, 2]", "/models", ""),
+    (500, b'{"error": {"code": 5}}', "/models", ""),
+    (503, b"", "/models", ""),
+    (500, b'{"error": null}', "/models", ""),
+    (500, b'"just text"', "/models", ""),
+]
+
+
+def align_cases():
+    trans = ALIGN_TRANSLATIONS
+    answers = []
+    for text in ALIGN_ANSWERS:
+        for n_rows in (6, 3):
+            mapping = L.parse_alignment(text, n_rows, trans)
+            answers.append({
+                "text": text, "n_rows": n_rows, "count": L.count_answer_lines(text),
+                "mapping": [[row, [list(r) for r in refs]] for row, refs in mapping.items()],
+                "texts": L.alignment_to_texts(mapping, n_rows, trans),
+            })
+    texts_sets = [["I can hear your voice", "from beyond the distant sky", ""], ["", "", ""],
+                  ["The night is ending,", "and the light shines in"], []]
+    return {
+        "lines": [{"line": l, "header": L.is_section_header(l), "clauses": L.split_clauses(l),
+                   "used": [L.line_is_used(l, t) for t in texts_sets]} for l in ALIGN_LINES],
+        "texts_sets": texts_sets,
+        "clean": [{"text": t, "lines": L.clean_translation_lines(t)} for t in
+                  ["\n".join(ALIGN_LINES), "[ar:x]\n[00:01.00][00:02.00] two \n\n♪\r\nlast", ""]],
+        "match_in_order": [{"n": n, "lines": trans, "texts": L.match_in_order(n, trans)} for n in (0, 3, 6, 10)],
+        "messages": [{"originals": o, "translations": t, "messages": L.build_alignment_messages(o, t)}
+                     for o, t in [(["君の声", "遠い空", "ラララ"], trans), ([], []), (["a"], ["x, y"])]],
+        "translations": trans,
+        "answers": answers,
+        "strip_thinking": [{"text": t, "out": L.strip_thinking(t)} for t in THINK_SAMPLES],
+    }
+
+
+class _FakeLabel:
+    def __init__(self):
+        self.text, self.name = "", ""
+
+    def setText(self, t):
+        self.text = t
+
+    def objectName(self):
+        return self.name
+
+    def setObjectName(self, n):
+        self.name = n
+
+    def style(self):
+        return types.SimpleNamespace(unpolish=lambda w: None, polish=lambda w: None)
+
+
+def ai_cases():
+    models = ["qwen/qwen3-32b", "qwen/qwen3-235b", "meta/llama:free", "Paid/Big", "odd"]
+    pricing = {"qwen/qwen3-32b": (1e-7, 3e-7), "qwen/qwen3-235b": (2e-6, 6e-6), "meta/llama:free": (0.0, 0.0),
+               "Paid/Big": (0.000003333, 0.0000111)}
+    costs = []
+    for typed in ["", "  ", "qwen", "QWEN3-32", "qwen/qwen3-32b", "qwen/qwen3-235b", "meta/llama:free",
+                  "Paid/Big", "odd", "zzz", " qwen/qwen3-32b "]:
+        lbl = _FakeLabel()
+        fake = types.SimpleNamespace(ed_or_model=types.SimpleNamespace(text=lambda t=typed: t),
+                                     _provider=lambda: "openrouter", or_models=models, or_pricing=pricing,
+                                     lbl_cost=lbl)
+        L.AiSettingsDialog._update_cost(fake)
+        costs.append({"typed": typed, "text": lbl.text, "error": lbl.name == "syncError"})
+    return {
+        "urls": [{"url": u, "out": L.normalize_ai_url(u)} for u in AI_URLS],
+        "http_errors": [{"status": s, "body": b64(b), "endpoint": e, "model": m,
+                         "text": L._ai_http_error(s, b, e, m)} for s, b, e, m in HTTP_ERRORS],
+        "models": models, "pricing": {k: list(v) for k, v in pricing.items()}, "costs": costs,
+    }
+
+
+SYNC_TEXTS = [
+    "one\n\ntwo\n  three  ",
+    "[ar:Artist]\n[00:05.00]five\n[00:01.00]one\n[00:01.10]uno\n[00:03.00]\n[00:04.00]♪\n[00:06.00][00:08.00]twice",
+    "[00:01.00]a\n[00:01.00]b\n[00:01.00]c\nplain line",
+    "[00:02.00]line\n[00:02.20]not paired\n[00:02.30]paired",
+    "plain\n[00:01.00]stamped\n[00:00.50]earlier",
+    "[00:01.00]\n[00:01.05]sub after break",
+    "[01:02:34]colon\n[1:02,5]comma\n[00:00.0005]tiny",
+    "",
+]
+
+
+def editor_cases():
+    sync = []
+    for text in SYNC_TEXTS:
+        entries = L.LyricsSyncDialog._parse_text(text)
+        ns = types.SimpleNamespace(entries=entries)
+        lrc, missing = L.LyricsSyncDialog.build_lrc(ns)
+        sync.append({"text": text, "entries": entries, "as_text": L.LyricsSyncDialog._entries_to_text(ns),
+                     "lrc": lrc, "missing": missing})
+    cards_sets = [
+        [(1000, "Hello", ""), (2000, "♪", ""), (3000, "World", "Monde"), (4000, "Spin", "")],
+        [(0, "a", ""), (61_250, "b", ""), (3_599_990, "c", "")],
+    ]
+    texts_sets = [["Bonjour", "Monde!", "spin"], ["", " x ", "C"]]
+    trans = []
+    for cards, texts in zip(cards_sets, texts_sets):
+        row_cards = [i for i, (_, m, _) in enumerate(cards) if m and m != "♪"]
+        ns = types.SimpleNamespace(cards=cards, row_cards=row_cards, texts=texts)
+        trans.append({"cards": cards, "texts": texts, "lrc": L.TranslationDialog.build_lrc(ns)})
+    times = [{"ms": ms, "text": f"{ms // 60000}:{(ms % 60000) / 1000:04.1f}"}
+             for ms in (0, 1000, 59_950, 59_949, 61_250, 61_350, 600_000, 3_599_999, 25, 75)]
+    return {"sync": sync, "translation": trans, "row_times": times}
+
+
 def build_pure():
     return {
         "_comment": "Written by tools/make_fixtures.py pure from desktop/lrcplayer.py. Do not edit.",
@@ -352,6 +520,9 @@ def build_pure():
         "lrclib": lrclib_cases(),
         "palette": palette_cases(),
         "window_text": window_text_cases(),
+        "align": align_cases(),
+        "ai": ai_cases(),
+        "editor": editor_cases(),
     }
 
 

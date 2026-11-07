@@ -18,9 +18,14 @@
 //! - [`system`]: the tray menu's texts, the media flyout's fields and the error message's rules.
 //! - [`visualizer`]: the spectrum behind the lyrics: FFT, bands and their shapes.
 //!
-//! The AI alignment module (`align`) arrives in M7.
+//! - [`align`]: matching a translation to synced lyrics, and the prompt for a language model.
+//! - [`ai`]: the AI server (local or OpenRouter), its settings and stored keys.
+//! - [`editor`]: the sync editor and the translation window, without their windows.
 
+pub mod ai;
+pub mod align;
 mod codepages;
+pub mod editor;
 pub mod library;
 pub mod lrc;
 pub mod lrclib;
