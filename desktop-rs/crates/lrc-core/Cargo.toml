@@ -8,6 +8,8 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+# Stored API keys are `dpapi:` plus base64, as the Python app writes them.
+base64 = "0.22"
 caseless = "0.2"
 encoding_rs = "0.8"
 fastrand = "2"
@@ -16,6 +18,9 @@ lofty = "0.25"
 regex = "1"
 # The visualizer's FFT (already built for Rubato's resampler).
 rustfft = "6.4"
+# TLS for the AI client (already built for ureq), with the system's own certificate checks.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls-platform-verifier = "0.7"
 serde_json = "1"
 tempfile = "3"
 # No gzip: the Python app's urllib does not ask for it either. The platform verifier
@@ -23,4 +28,3 @@ tempfile = "3"
 ureq = { version = "3.5", default-features = false, features = ["rustls", "platform-verifier"] }
 
 [dev-dependencies]
-base64 = "0.22"

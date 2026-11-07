@@ -13,6 +13,7 @@ import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
 export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
+export { SyncDialog, SyncRowData, TranslationDialog, TranslationRowData, AiSettingsDialog, AnswerDialog } from "editors.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -103,6 +104,9 @@ export component MainWindow inherits Window {
     callback set-visualizer(string);
     callback cycle-visualizer();
     callback set-close-to-tray(bool);
+    callback open-sync();
+    callback open-translation();
+    callback open-ai-settings();
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -163,6 +167,14 @@ export component MainWindow inherits Window {
                 }
                 if k == "i" && !event.modifiers.shift && root.has-track {
                     root.show-details();
+                    return accept;
+                }
+                if k == "t" && event.modifiers.shift && root.has-track {
+                    root.open-translation();
+                    return accept;
+                }
+                if k == "t" && root.has-track {
+                    root.open-sync();
                     return accept;
                 }
             }
@@ -287,8 +299,8 @@ export component MainWindow inherits Window {
                                     { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
                                     { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
                                     { id: "-" },
-                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: true },
-                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: true },
+                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: !root.has-track },
+                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: !root.has-track },
                                     { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
                                 ];
                                 activated(id) => {
@@ -296,6 +308,10 @@ export component MainWindow inherits Window {
                                         root.load-lrc();
                                     } else if id == "search" {
                                         root.search-online();
+                                    } else if id == "sync" {
+                                        root.open-sync();
+                                    } else if id == "translate" {
+                                        root.open-translation();
                                     } else if id == "embed" {
                                         root.embed-lyrics();
                                     }
@@ -325,7 +341,7 @@ export component MainWindow inherits Window {
                                     { id: "viz", title: "Visualizer", sub: 3 },
                                     { id: "-" },
                                     { id: "tray", title: "Keep playing in tray when closed", checkable: true, checked: root.close-to-tray, disabled: !root.tray-available },
-                                    { id: "ai", title: "AI alignment…", disabled: true },
+                                    { id: "ai", title: "AI alignment…" },
                                     { id: "shortcuts", title: "Keyboard shortcuts", shortcut: "F1" },
                                 ];
                                 sub-check-col: [true, true, true];
@@ -352,6 +368,8 @@ export component MainWindow inherits Window {
                                 activated(id) => {
                                     if id == "shortcuts" {
                                         root.show-shortcuts();
+                                    } else if id == "ai" {
+                                        root.open-ai-settings();
                                     } else if id == "details" {
                                         root.show-details();
                                     } else if id == "theme:dark" || id == "theme:light" {

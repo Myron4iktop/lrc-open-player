@@ -51,6 +51,33 @@ pub fn hook_window_events(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     });
 }
 
+/// The same repaint for another window (the editors): `bump` changes its `repaint-count`.
+pub fn hook_repaint<C: ComponentHandle + 'static>(c: &C, bump: fn(&C)) {
+    let weak = c.as_weak();
+    c.window().on_winit_window_event(move |_, event| {
+        let again = match event {
+            winit::event::WindowEvent::Occluded(false)
+            | winit::event::WindowEvent::Focused(true) => true,
+            winit::event::WindowEvent::Resized(_) => false,
+            _ => return EventResult::Propagate,
+        };
+        if let Some(c) = weak.upgrade() {
+            bump(&c);
+            c.window().request_redraw();
+        }
+        if again {
+            let weak = weak.clone();
+            slint::Timer::single_shot(std::time::Duration::from_millis(150), move || {
+                if let Some(c) = weak.upgrade() {
+                    bump(&c);
+                    c.window().request_redraw();
+                }
+            });
+        }
+        EventResult::Propagate
+    });
+}
+
 /// Makes the next frame repaint the whole window (see `repaint-count` in main.slint).
 ///
 /// After the window is restored from the taskbar, the renderer sometimes drew only the
@@ -171,5 +198,49 @@ pub fn window_handle(ui: &MainWindow) -> Option<isize> {
 
 /// `raise_()` and `activateWindow()`: brings the window back in front of the others.
 pub fn bring_to_front(ui: &MainWindow) {
-    ui.window().with_winit_window(|w| w.focus_window());
+    raise(ui.window());
+}
+
+/// `raise_()` + `activateWindow()` for any window (the editors).
+pub fn raise(window: &slint::Window) {
+    window.with_winit_window(|w| w.focus_window());
+}
+
+/// `QDesktopServices.openUrl`: opens a web page in the default browser.
+pub fn open_url(url: &str) {
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Shell::ShellExecuteW;
+        use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+        use windows::core::HSTRING;
+        // SAFETY: plain strings in, nothing kept.
+        unsafe {
+            ShellExecuteW(
+                None,
+                &HSTRING::from("open"),
+                &HSTRING::from(url),
+                None,
+                None,
+                SW_SHOWNORMAL,
+            );
+        }
+    }
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let _ = std::process::Command::new("xdg-open").arg(url).spawn();
+}
+
+/// The encryption for saved API keys: DPAPI on Windows, none elsewhere (keys saved
+/// encrypted then read as empty, as in the Python app).
+pub fn cipher() -> Option<&'static dyn lrc_core::ai::Cipher> {
+    #[cfg(windows)]
+    {
+        static DPAPI: crate::win::dpapi::Dpapi = crate::win::dpapi::Dpapi;
+        Some(&DPAPI)
+    }
+    #[cfg(not(windows))]
+    {
+        None
+    }
 }

@@ -12,7 +12,7 @@ python tools/make_fixtures.py media /tmp/media         # tagged songs in all six
 python tools/make_fixtures.py check-embedded /tmp/media
 ```
 
-- **pure**: lyrics decoding in every Windows code page, LRC parsing (run through the window's own `parse_and_display_lyrics`), timestamps, search text, album order, `_same_text` and the LRCLIB rules (run through `LrcFetchWorker` with a fake network). The JSON is committed; rerun it when the Python code changes.
+- **pure**: lyrics decoding in every Windows code page, LRC parsing (run through the window's own `parse_and_display_lyrics`), timestamps, search text, album order, `_same_text` and the LRCLIB rules (run through `LrcFetchWorker` with a fake network); the AI alignment prompt, answer parsing and translation clean-up (`align`); the AI settings rules, addresses, error texts and cost lines (`ai`); and the sync and translation editors' LRC output (`editor`). The JSON is committed; rerun it when the Python code changes.
 - **media**: makes 15 tiny songs with ffmpeg and mutagen, and records what `read_track_tags`, `extract_metadata_and_cover` and `scan_album_folder` give for each. CI makes them fresh on every run; they are not committed.
 - **check-embedded**: after `cargo test` wrote lyrics into copies of those songs, checks that the Python app reads each copy exactly as `lrc-core` does.
 
