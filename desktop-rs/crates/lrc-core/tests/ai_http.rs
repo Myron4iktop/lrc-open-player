@@ -132,7 +132,9 @@ fn nothing_listening() {
     let e = ai::list_models(
         &format!("http://127.0.0.1:{port}/v1"),
         "",
-        Duration::from_secs(2),
+        // Windows takes about two seconds to report a refused connection to localhost
+        // (it retries first), so a 2 s timeout raced it and read as "didn't respond".
+        Duration::from_secs(10),
         &[],
     )
     .unwrap_err();
