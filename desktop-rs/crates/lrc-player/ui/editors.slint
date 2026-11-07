@@ -857,7 +857,11 @@ export component TranslationDialog inherits Window {
                                             horizontal-stretch: 1;
                                             min-height: root.editing == i ? 28px : 0px;
                                             if root.editing != i: Text {
-                                                width: 100%;
+                                                // Explicit: inside `if`, a percentage width is lost and the
+                                                // text was centred.
+                                                x: 0px;
+                                                y: 0px;
+                                                width: parent.width;
                                                 text: row.translation;
                                                 color: sel ? Theme.sel-text : row.repeat ? Theme.faint : Theme.text-soft;
                                                 font-size: 13px;
@@ -880,7 +884,8 @@ export component TranslationDialog inherits Window {
                                                 }
                                             }
                                             if root.editing == i: field := LineEdit {
-                                                width: 100%;
+                                                x: 0px;
+                                                width: parent.width;
                                                 text: row.translation;
                                                 font-size: 13px;
                                                 init => {

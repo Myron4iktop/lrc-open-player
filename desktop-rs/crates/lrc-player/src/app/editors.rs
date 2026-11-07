@@ -20,10 +20,11 @@ use lrc_core::py;
 use lrc_core::text::{read_lyrics_file, write_lrc};
 use lrc_core::theme::build_palette;
 use lrc_core::window::lrc_path_for;
-use slint::{ComponentHandle, ModelRc, SharedString, Timer, TimerMode, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, SharedString, Timer, TimerMode, VecModel};
 
 use super::{
-    App, app_call, embed_lyrics_in_file, file_name, fill_theme, message_later, with_app_ret,
+    App, app_call, ask, ask_yes_no, embed_lyrics_in_file, file_name, fill_theme, message_later,
+    with_app_ret,
 };
 use crate::audio::State;
 use crate::{
@@ -66,52 +67,80 @@ pub(super) struct AiWindow {
     token: u64,
 }
 
+/// Puts `rows` in a list, changing only the rows that differ. Rebuilding the whole list
+/// would recreate every row, so a double-click whose first click changed the list (the
+/// sync editor's cursor) would never arrive, and the list would lose its place.
+fn update_rows<T: Clone + PartialEq + 'static>(model: &VecModel<T>, rows: Vec<T>) {
+    if model.row_count() != rows.len() {
+        model.set_vec(rows);
+        return;
+    }
+    for (i, row) in rows.into_iter().enumerate() {
+        if model.row_data(i).as_ref() != Some(&row) {
+            model.set_row_data(i, row);
+        }
+    }
+}
+
 /// Something the current callback hands to the event loop to drop, once it returns.
 fn drop_later<T: 'static>(value: T) {
     let mut value = Some(value);
     Timer::single_shot(Duration::ZERO, move || drop(value.take()));
 }
 
-fn yes_no(title: &str, text: &str) -> bool {
-    rfd::MessageDialog::new()
-        .set_level(rfd::MessageLevel::Info)
-        .set_title(title)
-        .set_description(text)
-        .set_buttons(rfd::MessageButtons::YesNo)
-        .show()
-        == rfd::MessageDialogResult::Yes
+thread_local! {
+    /// An editor is waiting for an answer (a message box or a file dialog). Those run
+    /// on threads of their own, so the windows keep working; a second click on Save
+    /// meanwhile is ignored rather than asking twice.
+    static ASKING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
-fn warning(title: &str, text: &str) {
-    rfd::MessageDialog::new()
-        .set_level(rfd::MessageLevel::Warning)
-        .set_title(title)
-        .set_description(text)
-        .set_buttons(rfd::MessageButtons::Ok)
-        .show();
+/// Runs an editor flow that asks questions, unless one is already asking.
+fn ask_flow(flow: impl std::future::Future<Output = ()> + 'static) {
+    if ASKING.with(|a| a.replace(true)) {
+        return;
+    }
+    if slint::spawn_local(async move {
+        flow.await;
+        ASKING.with(|a| a.set(false));
+    })
+    .is_err()
+    {
+        ASKING.with(|a| a.set(false));
+    }
+}
+
+async fn warning(title: &str, text: &str) {
+    ask(
+        rfd::MessageLevel::Warning,
+        title,
+        text,
+        rfd::MessageButtons::Ok,
+    )
+    .await;
 }
 
 /// The file dialog of "Load .txt / .lrc…", in the song's folder.
-fn pick_lyrics_file(title: &str, track: &Path, lrc_first: bool) -> Option<PathBuf> {
+async fn pick_lyrics_file(title: &str, track: &Path, lrc_first: bool) -> Option<PathBuf> {
     let exts: &[&str] = if lrc_first {
         &["lrc", "txt"]
     } else {
         &["txt", "lrc"]
     };
-    let mut dialog = rfd::FileDialog::new()
+    let mut dialog = rfd::AsyncFileDialog::new()
         .set_title(title)
         .add_filter("Lyrics", exts)
         .add_filter("All files", &["*"]);
     if let Some(dir) = track.parent() {
         dialog = dialog.set_directory(dir);
     }
-    dialog.pick_file()
+    dialog.pick_file().await.map(|f| f.path().to_path_buf())
 }
 
 /// Writes a .lrc next to the song, asking first if one is there: `save` in both
 /// editors. `question` gets the existing file's name, if any, and returns the question
 /// to ask (or `None`). Returns the path written.
-fn save_lrc_asking(
+async fn save_lrc_asking(
     track: &Path,
     text: &str,
     question: impl FnOnce(Option<&str>) -> Option<String>,
@@ -120,12 +149,12 @@ fn save_lrc_asking(
     let name = file_name(&path);
     let existing = path.exists().then_some(name.as_str());
     if let Some(q) = question(existing)
-        && !yes_no("Save lyrics", &q)
+        && !ask_yes_no("Save lyrics", &q).await
     {
         return None;
     }
     if let Err(e) = write_lrc(&path, text) {
-        warning("Save lyrics", &ed::save_failed(&e.to_string()));
+        warning("Save lyrics", &ed::save_failed(&e.to_string())).await;
         return None;
     }
     Some(path)
@@ -320,7 +349,7 @@ impl App {
         } else {
             None
         };
-        w.rows.set_vec(rows);
+        update_rows(&w.rows, rows);
         if let Some((row, rows)) = target {
             // `scrollToItem(…, PositionAtCenter)`, from the rows' fixed heights.
             let heights: Vec<f32> = rows
@@ -617,7 +646,7 @@ impl App {
                 }
             })
             .collect();
-        w.rows.set_vec(rows);
+        update_rows(&w.rows, rows);
         let (cover, tip) = w.ed.coverage();
         w.dialog.set_cover_text(cover.into());
         w.dialog.set_cover_tip(tip.into());
@@ -1086,16 +1115,18 @@ fn connect_sync(d: &SyncDialog) {
         let Some(Some(track)) = with_sync(|w| w.track_path.clone()) else {
             return;
         };
-        if let Some(path) = pick_lyrics_file("Load lyrics", &track, true) {
-            match read_lyrics_file(&path) {
-                Ok(text) => app_call(|a, _| {
-                    if let Some(w) = &a.sync {
-                        w.dialog.set_input_text(text.into());
-                    }
-                }),
-                Err(e) => warning("Load lyrics", &e.to_string()),
+        ask_flow(async move {
+            if let Some(path) = pick_lyrics_file("Load lyrics", &track, true).await {
+                match read_lyrics_file(&path) {
+                    Ok(text) => app_call(|a, _| {
+                        if let Some(w) = &a.sync {
+                            w.dialog.set_input_text(text.into());
+                        }
+                    }),
+                    Err(e) => warning("Load lyrics", &e.to_string()).await,
+                }
             }
-        }
+        });
     });
     on!(on_use_shown, |a, ui| {
         if let Some(w) = &a.sync {
@@ -1127,17 +1158,19 @@ fn connect_sync(d: &SyncDialog) {
             a.sync_row_double_clicked(r)
         }
     });
-    d.on_save(sync_save);
-    d.on_embed(sync_embed);
+    d.on_save(|| ask_flow(sync_save()));
+    d.on_embed(|| ask_flow(sync_embed()));
     d.on_close_asked(|| {
-        try_close_sync();
+        ask_flow(async {
+            try_close_sync().await;
+        })
     });
     d.window().on_close_requested(|| {
-        if try_close_sync() {
-            slint::CloseRequestResponse::HideWindow
-        } else {
-            slint::CloseRequestResponse::KeepWindowShown
-        }
+        // The window goes once any question about unsaved work is answered.
+        ask_flow(async {
+            try_close_sync().await;
+        });
+        slint::CloseRequestResponse::KeepWindowShown
     });
 }
 
@@ -1152,7 +1185,7 @@ fn with_translate<R>(f: impl FnOnce(&TranslateWindow) -> R) -> Option<Option<R>>
 }
 
 /// `save` of the sync editor.
-fn sync_save() {
+async fn sync_save() {
     let Some(Some((track, (text, missing)))) =
         with_sync(|w| (w.track_path.clone(), ed::build_sync_lrc(&w.ed.entries)))
     else {
@@ -1163,14 +1196,16 @@ fn sync_save() {
     }
     if let Some(path) = save_lrc_asking(&track, &text, |existing| {
         ed::sync_save_question(missing, existing)
-    }) {
+    })
+    .await
+    {
         let status = format!("Saved {}", file_name(&path));
         app_call(|a, ui| a.sync_written(ui, &text, status));
     }
 }
 
 /// `embed` of the sync editor.
-fn sync_embed() {
+async fn sync_embed() {
     let Some(Some((track, (text, missing)))) =
         with_sync(|w| (w.track_path.clone(), ed::build_sync_lrc(&w.ed.entries)))
     else {
@@ -1179,11 +1214,11 @@ fn sync_embed() {
     if text.is_empty() {
         return app_call(|a, _| a.sync_status(ed::NOTHING_STAMPED));
     }
-    if missing > 0 && !yes_no("Embed lyrics", &ed::sync_embed_question(missing)) {
+    if missing > 0 && !ask_yes_no("Embed lyrics", &ed::sync_embed_question(missing)).await {
         return;
     }
     let weak = super::APP.with(|a| a.borrow().clone());
-    if embed_lyrics_in_file(&weak, &track, &text) {
+    if embed_lyrics_in_file(&weak, &track, &text).await {
         let status = format!("Lyrics embedded in {}", file_name(&track));
         app_call(|a, ui| a.sync_written(ui, &text, status));
     }
@@ -1191,11 +1226,11 @@ fn sync_embed() {
 
 /// `closeEvent` of the sync editor: asks about unsaved timestamps. True when it closed
 /// (or wasn't open).
-pub(super) fn try_close_sync() -> bool {
+pub(super) async fn try_close_sync() -> bool {
     let Some(Some(dirty)) = with_sync(|w| w.ed.dirty) else {
         return true;
     };
-    if dirty && !yes_no(ed::SYNC_TITLE, ed::SYNC_UNSAVED) {
+    if dirty && !ask_yes_no(ed::SYNC_TITLE, ed::SYNC_UNSAVED).await {
         return false;
     }
     app_call(|a, _| {
@@ -1218,17 +1253,19 @@ fn connect_translation(d: &TranslationDialog) {
         let Some(Some(track)) = with_translate(|w| w.track_path.clone()) else {
             return;
         };
-        if let Some(path) = pick_lyrics_file("Load translation", &track, false) {
-            match read_lyrics_file(&path) {
-                Ok(text) => app_call(|a, _| {
-                    if let Some(w) = &a.translate {
-                        w.dialog.set_input_text(text.into());
-                    }
-                    a.translate_counts();
-                }),
-                Err(e) => app_call(|a, _| a.translate_status(&e.to_string(), true)),
+        ask_flow(async move {
+            if let Some(path) = pick_lyrics_file("Load translation", &track, false).await {
+                match read_lyrics_file(&path) {
+                    Ok(text) => app_call(|a, _| {
+                        if let Some(w) = &a.translate {
+                            w.dialog.set_input_text(text.into());
+                        }
+                        a.translate_counts();
+                    }),
+                    Err(e) => app_call(|a, _| a.translate_status(&e.to_string(), true)),
+                }
             }
-        }
+        });
     });
     on!(on_setup_ai, |a, ui| a.open_ai_settings(ui));
     on!(on_match_lines, |a, ui| a.translate_match());
@@ -1253,40 +1290,42 @@ fn connect_translation(d: &TranslationDialog) {
             a.translate_commit(r, &text)
         }
     });
-    d.on_save(translate_save);
-    d.on_embed(translate_embed);
+    d.on_save(|| ask_flow(translate_save()));
+    d.on_embed(|| ask_flow(translate_embed()));
     d.on_close_asked(|| {
-        try_close_translate();
+        ask_flow(async {
+            try_close_translate().await;
+        })
     });
     d.window().on_close_requested(|| {
-        if try_close_translate() {
-            slint::CloseRequestResponse::HideWindow
-        } else {
-            slint::CloseRequestResponse::KeepWindowShown
-        }
+        // The window goes once any question about unsaved work is answered.
+        ask_flow(async {
+            try_close_translate().await;
+        });
+        slint::CloseRequestResponse::KeepWindowShown
     });
 }
 
-fn translate_save() {
+async fn translate_save() {
     let Some(Some((track, text))) = with_translate(|w| (w.track_path.clone(), w.ed.build_lrc()))
     else {
         return;
     };
     if let Some(path) =
-        save_lrc_asking(&track, &text, |existing| existing.map(ed::replace_question))
+        save_lrc_asking(&track, &text, |existing| existing.map(ed::replace_question)).await
     {
         let status = format!("Saved {}", file_name(&path));
         app_call(|a, ui| a.translate_written(ui, &text, status));
     }
 }
 
-fn translate_embed() {
+async fn translate_embed() {
     let Some(Some((track, text))) = with_translate(|w| (w.track_path.clone(), w.ed.build_lrc()))
     else {
         return;
     };
     let weak = super::APP.with(|a| a.borrow().clone());
-    if embed_lyrics_in_file(&weak, &track, &text) {
+    if embed_lyrics_in_file(&weak, &track, &text).await {
         let status = ed::translation_embedded(&file_name(&track));
         app_call(|a, ui| a.translate_written(ui, &text, status));
     }
@@ -1294,17 +1333,17 @@ fn translate_embed() {
 
 /// `closeEvent` of the translation window: a running model is stopped, and unsaved
 /// work is asked about. True when it closed (or wasn't open).
-pub(super) fn try_close_translate() -> bool {
+pub(super) async fn try_close_translate() -> bool {
     let Some(Some((working, dirty))) = with_translate(|w| (w.worker.is_some(), w.ed.dirty)) else {
         return true;
     };
     if working {
-        if !yes_no(ed::TRANSLATE_TITLE, ed::MODEL_STILL_WORKING) {
+        if !ask_yes_no(ed::TRANSLATE_TITLE, ed::MODEL_STILL_WORKING).await {
             return false;
         }
         app_call(|a, _| a.translate_cancel_ai());
     }
-    if dirty && !yes_no(ed::TRANSLATE_TITLE, ed::TRANSLATE_UNSAVED) {
+    if dirty && !ask_yes_no(ed::TRANSLATE_TITLE, ed::TRANSLATE_UNSAVED).await {
         return false;
     }
     app_call(|a, _| {
@@ -1324,8 +1363,16 @@ pub(super) fn try_close_translate() -> bool {
 
 /// The main window is closing or quitting: each editor may ask about unsaved work
 /// first. False when the user chose to keep editing.
-pub(super) fn try_close_editors() -> bool {
-    try_close_sync() && try_close_translate()
+pub(super) async fn try_close_editors() -> bool {
+    try_close_sync().await && try_close_translate().await
+}
+
+/// An editor has unsaved work or a model still answering, so closing asks first.
+pub(super) fn editors_need_asking() -> bool {
+    with_sync(|w| w.ed.dirty).flatten().unwrap_or(false)
+        || with_translate(|w| w.worker.is_some() || w.ed.dirty)
+            .flatten()
+            .unwrap_or(false)
 }
 
 fn connect_ai_settings(d: &AiSettingsDialog) {

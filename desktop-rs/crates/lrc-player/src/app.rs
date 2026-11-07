@@ -233,17 +233,43 @@ fn with_app_ret<R>(
     out
 }
 
-/// A message box shown after the current callback returns, so the app isn't borrowed
-/// while it is up (QMessageBox.information / .warning).
+/// A message box on a thread of its own (`QMessageBox`), answered asynchronously.
+///
+/// A box run on the UI thread would pump the windows' messages from inside Slint's own
+/// event handling, which on Windows can leave the windows unable to redraw; on its own
+/// thread the windows keep running behind it, and the app is never borrowed meanwhile.
+async fn ask(
+    level: rfd::MessageLevel,
+    title: &str,
+    text: &str,
+    buttons: rfd::MessageButtons,
+) -> rfd::MessageDialogResult {
+    rfd::AsyncMessageDialog::new()
+        .set_level(level)
+        .set_title(title)
+        .set_description(text)
+        .set_buttons(buttons)
+        .show()
+        .await
+}
+
+/// Yes/No question (`QMessageBox.question`); true for Yes.
+async fn ask_yes_no(title: &str, text: &str) -> bool {
+    ask(
+        rfd::MessageLevel::Info,
+        title,
+        text,
+        rfd::MessageButtons::YesNo,
+    )
+    .await
+        == rfd::MessageDialogResult::Yes
+}
+
+/// A message box that doesn't wait for an answer (QMessageBox.information / .warning).
 fn message_later(level: rfd::MessageLevel, title: &str, text: String) {
     let title = title.to_owned();
-    Timer::single_shot(Duration::ZERO, move || {
-        rfd::MessageDialog::new()
-            .set_level(level)
-            .set_title(title)
-            .set_description(text)
-            .set_buttons(rfd::MessageButtons::Ok)
-            .show();
+    let _ = slint::spawn_local(async move {
+        ask(level, &title, &text, rfd::MessageButtons::Ok).await;
     });
 }
 
@@ -375,20 +401,25 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     ui.window().on_close_requested(move || {
         // Either way the window goes; only a real close stops the event loop.
         let to_tray = with_app_ret(&weak, |a, _ui| a.close_to_tray()).unwrap_or(false);
-        // Unsaved edits: the user may choose to keep editing.
-        if !to_tray && !editors::try_close_editors() {
+        if to_tray {
+            with_app(&weak, |a, ui| a.close_to_tray_now(ui));
+            return slint::CloseRequestResponse::HideWindow;
+        }
+        // Unsaved edits: asked first, and the user may choose to keep editing.
+        if editors::editors_need_asking() {
+            let _ = slint::spawn_local(async {
+                if editors::try_close_editors().await {
+                    app_call(|a, ui| {
+                        a.close();
+                        let _ = ui.hide();
+                    });
+                    let _ = slint::quit_event_loop();
+                }
+            });
             return slint::CloseRequestResponse::KeepWindowShown;
         }
-        with_app(&weak, |a, ui| {
-            if to_tray {
-                a.close_to_tray_now(ui);
-            } else {
-                a.close();
-            }
-        });
-        if !to_tray {
-            let _ = slint::quit_event_loop();
-        }
+        with_app(&weak, |a, _ui| a.close());
+        let _ = slint::quit_event_loop();
         slint::CloseRequestResponse::HideWindow
     });
 }
@@ -396,6 +427,11 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
 /// "Embed lyrics in file…" (`embed_shown_lyrics`). Runs without the app borrowed, since
 /// its message boxes wait for an answer.
 fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
+    let app = app.clone();
+    let _ = slint::spawn_local(async move { embed_shown_lyrics_async(&app).await });
+}
+
+async fn embed_shown_lyrics_async(app: &Weak<RefCell<App>>) {
     let Some(Some((path, text))) = with_app_ret(app, |a, _ui| {
         let path = a.queue.current_path()?.clone();
         Some((path, lrc::to_text(&a.shown, a.synced)))
@@ -410,7 +446,7 @@ fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
         );
         return;
     }
-    if embed_lyrics_in_file(app, &path, &text) {
+    if embed_lyrics_in_file(app, &path, &text).await {
         message_later(
             rfd::MessageLevel::Info,
             rules::EMBED_TITLE,
@@ -420,15 +456,9 @@ fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
 }
 
 /// `embed_lyrics_in_file`: asks first, then writes the lyrics into the song's tags.
-fn embed_lyrics_in_file(app: &Weak<RefCell<App>>, path: &Path, text: &str) -> bool {
+async fn embed_lyrics_in_file(app: &Weak<RefCell<App>>, path: &Path, text: &str) -> bool {
     let name = file_name(path);
-    let answer = rfd::MessageDialog::new()
-        .set_level(rfd::MessageLevel::Info)
-        .set_title(rules::EMBED_TITLE)
-        .set_description(rules::embed_question(&name))
-        .set_buttons(rfd::MessageButtons::YesNo)
-        .show();
-    if answer != rfd::MessageDialogResult::Yes {
+    if !ask_yes_no(rules::EMBED_TITLE, &rules::embed_question(&name)).await {
         return false;
     }
     match with_app_ret(app, |a, _ui| a.write_lyrics_into(path, text)) {
@@ -773,15 +803,11 @@ impl App {
         match then {
             ScanThen::Album { folder, name } => {
                 if paths.is_empty() {
-                    // After this call returns, so the app isn't borrowed while the box is up.
-                    Timer::single_shot(Duration::ZERO, move || {
-                        rfd::MessageDialog::new()
-                            .set_level(rfd::MessageLevel::Info)
-                            .set_title("Open album")
-                            .set_description(format!("No audio files found in “{name}”."))
-                            .set_buttons(rfd::MessageButtons::Ok)
-                            .show();
-                    });
+                    message_later(
+                        rfd::MessageLevel::Info,
+                        "Open album",
+                        format!("No audio files found in “{name}”."),
+                    );
                     return;
                 }
                 self.set_playlist(ui, paths, Source::Folder(folder));
@@ -1872,9 +1898,9 @@ impl App {
                 }
                 TrayItem::Window => self.toggle_window(ui),
                 TrayItem::Quit => {
-                    // Asked after this callback, so the app isn't borrowed while asking.
-                    Timer::single_shot(Duration::ZERO, || {
-                        if editors::try_close_editors() {
+                    // Unsaved edits are asked about first, with the app not borrowed.
+                    let _ = slint::spawn_local(async {
+                        if editors::try_close_editors().await {
                             app_call(|a, ui| a.quit_app(ui));
                         }
                     });
