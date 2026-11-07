@@ -533,6 +533,13 @@ export component SyncDialog inherits Window {
             }
         }
     }
+
+    // Bumped from Rust when the window comes back from the taskbar, as in main.slint:
+    // changing this invisible full-window layer makes the next frame repaint every pixel.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
+    }
 }
 
 // =======================================================================================
@@ -1046,6 +1053,13 @@ export component TranslationDialog inherits Window {
             }
         }
     }
+
+    // Bumped from Rust when the window comes back from the taskbar, as in main.slint:
+    // changing this invisible full-window layer makes the next frame repaint every pixel.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
+    }
 }
 
 // =======================================================================================
@@ -1200,7 +1214,8 @@ export component AiSettingsDialog inherits Window {
                         PushButton {
                             width: 100%;
                             height: 100%;
-                            text: "Choose  ▾";
+                            text: "Choose";
+                            glyph: "menu";
                             enabled: root.ai-enabled && root.local-models.length > 0;
                             tooltip: "Run Test connection to list the server's models";
                             clicked => {
@@ -1438,6 +1453,13 @@ export component AiSettingsDialog inherits Window {
         }
     }
 
+
+    // Bumped from Rust when the window comes back from the taskbar, as in main.slint:
+    // changing this invisible full-window layer makes the next frame repaint every pixel.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
+    }
 }
 
 // =======================================================================================
@@ -1530,5 +1552,12 @@ export component AnswerDialog inherits Window {
                 }
             }
         }
+    }
+
+    // Bumped from Rust when the window comes back from the taskbar, as in main.slint:
+    // changing this invisible full-window layer makes the next frame repaint every pixel.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
     }
 }

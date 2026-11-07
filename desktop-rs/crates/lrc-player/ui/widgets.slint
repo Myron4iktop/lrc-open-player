@@ -37,6 +37,9 @@ export component PushButton {
     in property <bool> checked;
     in property <length> font-size: 13px;
     in property <string> tooltip;
+    // A symbol drawn next to the text, since Windows fonts lack these characters:
+    // "menu" puts "  ▾" after it, "list" puts "☰ " before it, and "close" is a lone "✕".
+    in property <string> glyph;
     callback clicked();
     callback double-clicked();
 
@@ -48,7 +51,12 @@ export component PushButton {
 
     in property <length> min-h: 34px;
     min-height: root.min-h;
-    min-width: label.preferred-width + (root.icon-only ? 0px : root.primary ? 38px : root.role == "segment" ? 34px : root.link ? 14px : 22px);
+    min-width: content.preferred-width + (root.icon-only ? 0px : root.primary ? 38px : root.role == "segment" ? 34px : root.link ? 14px : 22px);
+    property <color> fg: root.primary ? (!root.enabled ? Theme.primary-disabled-text : Theme.primary-text)
+        : !root.enabled ? Theme.text-disabled
+        : root.link ? Theme.accent
+        : root.on ? Theme.toggle-text : Theme.text;
+    property <float> em: root.font-size / 1px;
 
     bg := Rectangle {
         border-radius: 6px;
@@ -63,17 +71,54 @@ export component PushButton {
             : !root.enabled ? Theme.btn-disabled-border
             : root.on ? Theme.toggle-border : Theme.btn-border;
 
-        label := Text {
-            text: root.text;
-            visible: root.text != "";
-            font-size: root.font-size;
-            font-weight: root.primary ? 700 : 600;
-            color: root.primary ? (!root.enabled ? Theme.primary-disabled-text : Theme.primary-text)
-                : !root.enabled ? Theme.text-disabled
-                : root.link ? Theme.accent
-                : root.on ? Theme.toggle-text : Theme.text;
-            horizontal-alignment: center;
-            vertical-alignment: center;
+        content := HorizontalLayout {
+            alignment: center;
+            spacing: root.font-size * (root.glyph == "menu" ? 0.45 : 0.35);
+
+            if root.glyph == "list": Path {
+                // ☰: three bars.
+                width: root.font-size * 0.85;
+                height: root.font-size * 0.7;
+                y: (parent.height - self.height) / 2;
+                viewbox-width: 12;
+                viewbox-height: 10;
+                stroke: root.fg;
+                stroke-width: max(1.4px, root.font-size * 0.11);
+                commands: "M 0 1 L 12 1 M 0 5 L 12 5 M 0 9 L 12 9";
+            }
+
+            label := Text {
+                text: root.text;
+                visible: root.text != "";
+                font-size: root.font-size;
+                font-weight: root.primary ? 700 : 600;
+                color: root.fg;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            if root.glyph == "menu": Path {
+                // "  ▾": a small filled down triangle after a gap.
+                width: root.font-size * 0.5;
+                height: root.font-size * 0.3;
+                y: (parent.height - self.height) / 2 + 1px;
+                viewbox-width: 10;
+                viewbox-height: 6;
+                fill: root.fg;
+                commands: "M 0 0 L 10 0 L 5 6 Z";
+            }
+
+            if root.glyph == "close": Path {
+                // ✕
+                width: 8px;
+                height: 8px;
+                y: (parent.height - self.height) / 2;
+                viewbox-width: 10;
+                viewbox-height: 10;
+                stroke: root.fg;
+                stroke-width: 1.3px;
+                commands: "M 1 1 L 9 9 M 9 1 L 1 9";
+            }
         }
 
         if root.icon != "": MediaIcon {
@@ -97,6 +142,9 @@ export component PushButton {
             text: root.tooltip;
         }
     }
+
+    // A drop-down menu, placed relative to the button.
+    @children
 }
 
 // QSlider with the app's groove, accent fill and round white handle.

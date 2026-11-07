@@ -249,6 +249,9 @@ impl App {
         let Ok(dialog) = SyncDialog::new() else {
             return;
         };
+        crate::platform::hook_repaint(&dialog, |d| {
+            d.set_repaint_count(d.get_repaint_count().wrapping_add(1))
+        });
         fill_theme(&dialog.global::<Theme>(), &self.palette());
         dialog.invoke_sync_color_scheme();
         dialog.set_window_title(format!("Sync lyrics — {}", self.editor_title(&path)).into());
@@ -544,6 +547,9 @@ impl App {
         let Ok(dialog) = TranslationDialog::new() else {
             return;
         };
+        crate::platform::hook_repaint(&dialog, |d| {
+            d.set_repaint_count(d.get_repaint_count().wrapping_add(1))
+        });
         fill_theme(&dialog.global::<Theme>(), &self.palette());
         dialog.invoke_sync_color_scheme();
         dialog.set_window_title(format!("Add translation — {}", self.editor_title(&path)).into());
@@ -867,6 +873,9 @@ impl App {
             let Ok(dialog) = AnswerDialog::new() else {
                 return;
             };
+            crate::platform::hook_repaint(&dialog, |d| {
+                d.set_repaint_count(d.get_repaint_count().wrapping_add(1))
+            });
             dialog.set_window_title(ed::RAW_ANSWER_TITLE.into());
             dialog.set_message(ed::RAW_ANSWER_TEXT.into());
             let weak = dialog.as_weak();
@@ -904,6 +913,9 @@ impl App {
         let Ok(dialog) = AiSettingsDialog::new() else {
             return;
         };
+        crate::platform::hook_repaint(&dialog, |d| {
+            d.set_repaint_count(d.get_repaint_count().wrapping_add(1))
+        });
         fill_theme(&dialog.global::<Theme>(), &self.palette());
         dialog.invoke_sync_color_scheme();
         dialog.set_intro_text("Optional help for Lyrics ▾ → Add translation: a language model works out which translated line belongs to which sung line. It only matches lines; it never writes or changes the translation.".into());

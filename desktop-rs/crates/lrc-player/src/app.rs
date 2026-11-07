@@ -295,22 +295,26 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         }};
     }
 
-    // File dialogs run without the app borrowed: they pump messages, and the playback
-    // timer must keep running meanwhile.
+    // File dialogs run on a thread of their own and are awaited, like message boxes:
+    // the window keeps running and redrawing behind them, and the app isn't borrowed.
     let weak = Rc::downgrade(app);
     ui.on_open_file(move || {
         let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
             return;
         };
-        let mut dialog = rfd::FileDialog::new()
-            .set_title("Select Audio File")
-            .add_filter("Audio Files", &["flac", "mp3", "wav", "m4a", "ogg", "opus"]);
-        if let Some(dir) = start {
-            dialog = dialog.set_directory(dir);
-        }
-        if let Some(path) = dialog.pick_file() {
-            with_app(&weak, |a, ui| a.open_file(ui, path));
-        }
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            let mut dialog = rfd::AsyncFileDialog::new()
+                .set_title("Select Audio File")
+                .add_filter("Audio Files", &["flac", "mp3", "wav", "m4a", "ogg", "opus"]);
+            if let Some(dir) = start {
+                dialog = dialog.set_directory(dir);
+            }
+            if let Some(file) = dialog.pick_file().await {
+                let path = file.path().to_path_buf();
+                with_app(&weak, |a, ui| a.open_file(ui, path));
+            }
+        });
     });
 
     let weak = Rc::downgrade(app);
@@ -318,30 +322,41 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
             return;
         };
-        let mut dialog = rfd::FileDialog::new().set_title("Select Album Folder");
-        if let Some(dir) = start {
-            dialog = dialog.set_directory(dir);
-        }
-        if let Some(folder) = dialog.pick_folder() {
-            with_app(&weak, |a, _ui| a.open_album_folder(folder));
-        }
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            let mut dialog = rfd::AsyncFileDialog::new().set_title("Select Album Folder");
+            if let Some(dir) = start {
+                dialog = dialog.set_directory(dir);
+            }
+            if let Some(folder) = dialog.pick_folder().await {
+                let folder = folder.path().to_path_buf();
+                with_app(&weak, |a, _ui| a.open_album_folder(folder));
+            }
+        });
     });
 
     let weak = Rc::downgrade(app);
     ui.on_load_lrc(move || {
-        let path = rfd::FileDialog::new()
-            .set_title("Select LRC File")
-            .add_filter("Lyrics Files", &["lrc", "txt"])
-            .pick_file();
-        if let Some(path) = path {
-            show_lyrics_file(&weak, &path, "Load LRC file");
-        }
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            let file = rfd::AsyncFileDialog::new()
+                .set_title("Select LRC File")
+                .add_filter("Lyrics Files", &["lrc", "txt"])
+                .pick_file()
+                .await;
+            if let Some(file) = file {
+                show_lyrics_file(&weak, file.path(), "Load LRC file");
+            }
+        });
     });
 
     on!(on_search_online, |a, ui| a.search_lyrics_online(ui, true));
     on!(on_show_details, |a, ui| a.show_details_dialog(ui));
     let weak = Rc::downgrade(app);
-    ui.on_embed_lyrics(move || embed_shown_lyrics(&weak));
+    ui.on_embed_lyrics(move || {
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move { embed_shown_lyrics(&weak).await });
+    });
     on!(on_show_shortcuts, |a, _ui| a.show_shortcuts());
     on!(on_open_sync, |a, ui| a.open_sync_dialog(ui));
     on!(on_open_translation, |a, ui| a.open_translation_dialog(ui));
@@ -426,12 +441,7 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
 
 /// "Embed lyrics in file…" (`embed_shown_lyrics`). Runs without the app borrowed, since
 /// its message boxes wait for an answer.
-fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
-    let app = app.clone();
-    let _ = slint::spawn_local(async move { embed_shown_lyrics_async(&app).await });
-}
-
-async fn embed_shown_lyrics_async(app: &Weak<RefCell<App>>) {
+async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
     let Some(Some((path, text))) = with_app_ret(app, |a, _ui| {
         let path = a.queue.current_path()?.clone();
         Some((path, lrc::to_text(&a.shown, a.synced)))
@@ -1849,9 +1859,9 @@ impl App {
 
     fn init_tray(&mut self, ui: &MainWindow) {
         let texts = self.tray_texts(ui);
+        // The tray runs on a thread of its own; its clicks come back to this one.
         self.tray = Tray::new(texts, |command| {
-            // After the shell's message is handled, not inside it.
-            Timer::single_shot(Duration::ZERO, move || {
+            let _ = slint::invoke_from_event_loop(move || {
                 app_call(|a, ui| a.tray_command(ui, command));
             });
         });

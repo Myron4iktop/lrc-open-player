@@ -10,6 +10,7 @@ import { Theme } from "theme.slint";
 import { MediaIcon } from "icons.slint";
 import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
+import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
 export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
 export { SyncDialog, SyncRowData, TranslationDialog, TranslationRowData, AiSettingsDialog, AnswerDialog } from "editors.slint";
@@ -258,244 +259,147 @@ export component MainWindow inherits Window {
                 GridLayout {
                     spacing: 6px;
                     Row {
-                        open-menu := ContextMenuArea {
-                            Menu {
-                                MenuItem {
-                                    title: "Audio file…";
-                                    activated => {
-                                        root.open-file();
-                                    }
-                                }
+                        PushButton {
+                            text: "Open";
+                            glyph: "menu";
+                            clicked => {
+                                open-menu.open(0, self.height + 2px);
+                            }
 
-                                MenuItem {
-                                    title: "Album folder…";
-                                    activated => {
+                            open-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+Shift+O";
+                                entries: [
+                                    { id: "file", title: "Audio file…", shortcut: "Ctrl+O" },
+                                    { id: "album", title: "Album folder…", shortcut: "Ctrl+Shift+O" },
+                                ];
+                                activated(id) => {
+                                    if id == "file" {
+                                        root.open-file();
+                                    } else {
                                         root.open-album();
                                     }
                                 }
                             }
-
-                            PushButton {
-                                width: 100%;
-                                height: 100%;
-                                text: "Open  ▾";
-                                clicked => {
-                                    open-menu.show({ x: 0, y: self.height });
-                                }
-                            }
                         }
 
-                        lyrics-menu := ContextMenuArea {
-                            Menu {
-                                MenuItem {
-                                    title: "Load LRC file…";
-                                    activated => {
-                                        root.load-lrc();
-                                    }
-                                }
-
-                                MenuItem {
-                                    title: "Search online (LRCLIB)";
-                                    enabled: root.has-track;
-                                    activated => {
-                                        root.search-online();
-                                    }
-                                }
-
-                                MenuSeparator { }
-
-                                MenuItem {
-                                    title: "Sync lyrics…";
-                                    enabled: root.has-track;
-                                    activated => {
-                                        root.open-sync();
-                                    }
-                                }
-
-                                MenuItem {
-                                    title: "Add translation…";
-                                    enabled: root.has-track;
-                                    activated => {
-                                        root.open-translation();
-                                    }
-                                }
-
-                                MenuItem {
-                                    title: "Embed lyrics in file…";
-                                    enabled: root.has-track;
-                                    activated => {
-                                        root.embed-lyrics();
-                                    }
-                                }
+                        PushButton {
+                            text: "Lyrics";
+                            glyph: "menu";
+                            clicked => {
+                                lyrics-menu.open(0, self.height + 2px);
                             }
 
-                            PushButton {
-                                width: 100%;
-                                height: 100%;
-                                text: "Lyrics  ▾";
-                                clicked => {
-                                    lyrics-menu.show({ x: 0, y: self.height });
+                            lyrics-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+Shift+T";
+                                entries: [
+                                    { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
+                                    { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
+                                    { id: "-" },
+                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: !root.has-track },
+                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: !root.has-track },
+                                    { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
+                                ];
+                                activated(id) => {
+                                    if id == "lrc" {
+                                        root.load-lrc();
+                                    } else if id == "search" {
+                                        root.search-online();
+                                    } else if id == "sync" {
+                                        root.open-sync();
+                                    } else if id == "translate" {
+                                        root.open-translation();
+                                    } else if id == "embed" {
+                                        root.embed-lyrics();
+                                    }
                                 }
                             }
                         }
                     }
 
                     Row {
-                        view-menu := ContextMenuArea {
-                            Menu {
-                                MenuItem {
-                                    title: "Track details…";
-                                    enabled: root.has-track;
-                                    activated => {
-                                        root.show-details();
-                                    }
-                                }
-
-                                MenuSeparator { }
-
-                                Menu {
-                                    title: "Theme";
-                                    MenuItem {
-                                        title: "Dark";
-                                        checked: root.theme-key == "dark";
-                                        activated => {
-                                            root.set-theme("dark");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Light";
-                                        checked: root.theme-key == "light";
-                                        activated => {
-                                            root.set-theme("light");
-                                        }
-                                    }
-                                }
-
-                                Menu {
-                                    title: "Accent color";
-                                    MenuItem {
-                                        title: "Coral";
-                                        icon: root.accent-icons[0];
-                                        activated => {
-                                            root.set-accent("coral");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Rose";
-                                        icon: root.accent-icons[1];
-                                        activated => {
-                                            root.set-accent("rose");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Amber";
-                                        icon: root.accent-icons[2];
-                                        activated => {
-                                            root.set-accent("amber");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Jade";
-                                        icon: root.accent-icons[3];
-                                        activated => {
-                                            root.set-accent("jade");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Aqua";
-                                        icon: root.accent-icons[4];
-                                        activated => {
-                                            root.set-accent("aqua");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Azure";
-                                        icon: root.accent-icons[5];
-                                        activated => {
-                                            root.set-accent("azure");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Violet";
-                                        icon: root.accent-icons[6];
-                                        activated => {
-                                            root.set-accent("violet");
-                                        }
-                                    }
-                                }
-
-                                Menu {
-                                    title: "Visualizer";
-                                    MenuItem {
-                                        title: "Off";
-                                        checked: root.visualizer-mode == "off";
-                                        activated => {
-                                            root.set-visualizer("off");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Spectrum bars";
-                                        checked: root.visualizer-mode == "bars";
-                                        activated => {
-                                            root.set-visualizer("bars");
-                                        }
-                                    }
-
-                                    MenuItem {
-                                        title: "Soft wave";
-                                        checked: root.visualizer-mode == "wave";
-                                        activated => {
-                                            root.set-visualizer("wave");
-                                        }
-                                    }
-                                }
-
-                                MenuSeparator { }
-
-                                MenuItem {
-                                    title: "Keep playing in tray when closed";
-                                    enabled: root.tray-available;
-                                    checked: root.close-to-tray;
-                                    activated => {
-                                        root.set-close-to-tray(!root.close-to-tray);
-                                    }
-                                }
-
-                                MenuItem {
-                                    title: "AI alignment…";
-                                    activated => {
-                                        root.open-ai-settings();
-                                    }
-                                }
-
-                                MenuItem {
-                                    title: "Keyboard shortcuts";
-                                    activated => {
-                                        root.show-shortcuts();
-                                    }
-                                }
+                        PushButton {
+                            text: "View";
+                            glyph: "menu";
+                            clicked => {
+                                view-menu.open(0, self.height + 2px);
                             }
 
-                            PushButton {
-                                width: 100%;
-                                height: 100%;
-                                text: "View  ▾";
-                                clicked => {
-                                    view-menu.show({ x: 0, y: self.height });
+                            view-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+I";
+                                check-col: true;
+                                entries: [
+                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: !root.has-track },
+                                    { id: "-" },
+                                    { id: "theme", title: "Theme", sub: 1 },
+                                    { id: "accent", title: "Accent color", sub: 2 },
+                                    { id: "viz", title: "Visualizer", sub: 3 },
+                                    { id: "-" },
+                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, checked: root.close-to-tray, disabled: !root.tray-available },
+                                    { id: "ai", title: "AI alignment…" },
+                                    { id: "shortcuts", title: "Keyboard shortcuts", shortcut: "F1" },
+                                ];
+                                sub-check-col: [true, true, true];
+                                subs: [
+                                    [
+                                        { id: "theme:dark", title: "Dark", checkable: true, checked: root.theme-key == "dark" },
+                                        { id: "theme:light", title: "Light", checkable: true, checked: root.theme-key == "light" },
+                                    ],
+                                    [
+                                        { id: "accent:coral", title: "Coral", checkable: true, icon: root.accent-icons[0] },
+                                        { id: "accent:rose", title: "Rose", checkable: true, icon: root.accent-icons[1] },
+                                        { id: "accent:amber", title: "Amber", checkable: true, icon: root.accent-icons[2] },
+                                        { id: "accent:jade", title: "Jade", checkable: true, icon: root.accent-icons[3] },
+                                        { id: "accent:aqua", title: "Aqua", checkable: true, icon: root.accent-icons[4] },
+                                        { id: "accent:azure", title: "Azure", checkable: true, icon: root.accent-icons[5] },
+                                        { id: "accent:violet", title: "Violet", checkable: true, icon: root.accent-icons[6] },
+                                    ],
+                                    [
+                                        { id: "viz:off", title: "Off", checkable: true, checked: root.visualizer-mode == "off" },
+                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, checked: root.visualizer-mode == "bars" },
+                                        { id: "viz:wave", title: "Soft wave", checkable: true, checked: root.visualizer-mode == "wave" },
+                                    ],
+                                ];
+                                activated(id) => {
+                                    if id == "shortcuts" {
+                                        root.show-shortcuts();
+                                    } else if id == "ai" {
+                                        root.open-ai-settings();
+                                    } else if id == "details" {
+                                        root.show-details();
+                                    } else if id == "theme:dark" || id == "theme:light" {
+                                        root.set-theme(id == "theme:dark" ? "dark" : "light");
+                                    } else if id == "accent:coral" {
+                                        root.set-accent("coral");
+                                    } else if id == "accent:rose" {
+                                        root.set-accent("rose");
+                                    } else if id == "accent:amber" {
+                                        root.set-accent("amber");
+                                    } else if id == "accent:jade" {
+                                        root.set-accent("jade");
+                                    } else if id == "accent:aqua" {
+                                        root.set-accent("aqua");
+                                    } else if id == "accent:azure" {
+                                        root.set-accent("azure");
+                                    } else if id == "accent:violet" {
+                                        root.set-accent("violet");
+                                    } else if id == "viz:off" || id == "viz:bars" || id == "viz:wave" {
+                                        root.set-visualizer(id == "viz:off" ? "off" : id == "viz:bars" ? "bars" : "wave");
+                                    } else if id == "tray" {
+                                        root.set-close-to-tray(!root.close-to-tray);
+                                    }
                                 }
                             }
                         }
 
                         PushButton {
-                            text: "☰ Tracklist";
+                            text: "Tracklist";
+                            glyph: "list";
                             enabled: root.queue-rows.length > 0;
                             clicked => {
                                 root.queue-visible = !root.queue-visible;
@@ -767,8 +671,7 @@ export component MainWindow inherits Window {
                         width: 26px;
                         height: 26px;
                         min-h: 26px;
-                        text: "✕";
-                        font-size: 8px;
+                        glyph: "close";
                         clicked => {
                             root.queue-visible = false;
                         }
@@ -928,5 +831,13 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+
+    // Rust bumps this when the window comes back from the taskbar. Changing the color of
+    // this invisible full-window layer makes the renderer repaint every pixel, instead of
+    // only the parts it thinks changed, which left parts of the window unpainted on Windows.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
     }
 }
