@@ -16,7 +16,7 @@ path = "src/main.rs"
 lrc-core.workspace = true
 slint.workspace = true
 # Lets Slint decode `desktop/favicon.ico` for the window icon (it reads PNG and JPEG only by default).
-image = { version = "0.25", default-features = false, features = ["ico"] }
+image = { version = "0.25", default-features = false, features = ["ico", "png"] }
 # Decoding: FLAC, MP3, AAC and ALAC in M4A, Vorbis and Opus in OGG, and WAV. The metadata
 # readers only let the probe step over ID3 and APE tags; tags themselves come from lrc-core.
 symphonia = { version = "0.6", default-features = false, features = ["aac", "alac", "all-meta", "flac", "isomp4", "mp3", "ogg", "pcm", "vorbis", "wav", "opt-simd"] }
@@ -28,13 +28,28 @@ rubato = "5"
 rtrb = "0.4"
 rfd = "0.17"
 serde_json = "1"
+# Draws the visualizer (Slint already builds it, for SVG icons).
+tiny-skia = { version = "0.12", default-features = false, features = ["std", "simd"] }
 
 # The same winit that Slint uses, for dropped files, the window handle and the taskbar
 # icon. Keep its minor version in step with Slint's.
 winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_System_Registry", "Win32_UI_Shell"] }
+windows = { version = "0.62", features = [
+    "Foundation",
+    "Media",
+    "Storage_Streams",
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Registry",
+    "Win32_System_WinRT",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
+# The media flyout's cover goes into a private temp folder, as a PNG.
+tempfile = "3"
 
 [build-dependencies]
 slint-build.workspace = true

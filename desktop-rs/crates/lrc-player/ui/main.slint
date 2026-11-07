@@ -12,7 +12,7 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
-export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
+export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -66,6 +66,16 @@ export component MainWindow inherits Window {
     in property <string> theme-key: "dark";
     in property <string> accent-key: "coral";
     in property <[image]> accent-icons;
+    // --- Visualizer and tray ---
+    in property <string> visualizer-mode: "off";
+    // The spectrum, drawn by Rust into the bottom of the lyrics area.
+    in property <image> viz-frame;
+    in property <color> viz-accent;
+    in property <float> viz-alpha;
+    out property <length> lyrics-width: lyrics-area.width;
+    out property <length> lyrics-height: lyrics-area.height;
+    in property <bool> close-to-tray;
+    in property <bool> tray-available;
 
     callback open-file();
     callback open-album();
@@ -90,6 +100,9 @@ export component MainWindow inherits Window {
     callback queue-play(int);
     callback line-clicked(int);
     callback toggle-fullscreen();
+    callback set-visualizer(string);
+    callback cycle-visualizer();
+    callback set-close-to-tray(bool);
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -204,6 +217,10 @@ export component MainWindow inherits Window {
                     root.toggle-mute();
                     return accept;
                 }
+                if k == "v" {
+                    root.cycle-visualizer();
+                    return accept;
+                }
             }
             reject
         }
@@ -307,7 +324,7 @@ export component MainWindow inherits Window {
                                     { id: "accent", title: "Accent color", sub: 2 },
                                     { id: "viz", title: "Visualizer", sub: 3 },
                                     { id: "-" },
-                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, disabled: true },
+                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, checked: root.close-to-tray, disabled: !root.tray-available },
                                     { id: "ai", title: "AI alignment…", disabled: true },
                                     { id: "shortcuts", title: "Keyboard shortcuts", shortcut: "F1" },
                                 ];
@@ -327,9 +344,9 @@ export component MainWindow inherits Window {
                                         { id: "accent:violet", title: "Violet", checkable: true, icon: root.accent-icons[6] },
                                     ],
                                     [
-                                        { id: "viz:off", title: "Off", checkable: true, checked: true },
-                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, disabled: true },
-                                        { id: "viz:wave", title: "Soft wave", checkable: true, disabled: true },
+                                        { id: "viz:off", title: "Off", checkable: true, checked: root.visualizer-mode == "off" },
+                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, checked: root.visualizer-mode == "bars" },
+                                        { id: "viz:wave", title: "Soft wave", checkable: true, checked: root.visualizer-mode == "wave" },
                                     ],
                                 ];
                                 activated(id) => {
@@ -353,6 +370,10 @@ export component MainWindow inherits Window {
                                         root.set-accent("azure");
                                     } else if id == "accent:violet" {
                                         root.set-accent("violet");
+                                    } else if id == "viz:off" || id == "viz:bars" || id == "viz:wave" {
+                                        root.set-visualizer(id == "viz:off" ? "off" : id == "viz:bars" ? "bars" : "wave");
+                                    } else if id == "tray" {
+                                        root.set-close-to-tray(!root.close-to-tray);
                                     }
                                 }
                             }
@@ -694,6 +715,16 @@ export component MainWindow inherits Window {
             // ------------------------------------------------------------------
             lyrics-area := Rectangle {
                 horizontal-stretch: 1;
+
+                // `VisualizerBackdrop`: behind the lyrics, at the bottom.
+                if root.visualizer-mode != "off": Image {
+                    x: 0;
+                    width: parent.width;
+                    height: self.source.height * 1phx;
+                    y: parent.height - self.height;
+                    source: root.viz-frame;
+                    image-fit: fill;
+                }
 
                 if root.lyrics-message != "": VerticalLayout {
                     padding-left: 10px;

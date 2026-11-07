@@ -4,9 +4,9 @@ A native Rust rewrite of the Windows player in `desktop/`. It is not finished ye
 
 ## Layout
 
-- `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order, the LRCLIB lookup, and the rules for the settings and session. No UI and no Windows APIs, so it is tested on Linux.
+- `crates/lrc-core`: lyrics files, LRC parsing, tags and covers, embedding lyrics, album order, the LRCLIB lookup, the visualizer's analysis, and the rules for the settings, session, tray and media flyout. No UI and no Windows APIs, so it is tested on Linux.
 - `crates/lrc-romaji`: Japanese to romaji (from M5).
-- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files, and `src/session.rs` keeps the settings file. Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start, instead of the last session.
+- `crates/lrc-player`: the `.exe`, with the Slint UI in `ui/` and Windows-only code behind `#[cfg(windows)]`. `src/audio/` is the audio engine: Symphonia decodes, Rubato resamples, cpal plays, and the clock counts the frames actually played. `src/app.rs` runs the main window (`ui/main.slint`), `src/platform.rs` holds what it needs from the system: the title bar color, the taskbar icon and dropped files, `src/session.rs` keeps the settings file, `src/visualizer.rs` draws the spectrum behind the lyrics, and `src/errors.rs` shows unexpected errors instead of closing the app. `src/win/` holds the Windows media flyout and media keys (SystemMediaTransportControls) and the tray icon (`Shell_NotifyIcon`). Debug builds open a song or album folder given in `LRC_DEV_OPEN` at start, instead of the last session.
 
 ## Building
 
