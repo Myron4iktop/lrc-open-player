@@ -31,7 +31,7 @@ fn main() -> Result<(), slint::PlatformError> {
     #[cfg(windows)]
     platform::set_icons_from_exe(&window);
     platform::apply_title_bar(&window, window.global::<Theme>().get_dark());
-    platform::hook_file_drops(&window, &app);
+    platform::hook_window_events(&window, &app);
     platform::keep_on_screen(&window);
     window.invoke_focus_window();
     // The last playlist comes back once the window is up (`QTimer.singleShot(0, …)`),
