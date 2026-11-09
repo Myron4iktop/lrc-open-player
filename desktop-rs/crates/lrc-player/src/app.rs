@@ -461,20 +461,26 @@ async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
     if !embed_lyrics_in_file(app, &path, &text).await {
         return;
     }
-    let lrc_path = lrc_path_for(&path);
-    if !lrc_path.exists() {
+    if !offer_lrc_update(&path, &text).await {
         message_later(
             rfd::MessageLevel::Info,
             rules::EMBED_TITLE,
             rules::embed_done_text(&file_name(&path)),
         );
-        return;
     }
-    // A .lrc next to the song wins over what was just embedded, so reopening the song
-    // would show the old lyrics. Offer to bring it in line.
-    let question = rules::update_lrc_question(&file_name(&path), &file_name(&lrc_path));
+}
+
+/// After an embed: a .lrc next to the song wins over what was just embedded, so
+/// reopening the song would show the old lyrics. Offers to bring it in line. False
+/// when there is no such .lrc (nothing was asked).
+pub(super) async fn offer_lrc_update(path: &Path, text: &str) -> bool {
+    let lrc_path = lrc_path_for(path);
+    if !lrc_path.exists() {
+        return false;
+    }
+    let question = rules::update_lrc_question(&file_name(path), &file_name(&lrc_path));
     if ask_yes_no(rules::EMBED_TITLE, &question).await
-        && let Err(error) = write_lrc(&lrc_path, &text)
+        && let Err(error) = write_lrc(&lrc_path, text)
     {
         message_later(
             rfd::MessageLevel::Warning,
@@ -482,6 +488,7 @@ async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
             rules::save_failed_text(&file_name(&lrc_path), &error),
         );
     }
+    true
 }
 
 /// `embed_lyrics_in_file`: asks first, then writes the lyrics into the song's tags.

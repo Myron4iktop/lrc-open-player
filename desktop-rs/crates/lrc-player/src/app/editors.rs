@@ -24,7 +24,7 @@ use slint::{ComponentHandle, Model, ModelRc, SharedString, Timer, TimerMode, Vec
 
 use super::{
     App, app_call, ask, ask_yes_no, embed_lyrics_in_file, file_name, fill_theme, message_later,
-    with_app_ret,
+    offer_lrc_update, with_app_ret,
 };
 use crate::audio::State;
 use crate::{
@@ -1213,6 +1213,7 @@ async fn sync_save() {
     {
         let status = format!("Saved {}", file_name(&path));
         app_call(|a, ui| a.sync_written(ui, &text, status));
+        offer_lrc_update(&track, &text).await;
     }
 }
 
@@ -1340,6 +1341,7 @@ async fn translate_embed() {
     if embed_lyrics_in_file(&weak, &track, &text).await {
         let status = ed::translation_embedded(&file_name(&track));
         app_call(|a, ui| a.translate_written(ui, &text, status));
+        offer_lrc_update(&track, &text).await;
     }
 }
 
