@@ -438,11 +438,28 @@ async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
         );
         return;
     }
-    if embed_lyrics_in_file(app, &path, &text).await {
+    if !embed_lyrics_in_file(app, &path, &text).await {
+        return;
+    }
+    let lrc_path = lrc_path_for(&path);
+    if !lrc_path.exists() {
         message_later(
             rfd::MessageLevel::Info,
             rules::EMBED_TITLE,
             rules::embed_done_text(&file_name(&path)),
+        );
+        return;
+    }
+    // A .lrc next to the song wins over what was just embedded, so reopening the song
+    // would show the old lyrics. Offer to bring it in line.
+    let question = rules::update_lrc_question(&file_name(&path), &file_name(&lrc_path));
+    if ask_yes_no(rules::EMBED_TITLE, &question).await
+        && let Err(error) = write_lrc(&lrc_path, &text)
+    {
+        message_later(
+            rfd::MessageLevel::Warning,
+            rules::EMBED_TITLE,
+            rules::save_failed_text(&file_name(&lrc_path), &error),
         );
     }
 }
