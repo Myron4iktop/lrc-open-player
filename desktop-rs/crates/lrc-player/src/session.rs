@@ -9,6 +9,18 @@ use std::path::PathBuf;
 use lrc_core::settings::{self, Loaded, Settings};
 use serde_json::Value;
 
+/// View → Smooth animation: draw with the GPU (Slint's FemtoVG renderer) instead of the
+/// software renderer. Read once at start, before the window exists.
+pub const SMOOTH_ANIMATION_KEY: &str = "ui/smooth_animation";
+pub const SMOOTH_ANIMATION_TITLE: &str = "Smooth animation";
+
+/// Whether the saved settings ask for GPU drawing. Only reads; never writes the file.
+pub fn smooth_animation_wanted() -> bool {
+    settings::default_path()
+        .and_then(|path| Settings::peek(&path))
+        .is_some_and(|s| s.get_bool(SMOOTH_ANIMATION_KEY, false))
+}
+
 /// The settings and where they are kept.
 pub struct Store {
     /// `None` when the file couldn't be read: then nothing is written, so whatever it

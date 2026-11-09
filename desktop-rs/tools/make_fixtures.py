@@ -803,6 +803,11 @@ def cmd_check_embedded(out: Path):
             failures.append(f"{name}: missing from rust.json")
             continue
         for key in ("track_tags", "lyrics", "cover", "info"):
+            # v1v2.mp3 has a comment with a timestamp before the lyrics. The Python app
+            # shows the comment; lrc-core asks the lyrics fields first and shows the
+            # embedded lyrics (its own test checks that).
+            if key == "lyrics" and name == "v1v2.mp3":
+                continue
             if got[key] != want[key]:
                 failures.append(f"{name}: {key}\n    python {got[key]}\n    rust   {want[key]}")
         if name.endswith((".mp3", ".wav")):

@@ -65,6 +65,8 @@ export component MainWindow inherits Window {
     in property <string> drop-headline;
     in property <string> drop-detail;
     in property <string> theme-key: "dark";
+    // View → Smooth animation: GPU drawing, from the next start.
+    in property <bool> smooth-animation;
     in property <string> accent-key: "coral";
     in property <[image]> accent-icons;
     // --- Visualizer and tray ---
@@ -86,6 +88,7 @@ export component MainWindow inherits Window {
     callback show-details();
     callback show-shortcuts();
     callback set-theme(string);
+    callback set-smooth-animation(bool);
     callback set-accent(string);
     callback toggle-play();
     callback previous();
@@ -133,8 +136,11 @@ export component MainWindow inherits Window {
         scroll-anim.running = false;
     }
 
+    // Steps finer than one frame even at 240 Hz, so every frame shows a new position
+    // (a 10 ms step left some 120 Hz frames repeating the last one, and Windows timers
+    // rounded it to 15.6 ms). The position comes from the frame clock, not the step count.
     scroll-anim := Timer {
-        interval: 10ms;
+        interval: 2ms;
         running: false;
         triggered => {
             let t = min(1, (animation-tick() - root.scroll-start) / 360ms);
@@ -339,6 +345,7 @@ export component MainWindow inherits Window {
                                     { id: "theme", title: "Theme", sub: 1 },
                                     { id: "accent", title: "Accent color", sub: 2 },
                                     { id: "viz", title: "Visualizer", sub: 3 },
+                                    { id: "smooth", title: "Smooth animation (GPU)", checkable: true, checked: root.smooth-animation },
                                     { id: "-" },
                                     { id: "tray", title: "Keep playing in tray when closed", checkable: true, checked: root.close-to-tray, disabled: !root.tray-available },
                                     { id: "ai", title: "AI alignment…" },
@@ -372,6 +379,8 @@ export component MainWindow inherits Window {
                                         root.open-ai-settings();
                                     } else if id == "details" {
                                         root.show-details();
+                                    } else if id == "smooth" {
+                                        root.set-smooth-animation(!root.smooth-animation);
                                     } else if id == "theme:dark" || id == "theme:light" {
                                         root.set-theme(id == "theme:dark" ? "dark" : "light");
                                     } else if id == "accent:coral" {

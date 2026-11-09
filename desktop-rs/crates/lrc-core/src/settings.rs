@@ -119,6 +119,15 @@ impl Settings {
         }
     }
 
+    /// Reads the settings file without touching it: `None` when it is missing or not
+    /// valid. For a look before [`Settings::load`] runs, which keeps a broken file aside.
+    pub fn peek(path: &Path) -> Option<Settings> {
+        match serde_json::from_slice::<Value>(&fs::read(path).ok()?) {
+            Ok(Value::Object(values)) => Some(Settings { values }),
+            _ => None,
+        }
+    }
+
     /// Writes the settings file. It is written next to the old one and then swapped in,
     /// so a crash or a full disk mid-write can't leave half a file behind.
     pub fn save(&self, path: &Path) -> io::Result<()> {
@@ -423,6 +432,22 @@ mod tests {
         assert_eq!(
             fs::read_to_string(dir.path().join("settings.json.broken")).unwrap(),
             "{ not json"
+        );
+    }
+
+    #[test]
+    fn peeking_leaves_the_file_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(FILE_NAME);
+        assert!(Settings::peek(&path).is_none());
+        fs::write(&path, "{ not json").unwrap();
+        assert!(Settings::peek(&path).is_none());
+        assert_eq!(fs::read_to_string(&path).unwrap(), "{ not json");
+        fs::write(&path, r#"{"ui/smooth_animation": true}"#).unwrap();
+        assert!(
+            Settings::peek(&path)
+                .unwrap()
+                .get_bool("ui/smooth_animation", false)
         );
     }
 

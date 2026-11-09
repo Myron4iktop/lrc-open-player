@@ -22,13 +22,23 @@ fn main() -> Result<(), slint::PlatformError> {
     platform::set_app_user_model_id();
 
     // Slint's software renderer draws the small transport icons crisply, as the Python
-    // app's QPainter does; its OpenGL renderer blurs shapes this small. `SLINT_BACKEND`
-    // still picks another one, for comparing.
+    // app's QPainter does; its OpenGL renderer blurs shapes this small. View → Smooth
+    // animation picks the OpenGL one instead, which keeps up with 120 Hz screens; if the
+    // GPU can't be used, the software one is used after all. `SLINT_BACKEND` still picks
+    // another one, for comparing.
     if std::env::var_os("SLINT_BACKEND").is_none() {
-        slint::BackendSelector::new()
-            .backend_name("winit".into())
-            .renderer_name("software".into())
-            .select()?;
+        let gpu = session::smooth_animation_wanted()
+            && slint::BackendSelector::new()
+                .backend_name("winit".into())
+                .renderer_name("femtovg".into())
+                .select()
+                .is_ok();
+        if !gpu {
+            slint::BackendSelector::new()
+                .backend_name("winit".into())
+                .renderer_name("software".into())
+                .select()?;
+        }
     }
 
     let window = MainWindow::new()?;
