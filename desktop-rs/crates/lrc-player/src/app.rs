@@ -32,7 +32,7 @@ use slint::{
 };
 
 use crate::audio::{Event, Player, State};
-use crate::session::Store;
+use crate::session::{SMOOTH_ANIMATION_KEY, SMOOTH_ANIMATION_TITLE, Store};
 use crate::{
     DetailRow, DetailsDialog, LyricLineData, MainWindow, QuestionDialog, ShortcutRow,
     ShortcutsDialog, Theme,
@@ -321,6 +321,8 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         let _ = slint::spawn_local(async move { embed_shown_lyrics(&weak).await });
     });
     on!(on_show_shortcuts, |a, _ui| a.show_shortcuts());
+    on!(on_set_smooth_animation, |a, ui, on| a
+        .set_smooth_animation(ui, on));
     on!(on_set_theme, |a, ui, theme| {
         let accent = a.accent;
         a.apply_theme(ui, &theme, accent, true)
@@ -1345,6 +1347,7 @@ impl App {
         let repeat = Repeat::from_key(&s.get_str("playback/repeat", "off"));
         let placement = s.raw(PLACEMENT_KEY).and_then(Placement::from_json);
         self.queue_wanted = s.get_bool("ui/queue_open", false);
+        ui.set_smooth_animation(s.get_bool(SMOOTH_ANIMATION_KEY, false));
 
         self.apply_theme(ui, &theme, &accent, false);
         ui.set_volume(volume as f32);
@@ -1362,6 +1365,24 @@ impl App {
                 window.set_maximized(true);
             }
         }
+    }
+
+    /// View → Smooth animation: draws with the GPU from the next start. The software
+    /// renderer can't keep up with a 120 Hz screen on a large window; the GPU can, and
+    /// waits for the screen's refresh, so the lyrics glide without tearing.
+    fn set_smooth_animation(&mut self, ui: &MainWindow, on: bool) {
+        ui.set_smooth_animation(on);
+        self.store.set(SMOOTH_ANIMATION_KEY, on);
+        message_later(
+            rfd::MessageLevel::Info,
+            SMOOTH_ANIMATION_TITLE,
+            if on {
+                "Smooth animation starts the next time you open LRC Open Player."
+            } else {
+                "The app goes back to its usual drawing the next time you open it."
+            }
+            .to_owned(),
+        );
     }
 
     /// Fullscreen, playlist, song and position. Runs right after the window appears.
