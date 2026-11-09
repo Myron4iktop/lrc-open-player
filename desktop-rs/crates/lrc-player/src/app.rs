@@ -399,7 +399,7 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     on!(on_set_close_to_tray, |a, ui, on| {
         a.close_to_tray = on && a.tray.is_some();
         ui.set_close_to_tray(a.close_to_tray);
-        a.store.set("ui/close_to_tray", a.close_to_tray)
+        a.store.set(sys::TRAY_ON_CLOSE_KEY, a.close_to_tray)
     });
 
     let weak = Rc::downgrade(app);
@@ -1439,9 +1439,10 @@ impl App {
         let mode = self.store.settings.get_str("ui/visualizer", "off");
         // Off unless turned on in the View menu: the Python app starts with it on, but on
         // Windows 11 the new tray icon hides behind the ^ arrow, so closing the window looked
-        // like quitting while the song kept playing.
+        // like quitting while the song kept playing. The Python app's own key isn't read:
+        // it saves "on" at every start, whether or not anyone chose it.
         self.close_to_tray =
-            self.store.settings.get_bool("ui/close_to_tray", false) && self.tray.is_some();
+            self.store.settings.get_bool(sys::TRAY_ON_CLOSE_KEY, false) && self.tray.is_some();
         ui.set_close_to_tray(self.close_to_tray);
         self.set_visualizer(ui, &mode, false);
         // The romaji setting is kept for M5.
@@ -1816,11 +1817,8 @@ impl App {
 
     /// Connects the media flyout and media keys. Needs the native window, so it runs
     /// once the window is shown.
-    pub fn init_media_controls(&mut self, ui: &MainWindow) {
-        let Some(hwnd) = crate::platform::window_handle(ui) else {
-            return;
-        };
-        self.media = MediaControls::new(hwnd, |command| {
+    pub fn init_media_controls(&mut self, _ui: &MainWindow) {
+        self.media = MediaControls::new(|command| {
             let _ = slint::invoke_from_event_loop(move || {
                 app_call(|a, ui| a.media_command(ui, command));
             });

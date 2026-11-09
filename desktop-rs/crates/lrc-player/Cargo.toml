@@ -39,6 +39,7 @@ winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
 windows = { version = "0.62", features = [
     "Foundation",
     "Media",
+    "Media_Playback",
     "Storage_Streams",
     "Win32_Foundation",
     "Win32_Graphics_Dwm",

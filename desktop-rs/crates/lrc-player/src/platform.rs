@@ -158,17 +158,6 @@ pub fn keep_on_screen(ui: &MainWindow) {
     });
 }
 
-/// The native window handle (HWND) of the main window, for the media flyout.
-pub fn window_handle(ui: &MainWindow) -> Option<isize> {
-    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
-    ui.window()
-        .with_winit_window(|w| match w.window_handle().ok()?.as_raw() {
-            RawWindowHandle::Win32(h) => Some(h.hwnd.get()),
-            _ => None,
-        })
-        .flatten()
-}
-
 /// `raise_()` and `activateWindow()`: brings the window back in front of the others.
 pub fn bring_to_front(ui: &MainWindow) {
     ui.window().with_winit_window(|w| w.focus_window());

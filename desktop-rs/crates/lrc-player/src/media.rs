@@ -30,10 +30,7 @@ mod none {
     pub struct MediaControls;
 
     impl MediaControls {
-        pub fn new(
-            _hwnd: isize,
-            _on_command: impl Fn(MediaCommand) + Send + Sync + 'static,
-        ) -> Option<Self> {
+        pub fn new(_on_command: impl Fn(MediaCommand) + Send + Sync + 'static) -> Option<Self> {
             None
         }
         pub fn set_track(&mut self, _: &TrackInfo, _: Option<&RgbaImage>, _: bool, _: bool) {}

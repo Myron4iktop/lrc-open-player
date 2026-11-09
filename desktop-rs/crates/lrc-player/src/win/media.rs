@@ -1,9 +1,10 @@
 //! The Windows media flyout, lock screen and media keys (`WindowsMediaControls`), through
-//! SystemMediaTransportControls for the main window.
+//! SystemMediaTransportControls.
 //!
 //! The plan named the `souvlaki` crate for this. It always enables Next and Previous and
 //! can't set the album artist or track number, which the Python app does, so this calls
-//! the same WinRT API directly through the `windows` crate.
+//! the same WinRT API directly through the `windows` crate. As in the Python app, a WinRT
+//! `MediaPlayer` that plays nothing is the way to get the controls in a desktop app.
 //!
 //! Windows calls the button and seek handlers on a thread-pool thread, so they only pass
 //! a [`MediaCommand`] on; the app acts on it on the UI thread.
@@ -15,6 +16,7 @@ use image::RgbaImage;
 use lrc_core::system::{TimelineThrottle, media_clean, media_track_number, timeline};
 use lrc_core::tags::TrackInfo;
 use windows::Foundation::{TimeSpan, TypedEventHandler, Uri};
+use windows::Media::Playback::MediaPlayer;
 use windows::Media::{
     MediaPlaybackStatus, MediaPlaybackType, PlaybackPositionChangeRequestedEventArgs,
     SystemMediaTransportControls, SystemMediaTransportControlsButton,
@@ -22,14 +24,14 @@ use windows::Media::{
     SystemMediaTransportControlsTimelineProperties,
 };
 use windows::Storage::Streams::RandomAccessStreamReference;
-use windows::Win32::Foundation::HWND;
-use windows::Win32::System::WinRT::ISystemMediaTransportControlsInterop;
 use windows::core::{HSTRING, Ref};
 
 use crate::audio::State;
 use crate::media::MediaCommand;
 
 pub struct MediaControls {
+    /// Only there to own the controls; the audio engine plays the music.
+    _player: MediaPlayer,
     smtc: SystemMediaTransportControls,
     button_token: i64,
     seek_token: i64,
@@ -42,13 +44,10 @@ pub struct MediaControls {
 }
 
 impl MediaControls {
-    /// Connects to the media flyout for the window `hwnd`. `None` if Windows refuses,
-    /// and the player then works without it, as the Python app does.
-    pub fn new(
-        hwnd: isize,
-        on_command: impl Fn(MediaCommand) + Send + Sync + 'static,
-    ) -> Option<Self> {
-        match Self::try_new(HWND(hwnd as *mut _), on_command) {
+    /// Connects to the media flyout. `None` if Windows refuses, and the player then works
+    /// without it, as the Python app does.
+    pub fn new(on_command: impl Fn(MediaCommand) + Send + Sync + 'static) -> Option<Self> {
+        match Self::try_new(on_command) {
             Ok(controls) => Some(controls),
             Err(e) => {
                 eprintln!("SMTC initialisation failed: {e}");
@@ -58,15 +57,11 @@ impl MediaControls {
     }
 
     fn try_new(
-        hwnd: HWND,
         on_command: impl Fn(MediaCommand) + Send + Sync + 'static,
     ) -> windows::core::Result<Self> {
-        let interop = windows::core::factory::<
-            SystemMediaTransportControls,
-            ISystemMediaTransportControlsInterop,
-        >()?;
-        // SAFETY: `hwnd` is the main window's live handle.
-        let smtc: SystemMediaTransportControls = unsafe { interop.GetForWindow(hwnd) }?;
+        let player = MediaPlayer::new()?;
+        player.CommandManager()?.SetIsEnabled(false)?;
+        let smtc = player.SystemMediaTransportControls()?;
         smtc.SetIsEnabled(true)?;
         smtc.SetIsPlayEnabled(true)?;
         smtc.SetIsPauseEnabled(true)?;
@@ -108,6 +103,7 @@ impl MediaControls {
             .tempdir()
             .ok();
         Ok(Self {
+            _player: player,
             smtc,
             button_token,
             seek_token,
