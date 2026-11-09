@@ -12,6 +12,9 @@ pub const TRAY_HINT_TEXT: &str =
     "The player keeps running in the tray. Right-click the icon to quit.";
 /// How long the hint stays up, in milliseconds (`showMessage(…, 5000)`).
 pub const TRAY_HINT_MS: u32 = 5000;
+/// Where "Keep playing in tray when closed" is kept. Not the Python app's
+/// `ui/close_to_tray`, which that app writes as on at every start.
+pub const TRAY_ON_CLOSE_KEY: &str = "ui/tray_on_close";
 /// The View menu item's tooltip when Windows has no tray.
 pub const NO_TRAY_TEXT: &str = "No system tray available";
 
