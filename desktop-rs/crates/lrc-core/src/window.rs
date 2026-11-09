@@ -384,6 +384,16 @@ pub fn embed_done_text(song_name: &str) -> String {
     format!("The lyrics are now inside “{song_name}”.")
 }
 
+/// After embedding, when a .lrc next to the song would still be shown instead (a .lrc
+/// always wins over the lyrics inside the song). Not in the Python app.
+pub fn update_lrc_question(song_name: &str, lrc_name: &str) -> String {
+    format!(
+        "The lyrics are now inside “{song_name}”.\n\n\
+         The lyrics file “{lrc_name}” next to it is shown instead of them. \
+         Write the same lyrics into “{lrc_name}” too?"
+    )
+}
+
 /// When writing them failed.
 pub fn embed_failed_text(song_name: &str, error: &str) -> String {
     format!("Couldn't update “{song_name}”:\n{error}")
