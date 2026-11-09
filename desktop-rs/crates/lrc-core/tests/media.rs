@@ -178,18 +178,13 @@ fn embedded_lyrics_read_back() {
             }
         }
         let got = describe(&target, &out);
-        // The player takes the first tag that holds a timestamp, and in this song that is
-        // a comment that comes before the lyrics. The Python app does the same.
-        let want_lyrics = if name == "v1v2.mp3" {
-            entry["lyrics"].as_str().unwrap()
-        } else {
-            text
-        };
-        if got["lyrics"].as_str() != Some(want_lyrics) {
+        // What was embedded is what the player shows, even in v1v2.mp3, whose comment
+        // with a timestamp comes first (the Python app would show the comment).
+        if got["lyrics"].as_str() != Some(text) {
             failures.push(format!("{name}: lyrics read back as {}", got["lyrics"]));
         }
         let mut want = entry.clone();
-        want["lyrics"] = Value::from(want_lyrics);
+        want["lyrics"] = Value::from(text);
         // Embedding adds bytes, which moves the bitrate the Python app works out from the
         // file size for some formats; everything else must stay the same.
         want["info"]["bitrate_kbps"] = got["info"]["bitrate_kbps"].clone();
