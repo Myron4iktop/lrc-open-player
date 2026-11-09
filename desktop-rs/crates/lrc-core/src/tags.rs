@@ -1074,24 +1074,29 @@ pub fn extract_metadata_and_cover(file_path: &Path) -> TrackMetadata {
         info.year = v.chars().take(4).collect();
     }
 
-    // 3. Lyrics: first any tag that holds timestamps, else the usual lyrics fields.
-    // USLT is where MP3 (ID3) keeps unsynced lyrics, under a key like "USLT::eng".
-    let mut lyrics = tag_pairs
+    // 3. Lyrics: a lyrics field that holds timestamps, else any tag that holds them (a
+    // comment, say), else the usual lyrics fields. USLT is where MP3 (ID3) keeps lyrics,
+    // under a key like "USLT::eng".
+    //
+    // The Python app takes the first tag with timestamps of any kind. Then a comment or
+    // an old copy of the lyrics that comes first in the file hides what "Embed lyrics in
+    // file" wrote, so the lyrics fields are asked first here.
+    let is_lyrics_key = |k: &str| {
+        k.contains("lyric")
+            || k.contains("\u{a9}lyr")
+            || k.contains("unsynced")
+            || k.starts_with("uslt")
+    };
+    let lyrics = tag_pairs
         .iter()
-        .find(|(_, text)| TIMESTAMP.is_match(text))
+        .find(|(k, text)| is_lyrics_key(k) && TIMESTAMP.is_match(text))
+        .or_else(|| tag_pairs.iter().find(|(_, text)| TIMESTAMP.is_match(text)))
+        .or_else(|| {
+            tag_pairs
+                .iter()
+                .find(|(k, text)| is_lyrics_key(k) && !py::strip(text).is_empty())
+        })
         .map(|(_, text)| text.clone());
-    if lyrics.is_none() {
-        lyrics = tag_pairs
-            .iter()
-            .find(|(k, text)| {
-                (k.contains("lyric")
-                    || k.contains("\u{a9}lyr")
-                    || k.contains("unsynced")
-                    || k.starts_with("uslt"))
-                    && !py::strip(text).is_empty()
-            })
-            .map(|(_, text)| text.clone());
-    }
 
     // 4. Cover
     let mut cover = embedded_pictures(&audio).into_iter().find_map(load_cover);
