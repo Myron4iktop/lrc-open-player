@@ -1434,8 +1434,11 @@ impl App {
         self.set_shuffle(ui, shuffle, false);
         self.set_repeat(ui, repeat, false);
         let mode = self.store.settings.get_str("ui/visualizer", "off");
+        // Off unless turned on in the View menu: the Python app starts with it on, but on
+        // Windows 11 the new tray icon hides behind the ^ arrow, so closing the window looked
+        // like quitting while the song kept playing.
         self.close_to_tray =
-            self.store.settings.get_bool("ui/close_to_tray", true) && self.tray.is_some();
+            self.store.settings.get_bool("ui/close_to_tray", false) && self.tray.is_some();
         ui.set_close_to_tray(self.close_to_tray);
         self.set_visualizer(ui, &mode, false);
         // The romaji setting is kept for M5.
@@ -1801,8 +1804,32 @@ impl App {
                 app_call(|a, ui| a.media_command(ui, command));
             });
         });
-        if self.media.is_some() {
-            self.update_navigation();
+        // The last session's song was loaded before the window, and so the flyout, existed:
+        // without this the flyout stayed empty until the next song.
+        let current = self.queue.current_path().cloned();
+        let has_next = self.queue.has_next();
+        let (state, pos, duration) = (
+            self.player.state(),
+            self.player.position_ms(),
+            self.player.duration_ms(),
+        );
+        let Some(media) = &mut self.media else {
+            return;
+        };
+        match current {
+            Some(path) => {
+                let meta = extract_metadata_and_cover(&path);
+                let duration = duration.max(meta.info.duration_sec * 1000);
+                media.set_track(
+                    &meta.info,
+                    meta.cover.as_ref().map(|c| &c.image),
+                    true,
+                    has_next,
+                );
+                media.set_playback_state(state);
+                media.update_timeline(pos, duration, true);
+            }
+            None => self.update_navigation(),
         }
     }
 
