@@ -3502,6 +3502,11 @@ class LyricsSyncDialog(QDialog):
     "sub" is a paired line (translation) that shares the main line's timestamp.
     """
 
+    # Keys that may repeat while held: seeking, moving ▶ and nudging. Enter, Backspace, Space
+    # and the rest act once per press.
+    REPEATING_KEYS = (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down,
+                      Qt.Key.Key_BracketLeft, Qt.Key.Key_BracketRight)
+
     ROW_VPAD = 9   # space above and below each row's text
     ROW_GAP = 2    # space between a line and its romaji/translation
 
@@ -4026,6 +4031,8 @@ class LyricsSyncDialog(QDialog):
         if self.stack.currentIndex() != 1:
             super().keyPressEvent(event)
             return
+        if event.isAutoRepeat() and key not in self.REPEATING_KEYS:
+            return  # a key held a moment too long must not stamp (or undo) several lines
         ctrl = bool(mods & Qt.KeyboardModifier.ControlModifier)
         if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.stamp()
