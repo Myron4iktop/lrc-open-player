@@ -21,7 +21,7 @@ fn main() -> Result<(), slint::PlatformError> {
     #[cfg(windows)]
     platform::set_app_user_model_id();
     #[cfg(windows)]
-    platform::register_app_name();
+    platform::ensure_start_menu_shortcut();
 
     // Slint's software renderer draws the small transport icons crisply, as the Python
     // app's QPainter does; its OpenGL renderer blurs shapes this small. View → Smooth
