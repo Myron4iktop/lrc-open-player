@@ -328,14 +328,14 @@ def extract_metadata_and_cover(file_path: str):
     try:
         if hasattr(audio, "info") and audio.info:
             ainfo = audio.info
-            sr = getattr(ainfo, "sample_rate", 44100)
+            ext = os.path.splitext(file_path)[1].lower()
+            # Opus has no sample rate in its tags (mutagen reports none): it always plays at 48 kHz
+            sr = getattr(ainfo, "sample_rate", 0) or (48000 if ext == ".opus" else 44100)
             info["sample_rate_khz"] = round(sr / 1000.0, 1)
             info["channels"] = getattr(ainfo, "channels", 2)
 
-            bps = getattr(ainfo, "bits_per_sample", 0)
-            if bps == 0:
-                ext = os.path.splitext(file_path)[1].lower()
-                bps = 16 if ext in (".mp3", ".ogg", ".m4a") else 24
+            # Lossy formats (MP3, Ogg Vorbis, Opus) have no bit depth of their own; show 16
+            bps = getattr(ainfo, "bits_per_sample", 0) or 16
             info["bits_per_sample"] = bps
 
             br = getattr(ainfo, "bitrate", 0)
@@ -352,7 +352,10 @@ def extract_metadata_and_cover(file_path: str):
             m, s = divmod(length_sec, 60)
             info["duration_str"] = f"{m}:{s:02d}"
 
-            if bps >= 24 or sr >= 48000 or info["bitrate_kbps"] >= 1000:
+            # "HD" is for lossless files only: an Opus file or a 48 kHz MP3 isn't one
+            codec = str(getattr(ainfo, "codec", "")).lower()  # M4A: "alac" or "mp4a…" (AAC)
+            lossless = ext in (".flac", ".wav") or codec.startswith("alac")
+            if lossless and (bps >= 24 or sr >= 48000 or info["bitrate_kbps"] >= 1000):
                 info["is_hd"] = True
 
         ext = os.path.splitext(file_path)[1].lower()
