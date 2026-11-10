@@ -2813,7 +2813,6 @@ dependencies = [
  "slint-build",
  "symphonia",
  "symphonia-adapter-libopus",
- "tempfile",
  "tiny-skia 0.12.0",
  "windows",
  "winit",
