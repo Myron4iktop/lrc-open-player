@@ -4115,6 +4115,8 @@ class AudioLRCPlayer(QMainWindow):
         self._scan_token = 0          # bumped by every open, so a slow album scan can't win late
         self._scan_worker = None
         self._scan_busy = False
+        self._play_wanted = False     # the current track was loaded to be played, not just restored paused
+        self._unplayable_run = 0      # songs in a row that couldn't be played
         self._fetch_worker = None     # the LRCLIB lookup still wanted, if any
         self._lyrics_shown = 0        # bumped whenever lyrics go on screen, so a late lookup can tell
 
@@ -4940,6 +4942,7 @@ class AudioLRCPlayer(QMainWindow):
 
         # A resume position can only be applied reliably once the media has loaded
         self._pending_seek_ms = start_position_ms if start_position_ms > 0 else None
+        self._play_wanted = autoplay
 
         self.queue_list.setCurrentRow(index)
         self.player.setSource(QUrl.fromLocalFile(file_path))
@@ -5168,6 +5171,17 @@ class AudioLRCPlayer(QMainWindow):
     def _on_media_status_changed(self, status):
         MS = QMediaPlayer.MediaStatus
 
+        if status == MS.InvalidMedia:
+            if 0 <= self.current_track_idx < len(self.playlist):
+                # Handled after this signal: the reason (errorString) is set by then, and
+                # the next song isn't loaded from inside the player's own status change.
+                path = self.playlist[self.current_track_idx]
+                QTimer.singleShot(0, lambda: self._on_unplayable(path))
+            return
+        if status in (MS.LoadedMedia, MS.BufferedMedia):
+            self._unplayable_run = 0
+            self._flag_queue_item(self.current_track_idx)  # it plays (again): no warning mark
+
         # Resume position from the previous session, applied once media is ready
         if status in (MS.LoadedMedia, MS.BufferedMedia) and self._pending_seek_ms is not None:
             resume_ms = self._pending_seek_ms
@@ -5188,6 +5202,42 @@ class AudioLRCPlayer(QMainWindow):
                 self.player.play()
             elif self._has_next():
                 self.play_next()
+
+    MAX_UNPLAYABLE_SKIPS = 5
+
+    def _on_unplayable(self, path: str):
+        """The song can't be played: it is missing, damaged, or in a format this PC can't decode.
+
+        The player used to just sit there, and an album stopped at the song. Now the song
+        is marked in the tracklist and, while an album is playing, skipped. After a few in
+        a row it stops skipping: a whole album that won't play (a missing codec, an
+        unplugged drive) shouldn't race to its end.
+        """
+        if not self._is_current(path):
+            return  # another song was opened in the meantime
+        name = os.path.basename(path)
+        reason = (self.player.errorString() or "").strip()
+        problem = f"Couldn't play “{name}”" + (f": {reason}" if reason else ".")
+        print(problem)
+        self._unplayable_run += 1
+        self._flag_queue_item(self.current_track_idx, problem)
+
+        if (self._play_wanted and len(self.playlist) > 1 and self._has_next() and self.repeat_mode != "track"
+                and not self._editor_open() and self._unplayable_run <= self.MAX_UNPLAYABLE_SKIPS):
+            self.play_next()
+            return
+        self._cancel_lyrics_search()
+        self._lyrics_shown += 1  # a lookup that has already answered must not replace this note
+        self._show_lyrics_message(problem, "lyricsEmpty")
+
+    def _flag_queue_item(self, index: int, problem: str = ""):
+        """Marks a tracklist row as unplayable (⚠ and a tooltip saying why), or clears the mark."""
+        item = self.queue_list.item(index)
+        if item is None:
+            return
+        text = item.text().removeprefix("⚠ ")
+        item.setText(f"⚠ {text}" if problem else text)
+        item.setToolTip(plain_tooltip(problem))
 
     def seek_to(self, ms: int):
         self.player.setPosition(ms)
