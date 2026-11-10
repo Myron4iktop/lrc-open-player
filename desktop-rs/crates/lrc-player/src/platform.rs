@@ -139,6 +139,50 @@ mod win {
         let _ = unsafe { SetCurrentProcessExplicitAppUserModelID(&id) };
     }
 
+    /// Tells Windows the player's name and icon for its taskbar identity, so the media
+    /// panel by the clock says "LRC Open Player" and not "Unknown app". A portable .exe has
+    /// no installer to do this, so it is written at every start, for this user only.
+    pub fn register_app_name() {
+        use windows::Win32::System::Registry::{HKEY_CURRENT_USER, REG_SZ, RegSetKeyValueW};
+
+        let key = HSTRING::from(format!(
+            r"Software\Classes\AppUserModelId\{}",
+            lrc_core::APP_USER_MODEL_ID
+        ));
+        let set = |name: &str, value: &str| {
+            let wide: Vec<u16> = value.encode_utf16().chain([0]).collect();
+            // SAFETY: `wide` is a NUL-terminated wide string of the stated size in bytes.
+            let _ = unsafe {
+                RegSetKeyValueW(
+                    HKEY_CURRENT_USER,
+                    &key,
+                    &HSTRING::from(name),
+                    REG_SZ.0,
+                    Some(wide.as_ptr().cast()),
+                    (wide.len() * 2) as u32,
+                )
+            };
+        };
+        set("DisplayName", lrc_core::APP_TITLE);
+        if let Some(icon) = app_icon_png() {
+            set("IconUri", &icon.to_string_lossy());
+        }
+    }
+
+    /// The icon as a PNG next to the settings file, which is where Windows reads it from.
+    fn app_icon_png() -> Option<std::path::PathBuf> {
+        const ICO: &[u8] = include_bytes!("../../../../desktop/favicon.ico");
+        let path = lrc_core::settings::default_path()?
+            .parent()?
+            .join("icon.png");
+        if !path.exists() {
+            let icon = image::load_from_memory_with_format(ICO, image::ImageFormat::Ico).ok()?;
+            std::fs::create_dir_all(path.parent()?).ok()?;
+            icon.save_with_format(&path, image::ImageFormat::Png).ok()?;
+        }
+        Some(path)
+    }
+
     /// Slint only sets the small (title bar) icon. The taskbar and Alt+Tab use the big one,
     /// so both are loaded from the .exe's own icon, which Windows picks at the right size.
     pub fn set_icons_from_exe(window: &crate::MainWindow) {
@@ -154,7 +198,7 @@ mod win {
 }
 
 #[cfg(windows)]
-pub use win::{set_app_user_model_id, set_icons_from_exe};
+pub use win::{register_app_name, set_app_user_model_id, set_icons_from_exe};
 
 /// Moves the window back onto a screen if the remembered position is off every one
 /// (a monitor unplugged since), as Qt's `restoreGeometry` does.
