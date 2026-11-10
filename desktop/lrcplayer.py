@@ -26,7 +26,7 @@ import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 from PyQt6.QtCore import (
-    Qt, QUrl, QTime, QSize, QThread, QObject, QSettings, pyqtSignal, QTimer,
+    Qt, QUrl, QSize, QThread, QObject, QSettings, pyqtSignal, QTimer,
     QPropertyAnimation, QEasingCurve, pyqtProperty, QPointF, QRectF,
     QBuffer, QByteArray, QIODevice
 )
@@ -5992,8 +5992,9 @@ class AudioLRCPlayer(QMainWindow):
 
     @staticmethod
     def _format_time(ms):
-        time = QTime(0, 0, 0).addMSecs(ms)
-        return time.toString("m:ss")
+        """75 minutes is "75:00" (a clock time would wrap around to "15:00" after an hour)."""
+        minutes, seconds = divmod(max(0, int(ms)) // 1000, 60)
+        return f"{minutes}:{seconds:02d}"
 
 
 def resource_path(relative_path: str) -> str:
