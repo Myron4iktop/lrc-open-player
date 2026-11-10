@@ -652,7 +652,9 @@ class LrcFetchWorker(QThread):
             with urllib.request.urlopen(req, timeout=6) as response:
                 if response.status == 200:
                     data = json.loads(response.read().decode("utf-8"))
-                    exact = self.duration_sec > 0  # LRCLIB only returns an entry of that length
+                    # LRCLIB only returns an entry of that length, by that artist. Without an
+                    # artist (an untagged file) it is a title-only match: see matches() below.
+                    exact = self.duration_sec > 0 and bool(self.artist)
                     if isinstance(data, dict) and data.get("syncedLyrics"):
                         self._emit(data["syncedLyrics"], "Synced lyrics downloaded from LRCLIB.", exact,
                                    data.get("duration") or 0)
@@ -690,13 +692,14 @@ class LrcFetchWorker(QThread):
                         # agree on the song, not only its length: another track of the same
                         # length is a different song. (The /api/get path above already keys on
                         # title+artist+duration, so its hits are trusted on their own.)
-                        if not fits(item):
+                        # Without an artist to compare (an untagged file) nothing is trusted:
+                        # plenty of songs are called "Home" or "Intro" and run about as long,
+                        # and a wrong .lrc saved next to the song would be shown from then on.
+                        if not self.artist or not fits(item):
                             return False
                         if not _same_text(item.get("trackName") or "", self.title):
                             return False
-                        if self.artist and not _same_text(item.get("artistName") or "", self.artist):
-                            return False
-                        return True
+                        return _same_text(item.get("artistName") or "", self.artist)
 
                     for item in results:
                         if item.get("syncedLyrics") and matches(item):
@@ -5359,11 +5362,12 @@ class AudioLRCPlayer(QMainWindow):
         notes = []
         if not trusted:
             mine = int(self.current_info.get("duration_sec", 0) or 0)
-            if lrclib_length and mine:
+            if lrclib_length and mine and abs(lrclib_length - mine) > LrcFetchWorker.MATCH_TOLERANCE_SEC:
                 notes.append(f"LRCLIB only has these lyrics for a {mins(lrclib_length)} version of the song "
                              f"(this file is {mins(mine)}), so they may not line up.")
             else:
-                notes.append("They come from a loose search, so they may belong to another version of the song.")
+                notes.append("They come from a loose search, so they may belong to another version of the song, "
+                             "or to another song with the same name.")
         if has_file:
             question, yes, no = f"Replace “{name}” with the lyrics from LRCLIB?", "Replace", "Keep mine"
             notes.append("Your current file will be overwritten.")
