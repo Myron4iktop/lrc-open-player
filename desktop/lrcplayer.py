@@ -4115,6 +4115,8 @@ class AudioLRCPlayer(QMainWindow):
         self._scan_token = 0          # bumped by every open, so a slow album scan can't win late
         self._scan_worker = None
         self._scan_busy = False
+        self._fetch_worker = None     # the LRCLIB lookup still wanted, if any
+        self._lyrics_shown = 0        # bumped whenever lyrics go on screen, so a late lookup can tell
 
         # Lyrics sync offset in ms. Positive = lyrics appear later, negative = earlier.
         self.lyrics_offset_ms = 0
@@ -4928,6 +4930,7 @@ class AudioLRCPlayer(QMainWindow):
         if not (0 <= index < len(self.playlist)):
             return
 
+        self._cancel_lyrics_search()  # skipping through an album shouldn't queue up lookups
         self.current_track_idx = index
         if index in self.play_order:
             self.order_pos = self.play_order.index(index)
@@ -5298,6 +5301,7 @@ class AudioLRCPlayer(QMainWindow):
             return
 
         current_file = self.playlist[self.current_track_idx]
+        self._cancel_lyrics_search()
         self._show_lyrics_message("Searching online lyrics (LRCLIB)...")
 
         worker = LrcFetchWorker(
@@ -5307,21 +5311,32 @@ class AudioLRCPlayer(QMainWindow):
             title_from_tags=self.current_info.get("title_from_tags", True),
         )
         # Keep a reference until the thread finishes (dropping it mid-run crashes Qt),
-        # and ignore results that arrive after the user has moved to another track.
+        # and ignore results that arrive after the user has moved to another track, or
+        # has put other lyrics on screen in the meantime (loaded a file, previewed an edit).
         self.keep_worker(worker)
+        self._fetch_worker = worker
         worker.finished_signal.connect(
-            lambda text, msg, trusted, length, path=current_file, manual=manual:
-            self._on_online_lyrics_fetched(text, msg, path, trusted, length, manual)
+            lambda text, msg, trusted, length, path=current_file, manual=manual, shown=self._lyrics_shown:
+            self._on_online_lyrics_fetched(text, msg, path, trusted, length, manual, shown)
         )
         worker.start()
+
+    def _cancel_lyrics_search(self):
+        """The running LRCLIB lookup is no longer wanted: it stops after its current request."""
+        if self._fetch_worker is not None:
+            self._fetch_worker.cancel()
+            self._fetch_worker = None
 
     def _is_current(self, path: str) -> bool:
         return 0 <= self.current_track_idx < len(self.playlist) and self.playlist[self.current_track_idx] == path
 
     def _on_online_lyrics_fetched(self, lyrics_text: str, status_msg: str, requested_path: str = "",
-                                  trusted: bool = False, lrclib_length: int = 0, manual: bool = False):
+                                  trusted: bool = False, lrclib_length: int = 0, manual: bool = False,
+                                  shown=None):
         if requested_path and not self._is_current(requested_path):
             return  # stale result for a track that is no longer current
+        if shown is not None and shown != self._lyrics_shown:
+            return  # other lyrics were put on screen while this search ran; they stay
         if not lyrics_text:
             if manual and self._show_own_lyrics(requested_path):
                 QMessageBox.information(self, "Search online", "LRCLIB has no lyrics for this song.")
@@ -5651,6 +5666,7 @@ class AudioLRCPlayer(QMainWindow):
         self._rescale_cards(self.isFullScreen())
 
     def parse_and_display_lyrics(self, content: str):
+        self._lyrics_shown += 1
         self._clear_lyrics()
         content = content.replace("\ufeff", "")  # a BOM (also seen inside tags) is never lyrics
         raw_entries = []
