@@ -112,48 +112,77 @@ mod win {
         let _ = unsafe { SetCurrentProcessExplicitAppUserModelID(&id) };
     }
 
-    /// Tells Windows the player's name and icon for its taskbar identity, so the media
-    /// panel by the clock says "LRC Open Player" and not "Unknown app". A portable .exe has
-    /// no installer to do this, so it is written at every start, for this user only.
-    pub fn register_app_name() {
-        use windows::Win32::System::Registry::{HKEY_CURRENT_USER, REG_SZ, RegSetKeyValueW};
-
-        let key = HSTRING::from(format!(
-            r"Software\Classes\AppUserModelId\{}",
-            lrc_core::APP_USER_MODEL_ID
-        ));
-        let set = |name: &str, value: &str| {
-            let wide: Vec<u16> = value.encode_utf16().chain([0]).collect();
-            // SAFETY: `wide` is a NUL-terminated wide string of the stated size in bytes.
-            let _ = unsafe {
-                RegSetKeyValueW(
-                    HKEY_CURRENT_USER,
-                    &key,
-                    &HSTRING::from(name),
-                    REG_SZ.0,
-                    Some(wide.as_ptr().cast()),
-                    (wide.len() * 2) as u32,
-                )
-            };
-        };
-        set("DisplayName", lrc_core::APP_TITLE);
-        if let Some(icon) = app_icon_png() {
-            set("IconUri", &icon.to_string_lossy());
+    /// Keeps a Start Menu shortcut to this .exe that carries the player's taskbar identity.
+    /// That shortcut is where Windows finds the name for the media panel by the clock, which
+    /// otherwise says "Unknown app". A portable .exe has no installer to make one, so it is
+    /// made at start-up, and made again when the .exe has moved. Failing is harmless.
+    pub fn ensure_start_menu_shortcut() {
+        if let Err(e) = try_start_menu_shortcut() {
+            eprintln!("Start Menu shortcut: {e}");
         }
     }
 
-    /// The icon as a PNG next to the settings file, which is where Windows reads it from.
-    fn app_icon_png() -> Option<std::path::PathBuf> {
-        const ICO: &[u8] = include_bytes!("../../../../desktop/favicon.ico");
-        let path = lrc_core::settings::default_path()?
-            .parent()?
-            .join("icon.png");
-        if !path.exists() {
-            let icon = image::load_from_memory_with_format(ICO, image::ImageFormat::Ico).ok()?;
-            std::fs::create_dir_all(path.parent()?).ok()?;
-            icon.save_with_format(&path, image::ImageFormat::Png).ok()?;
+    fn try_start_menu_shortcut() -> windows::core::Result<()> {
+        use windows::Win32::Foundation::{E_FAIL, MAX_PATH};
+        use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+        use windows::Win32::System::Com::StructuredStorage::{PROPVARIANT, PropVariantClear};
+        use windows::Win32::System::Com::{
+            CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx,
+            IPersistFile, STGM_READ,
+        };
+        use windows::Win32::System::Variant::VT_LPWSTR;
+        use windows::Win32::UI::Shell::PropertiesSystem::IPropertyStore;
+        use windows::Win32::UI::Shell::{IShellLinkW, SHStrDupW, ShellLink};
+        use windows::core::Interface;
+
+        let fail = || windows::core::Error::from(E_FAIL);
+        let exe = std::env::current_exe().map_err(|_| fail())?;
+        let folder = std::path::PathBuf::from(std::env::var_os("APPDATA").ok_or_else(fail)?)
+            .join(r"Microsoft\Windows\Start Menu\Programs");
+        let shortcut = folder.join(format!("{}.lnk", lrc_core::APP_TITLE));
+        let shortcut_w = HSTRING::from(shortcut.as_os_str());
+
+        // SAFETY: plain COM calls on this thread, with valid, NUL-terminated strings and
+        // buffers that outlive each call. The window toolkit later asks for the same
+        // threading model.
+        unsafe {
+            let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+            let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)?;
+            let file: IPersistFile = link.cast()?;
+
+            if shortcut.exists() && file.Load(&shortcut_w, STGM_READ).is_ok() {
+                let mut target = [0u16; MAX_PATH as usize];
+                if link.GetPath(&mut target, std::ptr::null_mut(), 0).is_ok() {
+                    let len = target.iter().position(|&c| c == 0).unwrap_or(target.len());
+                    let target = String::from_utf16_lossy(&target[..len]);
+                    if std::path::Path::new(&target) == exe {
+                        return Ok(()); // already there and pointing here
+                    }
+                }
+            }
+
+            let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)?;
+            link.SetPath(&HSTRING::from(exe.as_os_str()))?;
+            link.SetDescription(&HSTRING::from(lrc_core::APP_TITLE))?;
+
+            let store: IPropertyStore = link.cast()?;
+            let mut id = PROPVARIANT::default();
+            {
+                let inner = &mut *id.Anonymous.Anonymous;
+                inner.vt = VT_LPWSTR;
+                inner.Anonymous.pwszVal = SHStrDupW(&HSTRING::from(lrc_core::APP_USER_MODEL_ID))?;
+            }
+            let set = store
+                .SetValue(&PKEY_AppUserModel_ID, &id)
+                .and_then(|()| store.Commit());
+            let _ = PropVariantClear(&mut id);
+            set?;
+
+            std::fs::create_dir_all(&folder).map_err(|_| fail())?;
+            let file: IPersistFile = link.cast()?;
+            file.Save(&shortcut_w, true)?;
         }
-        Some(path)
+        Ok(())
     }
 
     /// Slint only sets the small (title bar) icon. The taskbar and Alt+Tab use the big one,
@@ -171,7 +200,7 @@ mod win {
 }
 
 #[cfg(windows)]
-pub use win::{register_app_name, set_app_user_model_id, set_icons_from_exe};
+pub use win::{ensure_start_menu_shortcut, set_app_user_model_id, set_icons_from_exe};
 
 /// Moves the window back onto a screen if the remembered position is off every one
 /// (a monitor unplugged since), as Qt's `restoreGeometry` does.
