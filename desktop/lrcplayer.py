@@ -40,7 +40,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import (
     QFont, QPixmap, QImageReader, QIcon, QPainter, QColor, QPolygonF, QKeySequence,
-    QPen, QPainterPath, QLinearGradient, QActionGroup, QDesktopServices
+    QPen, QPainterPath, QLinearGradient, QActionGroup, QDesktopServices, QShortcut
 )
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 try:  # Qt 6.8+: lets the visualizer see the decoded audio
@@ -4128,6 +4128,7 @@ class AudioLRCPlayer(QMainWindow):
         self._init_ui()
         self._init_animations()
         self._connect_signals()
+        self._init_shortcuts()
 
         # OS media integration (Windows SMTC)
         self.media_controls = WindowsMediaControls(self)
@@ -4632,6 +4633,34 @@ class AudioLRCPlayer(QMainWindow):
         self.player.durationChanged.connect(self._on_duration_changed)
         self.player.mediaStatusChanged.connect(self._on_media_status_changed)
         self.player.playbackStateChanged.connect(self._on_playback_state_changed)
+
+    def _init_shortcuts(self):
+        """The player's keys, as shortcuts of the window.
+
+        Handled in keyPressEvent they only worked while nothing else had keyboard focus:
+        a key press goes to the control that was clicked last. After clicking Next, Space
+        pressed Next again; the tracklist swallowed Space and the letter keys; a slider or
+        the lyrics view swallowed Ctrl+← / Ctrl+→. Shortcuts are looked up before that, so
+        they work wherever the focus is. They belong to this window only: typing in the
+        sync, translation and AI windows is not affected.
+        """
+        def add(keys: str, slot, auto_repeat: bool = False):
+            shortcut = QShortcut(QKeySequence(keys), self)
+            shortcut.setAutoRepeat(auto_repeat)  # a held key must not toggle over and over
+            shortcut.activated.connect(slot)
+
+        add("Space", self.toggle_play)
+        add("Ctrl+Right", self.play_next)
+        add("Ctrl+Left", self.play_previous)
+        add("F11", self.toggle_fullscreen)
+        add("[", lambda: self.adjust_lyrics_offset(-100), auto_repeat=True)
+        add("]", lambda: self.adjust_lyrics_offset(+100), auto_repeat=True)
+        add("\\", lambda: self.set_lyrics_offset(0))
+        add("R", self.btn_romaji.toggle)
+        add("S", lambda: self.set_shuffle(not self.shuffle_on))
+        add("L", self.cycle_repeat)
+        add("M", self.toggle_mute)
+        add("V", self.cycle_visualizer)
 
     def mouseDoubleClickEvent(self, event):
         self.toggle_fullscreen()
@@ -5727,32 +5756,10 @@ class AudioLRCPlayer(QMainWindow):
             QTimer.singleShot(25, lambda: self._smooth_scroll_to_card(active_card))
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_F11:
+        # Every other key is a window shortcut (see _init_shortcuts). Esc stays here: as a
+        # shortcut it would also take Esc away from whatever else wants it.
+        if event.key() == Qt.Key.Key_Escape and self.isFullScreen():
             self.toggle_fullscreen()
-        elif event.key() == Qt.Key.Key_Escape and self.isFullScreen():
-            self.toggle_fullscreen()
-        elif event.key() == Qt.Key.Key_Space:
-            self.toggle_play()
-        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Right:
-            self.play_next()
-        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Left:
-            self.play_previous()
-        elif event.key() == Qt.Key.Key_BracketLeft:
-            self.adjust_lyrics_offset(-100)
-        elif event.key() == Qt.Key.Key_BracketRight:
-            self.adjust_lyrics_offset(+100)
-        elif event.key() == Qt.Key.Key_Backslash:
-            self.set_lyrics_offset(0)
-        elif event.key() == Qt.Key.Key_R and not event.modifiers():
-            self.btn_romaji.toggle()
-        elif event.key() == Qt.Key.Key_S and not event.modifiers():
-            self.set_shuffle(not self.shuffle_on)
-        elif event.key() == Qt.Key.Key_L and not event.modifiers():
-            self.cycle_repeat()
-        elif event.key() == Qt.Key.Key_M and not event.modifiers():
-            self.toggle_mute()
-        elif event.key() == Qt.Key.Key_V and not event.modifiers():
-            self.cycle_visualizer()
         else:
             super().keyPressEvent(event)
 
