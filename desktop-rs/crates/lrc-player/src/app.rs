@@ -1,4 +1,4 @@
-//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py, minus romaji (M5).
+//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py.
 //! The lyrics editors and the AI settings window are in [`editors`].
 //!
 //! The rules live in `lrc-core` (`queue`, `window`, `lrc`, `theme`) and are tested there;
@@ -30,6 +30,7 @@ use lrc_core::text::{read_lyrics_file, write_lrc};
 use lrc_core::theme::{ACCENTS, Palette, build_palette, known_accent, known_theme, parse_color};
 use lrc_core::visualizer as viz;
 use lrc_core::window::{self as rules, AfterFetch, DropAction, SaveOffer, lrc_path_for};
+use lrc_romaji::Romaji;
 use slint::{
     Color, ComponentHandle, Image, Model, ModelRc, PhysicalPosition, PhysicalSize, Rgba8Pixel,
     SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel,
@@ -127,6 +128,12 @@ pub struct App {
     sync: Option<editors::SyncWindow>,
     translate: Option<editors::TranslateWindow>,
     ai_window: Option<editors::AiWindow>,
+    /// `self.romaji`: loaded on a worker the first time romaji is switched on.
+    romaji: Option<Arc<Romaji>>,
+    romaji_loading: bool,
+    /// `romaji_enabled`: the lyrics show romaji. The あ button can be on a moment
+    /// before this, while the dictionary loads.
+    romaji_enabled: bool,
 }
 
 /// The timers the app runs on; keep them alive as long as the window.
@@ -181,6 +188,9 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         sync: None,
         translate: None,
         ai_window: None,
+        romaji: None,
+        romaji_loading: false,
+        romaji_enabled: false,
     }));
     APP.with(|a| *a.borrow_mut() = Rc::downgrade(&app));
     // Before the settings come back, which turn close-to-tray on only if there is a tray.
@@ -412,6 +422,10 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         a.close_to_tray = on && a.tray.is_some();
         ui.set_close_to_tray(a.close_to_tray);
         a.store.set(sys::TRAY_ON_CLOSE_KEY, a.close_to_tray)
+    });
+    on!(on_toggle_romaji, |a, ui| {
+        let on = !ui.get_romaji_on();
+        a.set_romaji_enabled(ui, on)
     });
 
     let weak = Rc::downgrade(app);
@@ -1032,10 +1046,13 @@ impl App {
         let rows: Vec<LyricLineData> = parsed
             .lines
             .iter()
-            .map(|LyricLine { main, sub, .. }| LyricLineData {
-                main: main.into(),
-                sub: sub.into(),
-                active: false,
+            .map(|LyricLine { main, sub, .. }| {
+                let (main, sub) = self.display_for(main, sub);
+                LyricLineData {
+                    main: main.into(),
+                    sub: sub.into(),
+                    active: false,
+                }
             })
             .collect();
         self.shown = parsed.lines;
@@ -1045,6 +1062,81 @@ impl App {
         if pos > 0 {
             self.sync_lyrics_to_position(pos);
         }
+    }
+
+    /// `_display_for`: the (main, sub) a lyric card shows.
+    fn display_for(&self, main: &str, sub: &str) -> (String, String) {
+        let romaji = self.romaji.as_deref().filter(|_| self.romaji_enabled);
+        lrc_romaji::display_for(
+            romaji.is_some(),
+            |t| romaji.map(|r| r.convert(t)).unwrap_or_default(),
+            main,
+            sub,
+        )
+    }
+
+    /// `set_romaji_enabled`. The first time, the dictionary loads on a worker and the
+    /// lyrics switch once it's there, so the window never waits for it.
+    fn set_romaji_enabled(&mut self, ui: &MainWindow, enabled: bool) {
+        ui.set_romaji_on(enabled);
+        if enabled && self.romaji.is_none() {
+            if !self.romaji_loading {
+                self.romaji_loading = true;
+                let spawned = std::thread::Builder::new().name("romaji".into()).spawn(|| {
+                    let loaded = Romaji::load();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        app_call(|a, ui| a.romaji_loaded(ui, loaded));
+                    });
+                });
+                if let Err(e) = spawned {
+                    self.romaji_loaded(ui, Err(e.to_string()));
+                }
+            }
+            return;
+        }
+        self.apply_romaji(ui, enabled);
+    }
+
+    fn romaji_loaded(&mut self, ui: &MainWindow, loaded: Result<Romaji, String>) {
+        self.romaji_loading = false;
+        match loaded {
+            Ok(romaji) => {
+                self.romaji = Some(Arc::new(romaji));
+                // Switched off again while it loaded: nothing to change.
+                if ui.get_romaji_on() {
+                    self.apply_romaji(ui, true);
+                }
+            }
+            Err(e) => {
+                ui.set_romaji_on(false);
+                message_later(
+                    rfd::MessageLevel::Warning,
+                    "Romaji unavailable",
+                    format!(
+                        "Romaji conversion needs its Japanese dictionary, which could not be loaded.\n\nDetails: {e}"
+                    ),
+                );
+            }
+        }
+    }
+
+    fn apply_romaji(&mut self, ui: &MainWindow, enabled: bool) {
+        self.romaji_enabled = enabled;
+        ui.set_romaji_on(enabled);
+        self.store.set("lyrics/romaji", enabled);
+        for (row, line) in self.shown.iter().enumerate() {
+            let (main, sub) = self.display_for(&line.main, &line.sub);
+            if let Some(mut data) = self.lines.row_data(row) {
+                data.main = main.into();
+                data.sub = sub.into();
+                self.lines.set_row_data(row, data);
+            }
+        }
+        // `_rescale_cards`: the playing line goes back to the middle.
+        ui.set_rescale_count(ui.get_rescale_count().wrapping_add(1));
+        // The editors show the sung lines the same way.
+        self.sync_refresh(false);
+        self.translate_fill_table();
     }
 
     /// `_sync_lyrics_to_position`: lights up the line for `pos_ms`.
@@ -1473,6 +1565,7 @@ impl App {
         let repeat = Repeat::from_key(&s.get_str("playback/repeat", "off"));
         let placement = s.raw(PLACEMENT_KEY).and_then(Placement::from_json);
         self.queue_wanted = s.get_bool("ui/queue_open", false);
+        let romaji = s.get_bool("lyrics/romaji", false);
         ui.set_smooth_animation(s.get_bool(SMOOTH_ANIMATION_KEY, false));
 
         self.apply_theme(ui, &theme, &accent, false);
@@ -1490,7 +1583,12 @@ impl App {
             self.store.settings.get_bool(sys::TRAY_ON_CLOSE_KEY, false) && self.tray.is_some();
         ui.set_close_to_tray(self.close_to_tray);
         self.set_visualizer(ui, &mode, false);
-        // The romaji setting is kept for M5.
+        if romaji {
+            // Deferred, as the Python app does, so the first paint isn't held up.
+            Timer::single_shot(Duration::ZERO, || {
+                app_call(|a, ui| a.set_romaji_enabled(ui, true));
+            });
+        }
 
         if let Some(p) = placement {
             let window = ui.window();

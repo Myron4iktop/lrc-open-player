@@ -166,6 +166,7 @@ export component SyncDialog inherits Window {
     callback nudge(int);
     callback row-clicked(int);
     callback row-double-clicked(int);
+    callback toggle-romaji();
     callback close-asked();
 
     public function sync-color-scheme() {
@@ -247,6 +248,10 @@ export component SyncDialog inherits Window {
             }
             if event.text == "]" {
                 root.nudge(100);
+                return accept;
+            }
+            if none && event.text.to-lowercase() == "r" {
+                root.toggle-romaji();
                 return accept;
             }
             reject
@@ -575,6 +580,7 @@ export component TranslationDialog inherits Window {
     in property <string> status-text;
     in property <bool> status-error;
     in property <bool> raw-visible;
+    in property <bool> romaji-on;
 
     callback text-edited(string);
     callback load-file();
@@ -592,6 +598,7 @@ export component TranslationDialog inherits Window {
     callback show-raw();
     callback replay(int);
     callback commit-edit(int, string);
+    callback toggle-romaji();
     callback close-asked();
 
     public function sync-color-scheme() {
@@ -984,13 +991,16 @@ export component TranslationDialog inherits Window {
                         }
                     }
 
-                    // Romaji arrives with M5; the button is there so the row looks the same.
+                    // The same switch as the main window's あ button.
                     PushButton {
                         width: 36px;
                         text: "あ";
                         role: "toggle";
-                        enabled: false;
+                        checked: root.romaji-on;
                         tooltip: "Show the sung lines as romaji";
+                        clicked => {
+                            root.toggle-romaji();
+                        }
                     }
                 }
 

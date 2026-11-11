@@ -161,12 +161,6 @@ async fn save_lrc_asking(
 }
 
 impl App {
-    /// `_display_for`: what a line shows. Romaji (M5) will change this; until then it
-    /// is the line itself.
-    fn display_for(&self, main: &str, sub: &str) -> (String, String) {
-        (main.to_owned(), sub.to_owned())
-    }
-
     /// `_track_ok`: the player is still on the editor's song.
     fn track_ok(&self, path: &Path) -> bool {
         self.is_current(path)
@@ -318,7 +312,7 @@ impl App {
     }
 
     /// `_refresh` (and `_rebuild_rows`): the list from the entries.
-    fn sync_refresh(&mut self, scroll: bool) {
+    pub(super) fn sync_refresh(&mut self, scroll: bool) {
         let Some(w) = &self.sync else { return };
         let rows: Vec<SyncRowData> =
             w.ed.rows()
@@ -636,7 +630,7 @@ impl App {
     }
 
     /// `_fill_table`.
-    fn translate_fill_table(&mut self) {
+    pub(super) fn translate_fill_table(&mut self) {
         let Some(w) = &self.translate else { return };
         let rows: Vec<TranslationRowData> = (0..w.ed.n_rows())
             .map(|r| {
@@ -653,6 +647,7 @@ impl App {
             })
             .collect();
         update_rows(&w.rows, rows);
+        w.dialog.set_romaji_on(self.romaji_enabled);
         let (cover, tip) = w.ed.coverage();
         w.dialog.set_cover_text(cover.into());
         w.dialog.set_cover_tip(tip.into());
@@ -1160,6 +1155,11 @@ fn connect_sync(d: &SyncDialog) {
     on!(on_move_cursor, |a, ui, delta| a
         .sync_move_cursor(i64::from(delta)));
     on!(on_nudge, |a, ui, delta| a.sync_nudge(i64::from(delta)));
+    // `R`: the same switch as the main window's あ button.
+    on!(on_toggle_romaji, |a, ui| {
+        let on = !ui.get_romaji_on();
+        a.set_romaji_enabled(ui, on)
+    });
     on!(on_row_clicked, |a, ui, row| {
         if let Ok(r) = usize::try_from(row) {
             a.sync_row_clicked(r)
@@ -1302,6 +1302,11 @@ fn connect_translation(d: &TranslationDialog) {
         if let Ok(r) = usize::try_from(row) {
             a.translate_commit(r, &text)
         }
+    });
+    // `_toggle_romaji`: the same switch as the main window's あ button.
+    on!(on_toggle_romaji, |a, ui| {
+        let on = !ui.get_romaji_on();
+        a.set_romaji_enabled(ui, on)
     });
     d.on_save(|| ask_flow(translate_save()));
     d.on_embed(|| ask_flow(translate_embed()));

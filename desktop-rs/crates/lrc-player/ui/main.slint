@@ -61,6 +61,8 @@ export component MainWindow inherits Window {
     in property <int> rescale-count;
     // --- Window ---
     in-out property <bool> fullscreen;
+    // The あ button (`btn_romaji`) is on.
+    in property <bool> romaji-on;
     in property <bool> drop-visible;
     in property <string> drop-headline;
     in property <string> drop-detail;
@@ -110,6 +112,7 @@ export component MainWindow inherits Window {
     callback open-sync();
     callback open-translation();
     callback open-ai-settings();
+    callback toggle-romaji();
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -223,6 +226,10 @@ export component MainWindow inherits Window {
             }
             if !event.modifiers.control && !event.modifiers.alt && !event.modifiers.shift && !event.modifiers.meta {
                 let k = event.text.to-lowercase();
+                if k == "r" {
+                    root.toggle-romaji();
+                    return accept;
+                }
                 if k == "s" {
                     root.toggle-shuffle();
                     return accept;
@@ -648,13 +655,15 @@ export component MainWindow inherits Window {
                         horizontal-stretch: 1;
                     }
 
-                    // Romaji arrives in M5; the button is there so the row looks the same.
                     PushButton {
                         width: 36px;
                         text: "あ";
                         role: "toggle";
-                        enabled: false;
+                        checked: root.romaji-on;
                         tooltip: "Show Japanese lyrics as romaji   ( R )";
+                        clicked => {
+                            root.toggle-romaji();
+                        }
                     }
                 }
             }

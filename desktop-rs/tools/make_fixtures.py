@@ -19,6 +19,15 @@ really does rather than against someone's reading of it.
         embedded), checks that the Python app reads each one exactly as lrc-core does
         (rust.json), and that the lyrics fields are the ones mutagen would have written.
 
+    python tools/make_fixtures.py romaji LRC_FOLDER OUT.json [--check]
+        Runs the Python app's RomajiConverter (cutlet with unidic-lite) over every
+        Japanese line of every .lrc in LRC_FOLDER and its subfolders, and writes the
+        lines and their romaji to OUT.json, for
+        `cargo run -p lrc-romaji --release --example compare -- OUT.json`.
+        Needs cutlet and unidic-lite too (pip install cutlet unidic-lite). The sample
+        lines in crates/lrc-romaji/tests/fixtures are committed with their romaji.json;
+        --check only compares, and fails if that file is out of date.
+
 Needs PyQt6 and mutagen (pip install PyQt6 mutagen), and ffmpeg for `media`. Runs
 headless: it uses Qt's offscreen platform.
 """
@@ -835,6 +844,55 @@ def cmd_check_embedded(out: Path):
     print(f"mutagen reads back all {checked} songs that lrc-core embedded lyrics into")
 
 
+# ---------------------------------------------------------------------------------------
+# romaji
+# ---------------------------------------------------------------------------------------
+ROMAJI_SAMPLES = ROOT / "desktop-rs" / "crates" / "lrc-romaji" / "tests" / "fixtures"
+
+
+def romaji_lines(folder: Path):
+    """Every distinct line of every .lrc under `folder`, as the window shows them."""
+    seen = {}
+    for path in sorted(folder.rglob("*"), key=lambda p: str(p).casefold()):
+        if path.suffix.lower() != ".lrc" or not path.is_file():
+            continue
+        content = L.read_lyrics_file(str(path))
+        if content is None:
+            continue
+        for card in parse_lyrics(content)["lines"]:
+            for text in (card["main"], card["sub"]):
+                if text and text not in seen:
+                    seen[text] = path.relative_to(folder).as_posix()
+    return seen
+
+
+def cmd_romaji(folder: Path, out: Path, check: bool):
+    import importlib.metadata as md
+
+    conv = L.RomajiConverter()
+    if not conv.load():
+        sys.exit(f"cutlet could not load: {conv.error}")
+    lines = romaji_lines(folder)
+    data = {
+        "cutlet": md.version("cutlet"),
+        "unidic_lite": md.version("unidic-lite"),
+        "lines": [
+            {"file": f, "text": t, "romaji": conv.convert(t)}
+            for t, f in lines.items()
+            if L.RomajiConverter.has_japanese(t)
+        ],
+    }
+    text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
+    if check:
+        if not out.exists() or out.read_text(encoding="utf-8") != text:
+            sys.exit(f"{out} is out of date: run tools/make_fixtures.py romaji {folder} {out}")
+        print(f"{out} matches the Python app")
+        return
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    print(f"{len(data['lines'])} Japanese lines from {folder} written to {out}")
+
+
 def main():
     app = QGuiApplication.instance() or QGuiApplication([])  # QPixmap needs one  # noqa: F841
     args = sys.argv[1:]
@@ -842,6 +900,8 @@ def main():
         cmd_pure("--check" in args)
     elif args[:1] == ["media"] and len(args) == 2:
         cmd_media(Path(args[1]).resolve())
+    elif args[:1] == ["romaji"] and len(args) in (3, 4) and args[3:] in ([], ["--check"]):
+        cmd_romaji(Path(args[1]).resolve(), Path(args[2]).resolve(), "--check" in args)
     elif args[:1] == ["check-embedded"] and len(args) == 2:
         cmd_check_embedded(Path(args[1]).resolve())
     else:

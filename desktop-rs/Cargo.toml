@@ -12,6 +12,7 @@ publish = false
 
 [workspace.dependencies]
 lrc-core = { path = "crates/lrc-core" }
+lrc-romaji = { path = "crates/lrc-romaji", default-features = false }
 # Pinned to one minor version on purpose: M3 uses Slint's unstable winit API.
 slint = { version = "~1.18.1", features = ["unstable-winit-030"] }
 slint-build = "~1.18.1"
