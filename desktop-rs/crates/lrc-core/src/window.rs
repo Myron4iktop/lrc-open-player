@@ -60,6 +60,22 @@ pub fn queue_row_text(number: usize, title: Option<&str>, path: &Path) -> String
     format!("{number:02}. {title}")
 }
 
+/// The mark in front of a tracklist row that couldn't be played.
+pub const UNPLAYABLE_MARK: &str = "⚠ ";
+
+/// Songs in a row skipped because they can't be played, before the player stops on one.
+pub const MAX_UNPLAYABLE_SKIPS: u32 = 5;
+
+/// The note for a song that can't be played: `Couldn't play “name”: reason`.
+pub fn unplayable_text(name: &str, reason: &str) -> String {
+    let reason = reason.trim();
+    if reason.is_empty() {
+        format!("Couldn't play “{name}”.")
+    } else {
+        format!("Couldn't play “{name}”: {reason}")
+    }
+}
+
 /// The lyric line for a playback position (`_sync_lyrics_to_position`): the last line
 /// that started at or before `pos_ms - offset_ms`, or `None` before the first.
 pub fn active_line(times_ms: &[i64], pos_ms: u64, offset_ms: i64) -> Option<usize> {
@@ -320,7 +336,12 @@ pub fn save_offer(
 ) -> SaveOffer {
     let mut notes = Vec::new();
     if !trusted {
-        if lrclib_length != 0 && my_length != 0 {
+        // Lengths within the match tolerance aren't another version: the hit is untrusted
+        // for another reason (no artist to compare, say).
+        if lrclib_length != 0
+            && my_length != 0
+            && (lrclib_length - my_length).abs() as f64 > crate::lrclib::MATCH_TOLERANCE_SEC
+        {
             notes.push(format!(
                 "LRCLIB only has these lyrics for a {} version of the song (this file is {}), so they may not line up.",
                 mins(lrclib_length),
@@ -328,7 +349,7 @@ pub fn save_offer(
             ));
         } else {
             notes.push(
-                "They come from a loose search, so they may belong to another version of the song."
+                "They come from a loose search, so they may belong to another version of the song, or to another song with the same name."
                     .to_owned(),
             );
         }
@@ -626,13 +647,13 @@ mod tests {
         assert_eq!(
             o.notes,
             [
-                "They come from a loose search, so they may belong to another version of the song.",
+                "They come from a loose search, so they may belong to another version of the song, or to another song with the same name.",
                 "The player shows a .lrc file instead of the lyrics stored in the song.",
             ]
         );
         assert_eq!(
             o.full_text(),
-            "Save these lyrics as “Song.lrc”?\n\nThey come from a loose search, so they may belong to another version of the song.\n\nThe player shows a .lrc file instead of the lyrics stored in the song."
+            "Save these lyrics as “Song.lrc”?\n\nThey come from a loose search, so they may belong to another version of the song, or to another song with the same name.\n\nThe player shows a .lrc file instead of the lyrics stored in the song."
         );
     }
 
