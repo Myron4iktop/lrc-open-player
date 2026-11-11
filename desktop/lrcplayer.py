@@ -4,6 +4,7 @@ import sys
 import html
 import json
 import math
+import hashlib
 import time
 import array
 import atexit
@@ -26,7 +27,7 @@ import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 from PyQt6.QtCore import (
-    Qt, QUrl, QTime, QSize, QThread, QObject, QSettings, pyqtSignal, QTimer,
+    Qt, QUrl, QSize, QThread, QObject, QSettings, pyqtSignal, QTimer,
     QPropertyAnimation, QEasingCurve, pyqtProperty, QPointF, QRectF,
     QBuffer, QByteArray, QIODevice
 )
@@ -40,7 +41,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import (
     QFont, QPixmap, QImageReader, QIcon, QPainter, QColor, QPolygonF, QKeySequence,
-    QPen, QPainterPath, QLinearGradient, QActionGroup, QDesktopServices
+    QPen, QPainterPath, QLinearGradient, QActionGroup, QDesktopServices, QShortcut
 )
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 try:  # Qt 6.8+: lets the visualizer see the decoded audio
@@ -328,14 +329,14 @@ def extract_metadata_and_cover(file_path: str):
     try:
         if hasattr(audio, "info") and audio.info:
             ainfo = audio.info
-            sr = getattr(ainfo, "sample_rate", 44100)
+            ext = os.path.splitext(file_path)[1].lower()
+            # Opus has no sample rate in its tags (mutagen reports none): it always plays at 48 kHz
+            sr = getattr(ainfo, "sample_rate", 0) or (48000 if ext == ".opus" else 44100)
             info["sample_rate_khz"] = round(sr / 1000.0, 1)
             info["channels"] = getattr(ainfo, "channels", 2)
 
-            bps = getattr(ainfo, "bits_per_sample", 0)
-            if bps == 0:
-                ext = os.path.splitext(file_path)[1].lower()
-                bps = 16 if ext in (".mp3", ".ogg", ".m4a") else 24
+            # Lossy formats (MP3, Ogg Vorbis, Opus) have no bit depth of their own; show 16
+            bps = getattr(ainfo, "bits_per_sample", 0) or 16
             info["bits_per_sample"] = bps
 
             br = getattr(ainfo, "bitrate", 0)
@@ -352,7 +353,10 @@ def extract_metadata_and_cover(file_path: str):
             m, s = divmod(length_sec, 60)
             info["duration_str"] = f"{m}:{s:02d}"
 
-            if bps >= 24 or sr >= 48000 or info["bitrate_kbps"] >= 1000:
+            # "HD" is for lossless files only: an Opus file or a 48 kHz MP3 isn't one
+            codec = str(getattr(ainfo, "codec", "")).lower()  # M4A: "alac" or "mp4a…" (AAC)
+            lossless = ext in (".flac", ".wav") or codec.startswith("alac")
+            if lossless and (bps >= 24 or sr >= 48000 or info["bitrate_kbps"] >= 1000):
                 info["is_hd"] = True
 
         ext = os.path.splitext(file_path)[1].lower()
@@ -652,7 +656,9 @@ class LrcFetchWorker(QThread):
             with urllib.request.urlopen(req, timeout=6) as response:
                 if response.status == 200:
                     data = json.loads(response.read().decode("utf-8"))
-                    exact = self.duration_sec > 0  # LRCLIB only returns an entry of that length
+                    # LRCLIB only returns an entry of that length, by that artist. Without an
+                    # artist (an untagged file) it is a title-only match: see matches() below.
+                    exact = self.duration_sec > 0 and bool(self.artist)
                     if isinstance(data, dict) and data.get("syncedLyrics"):
                         self._emit(data["syncedLyrics"], "Synced lyrics downloaded from LRCLIB.", exact,
                                    data.get("duration") or 0)
@@ -690,13 +696,14 @@ class LrcFetchWorker(QThread):
                         # agree on the song, not only its length: another track of the same
                         # length is a different song. (The /api/get path above already keys on
                         # title+artist+duration, so its hits are trusted on their own.)
-                        if not fits(item):
+                        # Without an artist to compare (an untagged file) nothing is trusted:
+                        # plenty of songs are called "Home" or "Intro" and run about as long,
+                        # and a wrong .lrc saved next to the song would be shown from then on.
+                        if not self.artist or not fits(item):
                             return False
                         if not _same_text(item.get("trackName") or "", self.title):
                             return False
-                        if self.artist and not _same_text(item.get("artistName") or "", self.artist):
-                            return False
-                        return True
+                        return _same_text(item.get("artistName") or "", self.artist)
 
                     for item in results:
                         if item.get("syncedLyrics") and matches(item):
@@ -3496,6 +3503,11 @@ class LyricsSyncDialog(QDialog):
     "sub" is a paired line (translation) that shares the main line's timestamp.
     """
 
+    # Keys that may repeat while held: seeking, moving ▶ and nudging. Enter, Backspace, Space
+    # and the rest act once per press.
+    REPEATING_KEYS = (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down,
+                      Qt.Key.Key_BracketLeft, Qt.Key.Key_BracketRight)
+
     ROW_VPAD = 9   # space above and below each row's text
     ROW_GAP = 2    # space between a line and its romaji/translation
 
@@ -3675,6 +3687,14 @@ class LyricsSyncDialog(QDialog):
     def _track_ok(self) -> bool:
         pw = self.pw
         return 0 <= pw.current_track_idx < len(pw.playlist) and pw.playlist[pw.current_track_idx] == self.track_path
+
+    def _lyrics_time_now(self) -> int:
+        """The timestamp for "now": the playback position without the song's lyrics offset.
+
+        The player shows a line once position - offset reaches its timestamp, so a stamp
+        taken as the bare position would show up late (or early) by the whole offset.
+        """
+        return max(0, self.pw.player.position() - self.pw.lyrics_offset_ms)
 
     def _seek_relative(self, delta_ms: int):
         if self._track_ok():
@@ -3865,7 +3885,7 @@ class LyricsSyncDialog(QDialog):
     def _on_item_double_clicked(self, item):
         t = self.entries[self.list.row(item)]["time"]
         if t is not None and self._track_ok():
-            self.pw.seek_to(max(0, t - 1500))  # replay from just before the line
+            self.pw.seek_to(max(0, t + self.pw.lyrics_offset_ms - 1500))  # replay from just before the line
             if self.pw.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
                 self.pw.player.play()
 
@@ -3876,7 +3896,7 @@ class LyricsSyncDialog(QDialog):
         if self.cursor >= len(self.entries):
             self._set_status("Every line is stamped. Save when you're happy with it.")
             return
-        self.entries[self.cursor]["time"] = self.pw.player.position()
+        self.entries[self.cursor]["time"] = self._lyrics_time_now()
         self._select(self.cursor)
         self.cursor += 1
         self.dirty = True
@@ -3903,14 +3923,15 @@ class LyricsSyncDialog(QDialog):
         self._select(self.cursor)
         if self._track_ok():
             # rewind a little before the line so it can be stamped again
-            self.pw.seek_to(max(0, (t if t is not None else self.pw.player.position()) - 3000))
+            here = t + self.pw.lyrics_offset_ms if t is not None else self.pw.player.position()
+            self.pw.seek_to(max(0, here - 3000))
         self.dirty = True
         self._set_status("Undone. Playback jumped back 3 s so you can stamp the line again.")
 
     def insert_break(self):
         if not self.entries or not self._track_ok():
             return
-        pos = self.pw.player.position()
+        pos = self._lyrics_time_now()
         self.entries.insert(self.cursor, {"text": "", "time": pos, "sub": "", "break": True})
         self.cursor += 1
         self.dirty = True
@@ -3999,7 +4020,7 @@ class LyricsSyncDialog(QDialog):
         ok = self._track_ok()
         playing = self.pw.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
         self.btn_play.setIcon(self._icon_pause if playing else self._icon_play)
-        self.lbl_time.setText(_fmt_lrc_time(self.pw.player.position()) if ok else "--:--.--")
+        self.lbl_time.setText(_fmt_lrc_time(self._lyrics_time_now()) if ok else "--:--.--")  # what Enter would stamp
         for b in (self.btn_stamp, self.btn_break, self.btn_restart, self.btn_back, self.btn_fwd, self.btn_preview):
             b.setEnabled(ok)
         if ok:
@@ -4020,6 +4041,8 @@ class LyricsSyncDialog(QDialog):
         if self.stack.currentIndex() != 1:
             super().keyPressEvent(event)
             return
+        if event.isAutoRepeat() and key not in self.REPEATING_KEYS:
+            return  # a key held a moment too long must not stamp (or undo) several lines
         ctrl = bool(mods & Qt.KeyboardModifier.ControlModifier)
         if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.stamp()
@@ -4112,8 +4135,14 @@ class AudioLRCPlayer(QMainWindow):
         self._scan_token = 0          # bumped by every open, so a slow album scan can't win late
         self._scan_worker = None
         self._scan_busy = False
+        self._play_wanted = False     # the current track was loaded to be played, not just restored paused
+        self._unplayable_run = 0      # songs in a row that couldn't be played
+        self._fetch_worker = None     # the LRCLIB lookup still wanted, if any
+        self._lyrics_shown = 0        # bumped whenever lyrics go on screen, so a late lookup can tell
 
-        # Lyrics sync offset in ms. Positive = lyrics appear later, negative = earlier.
+        # The current song's lyrics offset in ms. Positive = lyrics appear later, negative = earlier.
+        # Remembered per song (see _offset_key): an offset that fixes one song's lyrics
+        # would put every well-synced song out of step.
         self.lyrics_offset_ms = 0
 
         # Session memory
@@ -4128,6 +4157,7 @@ class AudioLRCPlayer(QMainWindow):
         self._init_ui()
         self._init_animations()
         self._connect_signals()
+        self._init_shortcuts()
 
         # OS media integration (Windows SMTC)
         self.media_controls = WindowsMediaControls(self)
@@ -4364,9 +4394,9 @@ class AudioLRCPlayer(QMainWindow):
         self.btn_offset_minus.setFixedWidth(32)
         self.btn_offset_plus.setFixedWidth(32)
         self.btn_offset_reset.setFixedWidth(56)
-        self.btn_offset_minus.setToolTip("Show lyrics earlier by 0.1 s   ( [ )")
-        self.btn_offset_plus.setToolTip("Show lyrics later by 0.1 s   ( ] )")
-        self.btn_offset_reset.setToolTip("Reset lyrics offset   ( \\ )")
+        self.btn_offset_minus.setToolTip("Show this song's lyrics earlier by 0.1 s   ( [ )")
+        self.btn_offset_plus.setToolTip("Show this song's lyrics later by 0.1 s   ( ] )")
+        self.btn_offset_reset.setToolTip("Reset this song's lyrics offset   ( \\ )")
         self.btn_romaji = QPushButton("あ")
         self.btn_romaji.setCheckable(True)
         self.btn_romaji.setFixedWidth(36)
@@ -4633,6 +4663,34 @@ class AudioLRCPlayer(QMainWindow):
         self.player.mediaStatusChanged.connect(self._on_media_status_changed)
         self.player.playbackStateChanged.connect(self._on_playback_state_changed)
 
+    def _init_shortcuts(self):
+        """The player's keys, as shortcuts of the window.
+
+        Handled in keyPressEvent they only worked while nothing else had keyboard focus:
+        a key press goes to the control that was clicked last. After clicking Next, Space
+        pressed Next again; the tracklist swallowed Space and the letter keys; a slider or
+        the lyrics view swallowed Ctrl+← / Ctrl+→. Shortcuts are looked up before that, so
+        they work wherever the focus is. They belong to this window only: typing in the
+        sync, translation and AI windows is not affected.
+        """
+        def add(keys: str, slot, auto_repeat: bool = False):
+            shortcut = QShortcut(QKeySequence(keys), self)
+            shortcut.setAutoRepeat(auto_repeat)  # a held key must not toggle over and over
+            shortcut.activated.connect(slot)
+
+        add("Space", self.toggle_play)
+        add("Ctrl+Right", self.play_next)
+        add("Ctrl+Left", self.play_previous)
+        add("F11", self.toggle_fullscreen)
+        add("[", lambda: self.adjust_lyrics_offset(-100), auto_repeat=True)
+        add("]", lambda: self.adjust_lyrics_offset(+100), auto_repeat=True)
+        add("\\", lambda: self.set_lyrics_offset(0))
+        add("R", self.btn_romaji.toggle)
+        add("S", lambda: self.set_shuffle(not self.shuffle_on))
+        add("L", self.cycle_repeat)
+        add("M", self.toggle_mute)
+        add("V", self.cycle_visualizer)
+
     def mouseDoubleClickEvent(self, event):
         self.toggle_fullscreen()
         super().mouseDoubleClickEvent(event)
@@ -4896,6 +4954,7 @@ class AudioLRCPlayer(QMainWindow):
         if not (0 <= index < len(self.playlist)):
             return
 
+        self._cancel_lyrics_search()  # skipping through an album shouldn't queue up lookups
         self.current_track_idx = index
         if index in self.play_order:
             self.order_pos = self.play_order.index(index)
@@ -4905,6 +4964,7 @@ class AudioLRCPlayer(QMainWindow):
 
         # A resume position can only be applied reliably once the media has loaded
         self._pending_seek_ms = start_position_ms if start_position_ms > 0 else None
+        self._play_wanted = autoplay
 
         self.queue_list.setCurrentRow(index)
         self.player.setSource(QUrl.fromLocalFile(file_path))
@@ -4912,6 +4972,8 @@ class AudioLRCPlayer(QMainWindow):
             self.player.play()
         else:
             self.player.pause()
+
+        self.set_lyrics_offset(self.settings.value(self._offset_key(file_path), 0, type=int), persist=False)
 
         embedded_lyrics, cover, info = extract_metadata_and_cover(file_path)
         self.current_info = info
@@ -5133,6 +5195,17 @@ class AudioLRCPlayer(QMainWindow):
     def _on_media_status_changed(self, status):
         MS = QMediaPlayer.MediaStatus
 
+        if status == MS.InvalidMedia:
+            if 0 <= self.current_track_idx < len(self.playlist):
+                # Handled after this signal: the reason (errorString) is set by then, and
+                # the next song isn't loaded from inside the player's own status change.
+                path = self.playlist[self.current_track_idx]
+                QTimer.singleShot(0, lambda: self._on_unplayable(path))
+            return
+        if status in (MS.LoadedMedia, MS.BufferedMedia):
+            self._unplayable_run = 0
+            self._flag_queue_item(self.current_track_idx)  # it plays (again): no warning mark
+
         # Resume position from the previous session, applied once media is ready
         if status in (MS.LoadedMedia, MS.BufferedMedia) and self._pending_seek_ms is not None:
             resume_ms = self._pending_seek_ms
@@ -5153,6 +5226,42 @@ class AudioLRCPlayer(QMainWindow):
                 self.player.play()
             elif self._has_next():
                 self.play_next()
+
+    MAX_UNPLAYABLE_SKIPS = 5
+
+    def _on_unplayable(self, path: str):
+        """The song can't be played: it is missing, damaged, or in a format this PC can't decode.
+
+        The player used to just sit there, and an album stopped at the song. Now the song
+        is marked in the tracklist and, while an album is playing, skipped. After a few in
+        a row it stops skipping: a whole album that won't play (a missing codec, an
+        unplugged drive) shouldn't race to its end.
+        """
+        if not self._is_current(path):
+            return  # another song was opened in the meantime
+        name = os.path.basename(path)
+        reason = (self.player.errorString() or "").strip()
+        problem = f"Couldn't play “{name}”" + (f": {reason}" if reason else ".")
+        print(problem)
+        self._unplayable_run += 1
+        self._flag_queue_item(self.current_track_idx, problem)
+
+        if (self._play_wanted and len(self.playlist) > 1 and self._has_next() and self.repeat_mode != "track"
+                and not self._editor_open() and self._unplayable_run <= self.MAX_UNPLAYABLE_SKIPS):
+            self.play_next()
+            return
+        self._cancel_lyrics_search()
+        self._lyrics_shown += 1  # a lookup that has already answered must not replace this note
+        self._show_lyrics_message(problem, "lyricsEmpty")
+
+    def _flag_queue_item(self, index: int, problem: str = ""):
+        """Marks a tracklist row as unplayable (⚠ and a tooltip saying why), or clears the mark."""
+        item = self.queue_list.item(index)
+        if item is None:
+            return
+        text = item.text().removeprefix("⚠ ")
+        item.setText(f"⚠ {text}" if problem else text)
+        item.setToolTip(plain_tooltip(problem))
 
     def seek_to(self, ms: int):
         self.player.setPosition(ms)
@@ -5199,6 +5308,12 @@ class AudioLRCPlayer(QMainWindow):
     # -----------------------------------------------------
     OFFSET_LIMIT_MS = 30000
 
+    @staticmethod
+    def _offset_key(path: str) -> str:
+        """Settings key of a song's lyrics offset. A hash, because a path can't be a key name."""
+        name = os.path.normcase(os.path.abspath(path)).encode("utf-8", "surrogatepass")
+        return "lyrics/offsets/" + hashlib.sha1(name).hexdigest()[:20]
+
     def adjust_lyrics_offset(self, delta_ms: int):
         self.set_lyrics_offset(self.lyrics_offset_ms + delta_ms)
 
@@ -5206,8 +5321,12 @@ class AudioLRCPlayer(QMainWindow):
         offset_ms = max(-self.OFFSET_LIMIT_MS, min(self.OFFSET_LIMIT_MS, int(offset_ms)))
         self.lyrics_offset_ms = offset_ms
         self.lbl_offset.setText(f"{offset_ms / 1000:+.1f} s")
-        if persist:
-            self.settings.setValue("lyrics/offset_ms", offset_ms)
+        if persist and 0 <= self.current_track_idx < len(self.playlist):
+            key = self._offset_key(self.playlist[self.current_track_idx])
+            if offset_ms:
+                self.settings.setValue(key, offset_ms)
+            else:
+                self.settings.remove(key)  # only songs that need an offset are remembered
         self._sync_lyrics_to_position(self.player.position())
 
     def _update_active_card(self, active_index):
@@ -5266,6 +5385,7 @@ class AudioLRCPlayer(QMainWindow):
             return
 
         current_file = self.playlist[self.current_track_idx]
+        self._cancel_lyrics_search()
         self._show_lyrics_message("Searching online lyrics (LRCLIB)...")
 
         worker = LrcFetchWorker(
@@ -5275,21 +5395,32 @@ class AudioLRCPlayer(QMainWindow):
             title_from_tags=self.current_info.get("title_from_tags", True),
         )
         # Keep a reference until the thread finishes (dropping it mid-run crashes Qt),
-        # and ignore results that arrive after the user has moved to another track.
+        # and ignore results that arrive after the user has moved to another track, or
+        # has put other lyrics on screen in the meantime (loaded a file, previewed an edit).
         self.keep_worker(worker)
+        self._fetch_worker = worker
         worker.finished_signal.connect(
-            lambda text, msg, trusted, length, path=current_file, manual=manual:
-            self._on_online_lyrics_fetched(text, msg, path, trusted, length, manual)
+            lambda text, msg, trusted, length, path=current_file, manual=manual, shown=self._lyrics_shown:
+            self._on_online_lyrics_fetched(text, msg, path, trusted, length, manual, shown)
         )
         worker.start()
+
+    def _cancel_lyrics_search(self):
+        """The running LRCLIB lookup is no longer wanted: it stops after its current request."""
+        if self._fetch_worker is not None:
+            self._fetch_worker.cancel()
+            self._fetch_worker = None
 
     def _is_current(self, path: str) -> bool:
         return 0 <= self.current_track_idx < len(self.playlist) and self.playlist[self.current_track_idx] == path
 
     def _on_online_lyrics_fetched(self, lyrics_text: str, status_msg: str, requested_path: str = "",
-                                  trusted: bool = False, lrclib_length: int = 0, manual: bool = False):
+                                  trusted: bool = False, lrclib_length: int = 0, manual: bool = False,
+                                  shown=None):
         if requested_path and not self._is_current(requested_path):
             return  # stale result for a track that is no longer current
+        if shown is not None and shown != self._lyrics_shown:
+            return  # other lyrics were put on screen while this search ran; they stay
         if not lyrics_text:
             if manual and self._show_own_lyrics(requested_path):
                 QMessageBox.information(self, "Search online", "LRCLIB has no lyrics for this song.")
@@ -5330,11 +5461,12 @@ class AudioLRCPlayer(QMainWindow):
         notes = []
         if not trusted:
             mine = int(self.current_info.get("duration_sec", 0) or 0)
-            if lrclib_length and mine:
+            if lrclib_length and mine and abs(lrclib_length - mine) > LrcFetchWorker.MATCH_TOLERANCE_SEC:
                 notes.append(f"LRCLIB only has these lyrics for a {mins(lrclib_length)} version of the song "
                              f"(this file is {mins(mine)}), so they may not line up.")
             else:
-                notes.append("They come from a loose search, so they may belong to another version of the song.")
+                notes.append("They come from a loose search, so they may belong to another version of the song, "
+                             "or to another song with the same name.")
         if has_file:
             question, yes, no = f"Replace “{name}” with the lyrics from LRCLIB?", "Replace", "Keep mine"
             notes.append("Your current file will be overwritten.")
@@ -5618,6 +5750,7 @@ class AudioLRCPlayer(QMainWindow):
         self._rescale_cards(self.isFullScreen())
 
     def parse_and_display_lyrics(self, content: str):
+        self._lyrics_shown += 1
         self._clear_lyrics()
         content = content.replace("\ufeff", "")  # a BOM (also seen inside tags) is never lyrics
         raw_entries = []
@@ -5727,32 +5860,10 @@ class AudioLRCPlayer(QMainWindow):
             QTimer.singleShot(25, lambda: self._smooth_scroll_to_card(active_card))
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_F11:
+        # Every other key is a window shortcut (see _init_shortcuts). Esc stays here: as a
+        # shortcut it would also take Esc away from whatever else wants it.
+        if event.key() == Qt.Key.Key_Escape and self.isFullScreen():
             self.toggle_fullscreen()
-        elif event.key() == Qt.Key.Key_Escape and self.isFullScreen():
-            self.toggle_fullscreen()
-        elif event.key() == Qt.Key.Key_Space:
-            self.toggle_play()
-        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Right:
-            self.play_next()
-        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Left:
-            self.play_previous()
-        elif event.key() == Qt.Key.Key_BracketLeft:
-            self.adjust_lyrics_offset(-100)
-        elif event.key() == Qt.Key.Key_BracketRight:
-            self.adjust_lyrics_offset(+100)
-        elif event.key() == Qt.Key.Key_Backslash:
-            self.set_lyrics_offset(0)
-        elif event.key() == Qt.Key.Key_R and not event.modifiers():
-            self.btn_romaji.toggle()
-        elif event.key() == Qt.Key.Key_S and not event.modifiers():
-            self.set_shuffle(not self.shuffle_on)
-        elif event.key() == Qt.Key.Key_L and not event.modifiers():
-            self.cycle_repeat()
-        elif event.key() == Qt.Key.Key_M and not event.modifiers():
-            self.toggle_mute()
-        elif event.key() == Qt.Key.Key_V and not event.modifiers():
-            self.cycle_visualizer()
         else:
             super().keyPressEvent(event)
 
@@ -5767,7 +5878,7 @@ class AudioLRCPlayer(QMainWindow):
     # Session memory (QSettings)
     # -----------------------------------------------------
     def _restore_session_ui(self):
-        """Window geometry, volume, lyrics offset. Runs before the window is shown."""
+        """Window geometry, volume, theme and playback modes. Runs before the window is shown."""
         s = self.settings
 
         self.apply_theme(s.value("ui/theme", "dark", type=str), s.value("ui/accent", "coral", type=str), persist=False)
@@ -5775,7 +5886,6 @@ class AudioLRCPlayer(QMainWindow):
         volume = max(0, min(100, s.value("ui/volume", 80, type=int)))
         self.vol_slider.setValue(volume)  # slider signal updates the audio output
 
-        self.set_lyrics_offset(s.value("lyrics/offset_ms", 0, type=int), persist=False)
         self.set_shuffle(s.value("playback/shuffle", False, type=bool), persist=False)
         self.set_repeat(s.value("playback/repeat", "off", type=str), persist=False)
         self.set_visualizer(s.value("ui/visualizer", "off", type=str), persist=False)
@@ -5849,7 +5959,6 @@ class AudioLRCPlayer(QMainWindow):
             return
         s = self.settings
         s.setValue("ui/volume", self.vol_slider.value())
-        s.setValue("lyrics/offset_ms", self.lyrics_offset_ms)
 
         # Only overwrite the remembered playback if something is actually loaded, so a
         # failed restore (e.g. drive unplugged) doesn't erase it.
@@ -5912,8 +6021,9 @@ class AudioLRCPlayer(QMainWindow):
 
     @staticmethod
     def _format_time(ms):
-        time = QTime(0, 0, 0).addMSecs(ms)
-        return time.toString("m:ss")
+        """75 minutes is "75:00" (a clock time would wrap around to "15:00" after an hour)."""
+        minutes, seconds = divmod(max(0, int(ms)) // 1000, 60)
+        return f"{minutes}:{seconds:02d}"
 
 
 def resource_path(relative_path: str) -> str:
