@@ -2807,6 +2807,7 @@ dependencies = [
  "rfd",
  "rtrb",
  "rubato",
+ "serde_json",
  "slint",
  "slint-build",
  "symphonia",

@@ -12,6 +12,7 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
+export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -63,14 +64,20 @@ export component MainWindow inherits Window {
     in property <string> drop-headline;
     in property <string> drop-detail;
     in property <string> theme-key: "dark";
+    // View → Smooth animation: GPU drawing, from the next start.
+    in property <bool> smooth-animation;
     in property <string> accent-key: "coral";
     in property <[image]> accent-icons;
 
     callback open-file();
     callback open-album();
     callback load-lrc();
+    callback search-online();
+    callback embed-lyrics();
+    callback show-details();
     callback show-shortcuts();
     callback set-theme(string);
+    callback set-smooth-animation(bool);
     callback set-accent(string);
     callback toggle-play();
     callback previous();
@@ -112,8 +119,11 @@ export component MainWindow inherits Window {
         scroll-anim.running = false;
     }
 
+    // Steps finer than one frame even at 240 Hz, so every frame shows a new position
+    // (a 10 ms step left some 120 Hz frames repeating the last one, and Windows timers
+    // rounded it to 15.6 ms). The position comes from the frame clock, not the step count.
     scroll-anim := Timer {
-        interval: 10ms;
+        interval: 2ms;
         running: false;
         triggered => {
             let t = min(1, (animation-tick() - root.scroll-start) / 360ms);
@@ -142,6 +152,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "l" && !event.modifiers.shift {
                     root.load-lrc();
+                    return accept;
+                }
+                if k == "i" && !event.modifiers.shift && root.has-track {
+                    root.show-details();
                     return accept;
                 }
             }
@@ -260,15 +274,19 @@ export component MainWindow inherits Window {
                                 widest-shortcut: "Ctrl+Shift+T";
                                 entries: [
                                     { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
-                                    { id: "search", title: "Search online (LRCLIB)", disabled: true },
+                                    { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
                                     { id: "-" },
                                     { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: true },
                                     { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: true },
-                                    { id: "embed", title: "Embed lyrics in file…", disabled: true },
+                                    { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
                                 ];
                                 activated(id) => {
                                     if id == "lrc" {
                                         root.load-lrc();
+                                    } else if id == "search" {
+                                        root.search-online();
+                                    } else if id == "embed" {
+                                        root.embed-lyrics();
                                     }
                                 }
                             }
@@ -289,11 +307,12 @@ export component MainWindow inherits Window {
                                 widest-shortcut: "Ctrl+I";
                                 check-col: true;
                                 entries: [
-                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: true },
+                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: !root.has-track },
                                     { id: "-" },
                                     { id: "theme", title: "Theme", sub: 1 },
                                     { id: "accent", title: "Accent color", sub: 2 },
                                     { id: "viz", title: "Visualizer", sub: 3 },
+                                    { id: "smooth", title: "Smooth animation (GPU)", checkable: true, checked: root.smooth-animation },
                                     { id: "-" },
                                     { id: "tray", title: "Keep playing in tray when closed", checkable: true, disabled: true },
                                     { id: "ai", title: "AI alignment…", disabled: true },
@@ -323,6 +342,10 @@ export component MainWindow inherits Window {
                                 activated(id) => {
                                     if id == "shortcuts" {
                                         root.show-shortcuts();
+                                    } else if id == "details" {
+                                        root.show-details();
+                                    } else if id == "smooth" {
+                                        root.set-smooth-animation(!root.smooth-animation);
                                     } else if id == "theme:dark" || id == "theme:light" {
                                         root.set-theme(id == "theme:dark" ? "dark" : "light");
                                     } else if id == "accent:coral" {
