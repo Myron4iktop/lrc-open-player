@@ -14,6 +14,7 @@ Download **LRCOpenPlayer.exe** below and run it. It needs Windows 10 or 11 (64-b
 - Romaji for Japanese lyrics (press `R`), with a translation under each line
 - Sync lyrics (`Ctrl+T`) and add a translation (`Ctrl+Shift+T`), line by line or with optional AI alignment
 - Save lyrics as a `.lrc` file or embed them in the audio file
+- Lyrics a little early or late? `[` and `]` fix that song, and Lyrics ▾ → Use this offset for all songs sets a default (for Bluetooth headphones, say)
 - Albums, shuffle, repeat, drag and drop, dark and light themes, an optional visualizer
 - Windows media keys and the media flyout, a tray icon, and it remembers where you left off
 - Plays FLAC, MP3, M4A (AAC and ALAC), OGG, Opus and WAV
