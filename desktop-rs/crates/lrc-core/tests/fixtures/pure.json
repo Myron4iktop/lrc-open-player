@@ -8465,7 +8465,7 @@
    "result": {
     "lyrics": "from search",
     "message": "Plain lyrics found on LRCLIB.",
-    "trusted": true,
+    "trusted": false,
     "lrclib_duration_sec": 100
    }
   },
@@ -8488,7 +8488,7 @@
    "result": {
     "lyrics": "a",
     "message": "Plain lyrics downloaded from LRCLIB.",
-    "trusted": true,
+    "trusted": false,
     "lrclib_duration_sec": 1
    }
   },
@@ -8513,10 +8513,10 @@
    "query_title": "Song",
    "query_artist": "",
    "result": {
-    "lyrics": "",
-    "message": "No lyrics found online.",
+    "lyrics": "[00:01.00]s",
+    "message": "Synced lyrics found on LRCLIB (maybe another version).",
     "trusted": false,
-    "lrclib_duration_sec": 0
+    "lrclib_duration_sec": 100
    }
   },
   {
@@ -9649,23 +9649,23 @@
    },
    {
     "ms": 3600000,
-    "text": "0:00"
+    "text": "60:00"
    },
    {
     "ms": 3725000,
-    "text": "2:05"
+    "text": "62:05"
    },
    {
     "ms": 86399999,
-    "text": "59:59"
+    "text": "1439:59"
    },
    {
     "ms": 86400000,
-    "text": "0:00"
+    "text": "1440:00"
    },
    {
     "ms": 90000000,
-    "text": "0:00"
+    "text": "1500:00"
    }
   ],
   "offset": [

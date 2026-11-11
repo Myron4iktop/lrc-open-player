@@ -10,11 +10,11 @@ use crate::text::base_name;
 /// How far the lyrics offset can go either way (`OFFSET_LIMIT_MS`).
 pub const OFFSET_LIMIT_MS: i64 = 30_000;
 
-/// `_format_time`: `QTime(0, 0, 0).addMSecs(ms).toString("m:ss")`. Minutes don't
-/// count hours, as in the Python app (1:02:05 shows as 2:05).
+/// `_format_time`: minutes and seconds, with the minutes going past 60, so 75 minutes
+/// is "75:00" (a clock time would wrap around to "15:00" after an hour).
 pub fn format_time(ms: u64) -> String {
-    let secs = (ms % 86_400_000) / 1000;
-    format!("{}:{:02}", (secs / 60) % 60, secs % 60)
+    let secs = ms / 1000;
+    format!("{}:{:02}", secs / 60, secs % 60)
 }
 
 /// An offset clamped to ±30 s (`set_lyrics_offset`).
@@ -441,8 +441,8 @@ pub const SHORTCUTS: [(&str, &str); 17] = [
     ("Space", "Play / pause"),
     ("Ctrl+← / Ctrl+→", "Previous / next track"),
     ("F11 or double-click", "Fullscreen (Esc to leave)"),
-    ("[ / ]", "Show lyrics 0.1 s earlier / later"),
-    ("\\", "Reset lyrics offset"),
+    ("[ / ]", "Show this song's lyrics 0.1 s earlier / later"),
+    ("\\", "Back to the default offset (Lyrics ▾ sets it)"),
     ("R", "Romaji on / off"),
     ("S", "Shuffle on / off"),
     ("L", "Repeat: off → track → album"),

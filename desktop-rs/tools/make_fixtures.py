@@ -140,6 +140,7 @@ def parse_lyrics(content: str):
         lyric_cards=[],
         is_synced=False,
         _reset_scroll_and_sync=lambda: None,
+        _lyrics_shown=0,
     )
     real_card, real_single = L.LyricCard, L.QTimer.singleShot
     L.LyricCard = Card

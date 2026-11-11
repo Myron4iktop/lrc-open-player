@@ -841,6 +841,8 @@ struct StreamInfo {
     bits_per_sample: Option<u32>,
     bitrate_kbps: Option<u64>,
     length_sec: f64,
+    /// An M4A in Apple Lossless (mutagen's `codec` is "alac"), not AAC.
+    alac: bool,
 }
 
 fn stream_info(audio: &Audio) -> StreamInfo {
@@ -852,6 +854,7 @@ fn stream_info(audio: &Audio) -> StreamInfo {
             bits_per_sample: None,
             bitrate_kbps: Some(m.bitrate / 1000),
             length_sec: m.length,
+            alac: false,
         },
         Audio::Wav(f) => {
             let p = f.properties();
@@ -865,6 +868,7 @@ fn stream_info(audio: &Audio) -> StreamInfo {
                 bits_per_sample: Some(bits),
                 bitrate_kbps: Some(bps / 1000),
                 length_sec: secs(p.duration()),
+                alac: false,
             }
         }
         Audio::Flac(f) => {
@@ -875,6 +879,7 @@ fn stream_info(audio: &Audio) -> StreamInfo {
                 bits_per_sample: Some(u32::from(p.bit_depth())),
                 bitrate_kbps: Some(u64::from(p.audio_bitrate())),
                 length_sec: secs(p.duration()),
+                alac: false,
             }
         }
         Audio::Mp4(f) => {
@@ -886,6 +891,7 @@ fn stream_info(audio: &Audio) -> StreamInfo {
                 bits_per_sample: Some(p.bit_depth().map(u32::from).unwrap_or(0)),
                 bitrate_kbps: Some(p.audio_bitrate().map(u64::from).unwrap_or(0)),
                 length_sec: secs(p.duration()),
+                alac: matches!(p.codec(), Some(lofty::mp4::Mp4Codec::ALAC)),
             }
         }
         Audio::Vorbis(f) => {
@@ -911,6 +917,7 @@ fn stream_info(audio: &Audio) -> StreamInfo {
                 bits_per_sample: None,
                 bitrate_kbps: Some(bps as u64 / 1000),
                 length_sec: secs(p.duration()),
+                alac: false,
             }
         }
         Audio::Opus(f, mutagen) => {
@@ -920,12 +927,13 @@ fn stream_info(audio: &Audio) -> StreamInfo {
                 u64::from(p.audio_bitrate()) * 1000,
             ));
             StreamInfo {
-                // mutagen has no sample rate for Opus, so the player assumes 44.1 kHz.
+                // mutagen has no sample rate for Opus: it always plays at 48 kHz.
                 sample_rate: None,
                 channels: Some(u32::from(p.channels())),
                 bits_per_sample: None,
                 bitrate_kbps: Some(bps / 1000),
                 length_sec,
+                alac: false,
             }
         }
     }
@@ -983,19 +991,21 @@ pub fn extract_metadata_and_cover(file_path: &Path) -> TrackMetadata {
     // 1. Technical stream information
     let ext = lower_ext(file_path);
     let s = stream_info(&audio);
-    let sr = s.sample_rate.unwrap_or(44100);
+    // Opus has no sample rate in its tags (mutagen reports none): it always plays at 48 kHz.
+    let sr = match s.sample_rate {
+        Some(sr) if sr > 0 => sr,
+        _ if ext == ".opus" => 48000,
+        _ => 44100,
+    };
     info.sample_rate_khz = format!("{:.1}", f64::from(sr) / 1000.0)
         .parse()
         .unwrap_or(0.0);
     info.channels = s.channels.unwrap_or(2);
-    let mut bps = s.bits_per_sample.unwrap_or(0);
-    if bps == 0 {
-        bps = if [".mp3", ".ogg", ".m4a"].contains(&ext.as_str()) {
-            16
-        } else {
-            24
-        };
-    }
+    // Lossy formats (MP3, Ogg Vorbis, Opus) have no bit depth of their own; show 16.
+    let bps = match s.bits_per_sample {
+        Some(b) if b > 0 => b,
+        _ => 16,
+    };
     info.bits_per_sample = bps;
     match s.bitrate_kbps {
         Some(kbps) if kbps > 0 => info.bitrate_kbps = kbps,
@@ -1009,7 +1019,9 @@ pub fn extract_metadata_and_cover(file_path: &Path) -> TrackMetadata {
     let length_sec = s.length_sec as u64;
     info.duration_sec = length_sec;
     info.duration_str = format!("{}:{:02}", length_sec / 60, length_sec % 60);
-    if bps >= 24 || sr >= 48000 || info.bitrate_kbps >= 1000 {
+    // "HD" is for lossless files only: an Opus file or a 48 kHz MP3 isn't one.
+    let lossless = [".flac", ".wav"].contains(&ext.as_str()) || s.alac;
+    if lossless && (bps >= 24 || sr >= 48000 || info.bitrate_kbps >= 1000) {
         info.is_hd = true;
     }
     info.mime_type = match ext.as_str() {
