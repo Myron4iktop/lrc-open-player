@@ -1,0 +1,63 @@
+// The active palette. Rust fills it from `lrc_core::theme::build_palette`, so every color
+// in the window comes from the same place as in the Python app (`PAL`).
+
+export global Theme {
+    in property <bool> dark: true;
+    // Opacity of the lyric lines that aren't playing.
+    in property <float> inactive-opacity: 0.32;
+    in property <color> bg;
+    in property <color> dialog-bg;
+    in property <color> surface;
+    in property <color> surface2;
+    in property <color> surface-border;
+    in property <color> btn;
+    in property <color> btn-hover;
+    in property <color> btn-border;
+    in property <color> btn-disabled;
+    in property <color> btn-disabled-border;
+    in property <color> menu;
+    in property <color> menu-border;
+    in property <color> divider;
+    in property <color> hover;
+    in property <color> groove;
+    in property <color> badge-bg;
+    in property <color> text;
+    in property <color> text-soft;
+    in property <color> title;
+    in property <color> list-text;
+    in property <color> muted;
+    in property <color> dim;
+    in property <color> faint;
+    in property <color> faint2;
+    in property <color> text-disabled;
+    in property <color> handle;
+    in property <color> handle-border;
+    in property <color> icon;
+    in property <color> icon-muted;
+    in property <color> accent;
+    in property <color> artist;
+    in property <color> badge-text;
+    in property <color> sel;
+    in property <color> sel-text;
+    in property <color> toggle-bg;
+    in property <color> toggle-border;
+    in property <color> toggle-text;
+    in property <color> primary;
+    in property <color> primary-hover;
+    in property <color> primary-border;
+    in property <color> primary-text;
+    in property <color> primary-disabled;
+    in property <color> primary-disabled-text;
+    in property <color> primary-disabled-border;
+    in property <color> lyric-active;
+    in property <color> lyric-active-sub;
+    in property <color> lyric-inactive;
+    in property <color> lyric-inactive-sub;
+    in property <color> lyric-plain;
+    in property <color> time-ok;
+    in property <color> status;
+    in property <color> error;
+    in property <color> warn-text;
+    in property <color> warn-bg;
+    in property <color> overlay;
+}

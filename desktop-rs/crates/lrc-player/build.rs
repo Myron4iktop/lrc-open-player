@@ -1,5 +1,10 @@
 fn main() {
-    slint_build::compile("ui/main.slint").expect("Slint UI failed to compile");
+    slint_build::compile_with_config(
+        "ui/main.slint",
+        // One style everywhere, so the menus look the same on every machine.
+        slint_build::CompilerConfiguration::new().with_style("fluent".into()),
+    )
+    .expect("Slint UI failed to compile");
 
     // The icon inside the .exe, which Explorer, the taskbar and `main.rs` use.
     // Only on a Windows host, which has the resource compiler: CI builds the .exe there.

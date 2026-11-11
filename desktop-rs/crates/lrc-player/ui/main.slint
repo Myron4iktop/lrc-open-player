@@ -1,182 +1,780 @@
-// M2's throwaway debug window, for testing the audio engine until M3 brings the real one.
+// The main window: `_init_ui` and friends in lrcplayer.py.
+//
+// Left: the Open, Lyrics, View and Tracklist buttons, the cover, title and artist, the
+// seek bar, the audio badge, the transport controls and the lyrics offset. Middle: the
+// tracklist drawer. Right: the lyrics. Rust (src/app.rs) owns the state and the rules;
+// this file only lays them out.
 
-import { Button, CheckBox, Slider, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { Palette } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import { MediaIcon } from "icons.slint";
+import { PushButton, HSlider, TipBox } from "widgets.slint";
+import { LyricCard, LyricLineData } from "lyrics.slint";
+import { DropMenu } from "menu.slint";
+export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
+export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
     title: "LRC Open Player";
     icon: @image-url("../../../../desktop/favicon.ico");
-    preferred-width: 640px;
-    preferred-height: 300px;
+    preferred-width: 1150px;
+    preferred-height: 780px;
+    min-width: 760px;
+    min-height: 560px;
+    background: Theme.bg;
+    default-font-family: "Segoe UI";
+    full-screen <=> root.fullscreen;
 
-    in property <string> track: "No song open";
-    in property <string> status: "";
-    in property <string> state-text: "Stopped";
+    // --- Track ---
+    in property <bool> has-track;
+    in property <string> track-title: "No track loaded";
+    in property <string> track-artist;
+    in property <image> cover;
+    in property <bool> has-cover;
+    in property <string> specs-text;
+    // --- Playback ---
     in property <bool> playing;
     in property <bool> muted;
     in-out property <float> seek-value;
-    in property <float> duration-ms;
+    in property <float> seek-max;
     in property <string> position-text: "0:00";
     in property <string> duration-text: "0:00";
     in-out property <float> volume: 80;
-    in-out property <bool> repeat-track;
-    in-out property <bool> stay-at-end;
-    in-out property <bool> seeking;
+    in property <bool> shuffle;
+    in property <string> repeat: "off";
+    in property <string> repeat-tip: "Repeat: off   ( L )";
+    in property <string> offset-text: "+0.0 s";
+    // --- Tracklist ---
+    in property <string> queue-title: "Album Tracklist";
+    in property <[string]> queue-rows;
+    in-out property <int> queue-current: -1;
+    in-out property <bool> queue-visible;
+    // --- Lyrics ---
+    in property <[LyricLineData]> lines;
+    in property <bool> synced;
+    in property <string> lyrics-message;
+    // "status" (lyricsStatus) or "empty" (lyricsEmpty), the two looks of a note.
+    in property <string> lyrics-message-kind: "status";
+    in-out property <length> lyrics-scroll;
+    in property <int> rescale-count;
+    // --- Window ---
+    in-out property <bool> fullscreen;
+    in property <bool> drop-visible;
+    in property <string> drop-headline;
+    in property <string> drop-detail;
+    in property <string> theme-key: "dark";
+    in property <string> accent-key: "coral";
+    in property <[image]> accent-icons;
 
-    callback open-files();
+    callback open-file();
+    callback open-album();
+    callback load-lrc();
+    callback show-shortcuts();
+    callback set-theme(string);
+    callback set-accent(string);
     callback toggle-play();
-    callback toggle-mute();
-    callback seek-to(float);
-    callback volume-changed(float);
-    callback repeat-changed(bool);
     callback previous();
     callback next();
+    callback toggle-shuffle();
+    callback cycle-repeat();
+    callback toggle-mute();
+    callback volume-changed(float);
+    callback seek-pressed();
+    callback seek-released(float);
+    callback offset-step(int);
+    callback offset-reset();
+    callback queue-play(int);
+    callback line-clicked(int);
+    callback toggle-fullscreen();
+
+    // Menus follow the theme too (they are drawn by Slint's own style).
+    public function sync-color-scheme() {
+        Palette.color-scheme = Theme.dark ? ColorScheme.dark : ColorScheme.light;
+    }
+
+    public function focus-window() {
+        keys.focus();
+    }
+
+    // --- Smooth scroll of the lyrics: 360 ms, out-cubic (`_smooth_scroll_to_card`) ---
+    property <length> scroll-from;
+    property <length> scroll-to;
+    property <duration> scroll-start;
+
+    public function scroll-lyrics-to(target: length) {
+        root.scroll-from = -root.lyrics-scroll;
+        root.scroll-to = target;
+        root.scroll-start = animation-tick();
+        scroll-anim.running = true;
+    }
+
+    public function stop-lyrics-scroll() {
+        scroll-anim.running = false;
+    }
+
+    scroll-anim := Timer {
+        interval: 10ms;
+        running: false;
+        triggered => {
+            let t = min(1, (animation-tick() - root.scroll-start) / 360ms);
+            let eased = 1 - pow(1 - t, 3);
+            root.lyrics-scroll = -(root.scroll-from + (root.scroll-to - root.scroll-from) * eased);
+            if t >= 1 {
+                self.running = false;
+            }
+        }
+    }
 
     forward-focus: keys;
+
     keys := FocusScope {
         key-pressed(event) => {
-            if (event.text == " ") {
+            // Menu shortcuts first, as Qt's QActions take them before keyPressEvent.
+            if event.modifiers.control && !event.modifiers.alt {
+                let k = event.text.to-lowercase();
+                if k == "o" && event.modifiers.shift {
+                    root.open-album();
+                    return accept;
+                }
+                if k == "o" {
+                    root.open-file();
+                    return accept;
+                }
+                if k == "l" && !event.modifiers.shift {
+                    root.load-lrc();
+                    return accept;
+                }
+            }
+            if event.text == Key.F1 {
+                root.show-shortcuts();
+                return accept;
+            }
+            // keyPressEvent
+            if event.text == Key.F11 {
+                root.toggle-fullscreen();
+                return accept;
+            }
+            if event.text == Key.Escape && root.fullscreen {
+                root.toggle-fullscreen();
+                return accept;
+            }
+            if event.text == " " {
                 root.toggle-play();
                 return accept;
             }
-            if ((event.text == "m" || event.text == "M") && !event.modifiers.control && !event.modifiers.alt) {
-                root.toggle-mute();
+            if event.modifiers.control && event.text == Key.RightArrow {
+                root.next();
                 return accept;
+            }
+            if event.modifiers.control && event.text == Key.LeftArrow {
+                root.previous();
+                return accept;
+            }
+            if event.text == "[" {
+                root.offset-step(-100);
+                return accept;
+            }
+            if event.text == "]" {
+                root.offset-step(100);
+                return accept;
+            }
+            if event.text == "\\" {
+                root.offset-reset();
+                return accept;
+            }
+            if !event.modifiers.control && !event.modifiers.alt && !event.modifiers.shift && !event.modifiers.meta {
+                let k = event.text.to-lowercase();
+                if k == "s" {
+                    root.toggle-shuffle();
+                    return accept;
+                }
+                if k == "l" {
+                    root.cycle-repeat();
+                    return accept;
+                }
+                if k == "m" {
+                    root.toggle-mute();
+                    return accept;
+                }
             }
             reject
         }
 
-        VerticalBox {
-            Text {
-                text: root.track;
-                font-size: 16px;
-                font-weight: 600;
-                overflow: elide;
-            }
-
-            HorizontalBox {
-                padding: 0;
-                Text {
-                    text: root.position-text;
-                    vertical-alignment: center;
-                    min-width: 40px;
-                }
-
-                Slider {
-                    horizontal-stretch: 1;
-                    minimum: 0;
-                    maximum: max(root.duration-ms, 1);
-                    value <=> root.seek-value;
-                    enabled: root.duration-ms > 0;
-                    // Like the Python app: the bar stops following the clock while it is
-                    // held, and the song moves when it is let go.
-                    changed(v) => {
-                        root.seeking = true;
-                    }
-                    released(v) => {
-                        root.seeking = false;
-                        root.seek-to(v);
-                        keys.focus();
-                    }
-                }
-
-                Text {
-                    text: root.duration-text;
-                    vertical-alignment: center;
-                    min-width: 40px;
-                }
-            }
-
-            HorizontalBox {
-                padding: 0;
-                Button {
-                    text: "Open…";
-                    clicked => {
-                        root.open-files();
-                        keys.focus();
-                    }
-                }
-
-                Button {
-                    text: "⏮";
-                    clicked => {
-                        root.previous();
-                        keys.focus();
-                    }
-                }
-
-                Button {
-                    text: root.playing ? "Pause" : "Play";
-                    clicked => {
-                        root.toggle-play();
-                        keys.focus();
-                    }
-                }
-
-                Button {
-                    text: "⏭";
-                    clicked => {
-                        root.next();
-                        keys.focus();
-                    }
-                }
-
-                Button {
-                    text: root.muted ? "Unmute (M)" : "Mute (M)";
-                    clicked => {
-                        root.toggle-mute();
-                        keys.focus();
-                    }
-                }
-
-                Text {
-                    text: "Volume";
-                    vertical-alignment: center;
-                }
-
-                Slider {
-                    minimum: 0;
-                    maximum: 100;
-                    value <=> root.volume;
-                    min-width: 100px;
-                    changed(v) => {
-                        root.volume-changed(round(v));
-                    }
-                    released(v) => {
-                        keys.focus();
-                    }
-                }
-            }
-
-            HorizontalBox {
-                padding: 0;
-                CheckBox {
-                    text: "Repeat this track";
-                    checked <=> root.repeat-track;
-                    toggled => {
-                        root.repeat-changed(self.checked);
-                        keys.focus();
-                    }
-                }
-
-                CheckBox {
-                    text: "Pretend an editor is open (stay on the song at its end)";
-                    checked <=> root.stay-at-end;
-                    toggled => {
-                        keys.focus();
-                    }
-                }
-            }
-
-            Text {
-                text: "State: " + root.state-text;
-                color: #888;
-            }
-
-            Text {
-                text: root.status;
-                wrap: word-wrap;
-                color: #888;
+        // Double-click anywhere that isn't a control: fullscreen (`mouseDoubleClickEvent`).
+        TouchArea {
+            double-clicked => {
+                root.toggle-fullscreen();
             }
         }
+
+        HorizontalLayout {
+            padding: 25px;
+            spacing: 25px;
+
+            // ------------------------------------------------------------------
+            // Left panel
+            // ------------------------------------------------------------------
+            left := VerticalLayout {
+                width: root.fullscreen ? 420px : 330px;
+                spacing: 10px;
+                alignment: start;
+
+                GridLayout {
+                    spacing: 6px;
+                    Row {
+                        PushButton {
+                            text: "Open";
+                            glyph: "menu";
+                            clicked => {
+                                open-menu.open(0, self.height + 2px);
+                            }
+
+                            open-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+Shift+O";
+                                entries: [
+                                    { id: "file", title: "Audio file…", shortcut: "Ctrl+O" },
+                                    { id: "album", title: "Album folder…", shortcut: "Ctrl+Shift+O" },
+                                ];
+                                activated(id) => {
+                                    if id == "file" {
+                                        root.open-file();
+                                    } else {
+                                        root.open-album();
+                                    }
+                                }
+                            }
+                        }
+
+                        PushButton {
+                            text: "Lyrics";
+                            glyph: "menu";
+                            clicked => {
+                                lyrics-menu.open(0, self.height + 2px);
+                            }
+
+                            lyrics-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+Shift+T";
+                                entries: [
+                                    { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
+                                    { id: "search", title: "Search online (LRCLIB)", disabled: true },
+                                    { id: "-" },
+                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: true },
+                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: true },
+                                    { id: "embed", title: "Embed lyrics in file…", disabled: true },
+                                ];
+                                activated(id) => {
+                                    if id == "lrc" {
+                                        root.load-lrc();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        PushButton {
+                            text: "View";
+                            glyph: "menu";
+                            clicked => {
+                                view-menu.open(0, self.height + 2px);
+                            }
+
+                            view-menu := DropMenu {
+                                x: 0;
+                                y: 0;
+                                widest-shortcut: "Ctrl+I";
+                                check-col: true;
+                                entries: [
+                                    { id: "details", title: "Track details…", shortcut: "Ctrl+I", disabled: true },
+                                    { id: "-" },
+                                    { id: "theme", title: "Theme", sub: 1 },
+                                    { id: "accent", title: "Accent color", sub: 2 },
+                                    { id: "viz", title: "Visualizer", sub: 3 },
+                                    { id: "-" },
+                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, disabled: true },
+                                    { id: "ai", title: "AI alignment…", disabled: true },
+                                    { id: "shortcuts", title: "Keyboard shortcuts", shortcut: "F1" },
+                                ];
+                                sub-check-col: [true, true, true];
+                                subs: [
+                                    [
+                                        { id: "theme:dark", title: "Dark", checkable: true, checked: root.theme-key == "dark" },
+                                        { id: "theme:light", title: "Light", checkable: true, checked: root.theme-key == "light" },
+                                    ],
+                                    [
+                                        { id: "accent:coral", title: "Coral", checkable: true, icon: root.accent-icons[0] },
+                                        { id: "accent:rose", title: "Rose", checkable: true, icon: root.accent-icons[1] },
+                                        { id: "accent:amber", title: "Amber", checkable: true, icon: root.accent-icons[2] },
+                                        { id: "accent:jade", title: "Jade", checkable: true, icon: root.accent-icons[3] },
+                                        { id: "accent:aqua", title: "Aqua", checkable: true, icon: root.accent-icons[4] },
+                                        { id: "accent:azure", title: "Azure", checkable: true, icon: root.accent-icons[5] },
+                                        { id: "accent:violet", title: "Violet", checkable: true, icon: root.accent-icons[6] },
+                                    ],
+                                    [
+                                        { id: "viz:off", title: "Off", checkable: true, checked: true },
+                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, disabled: true },
+                                        { id: "viz:wave", title: "Soft wave", checkable: true, disabled: true },
+                                    ],
+                                ];
+                                activated(id) => {
+                                    if id == "shortcuts" {
+                                        root.show-shortcuts();
+                                    } else if id == "theme:dark" || id == "theme:light" {
+                                        root.set-theme(id == "theme:dark" ? "dark" : "light");
+                                    } else if id == "accent:coral" {
+                                        root.set-accent("coral");
+                                    } else if id == "accent:rose" {
+                                        root.set-accent("rose");
+                                    } else if id == "accent:amber" {
+                                        root.set-accent("amber");
+                                    } else if id == "accent:jade" {
+                                        root.set-accent("jade");
+                                    } else if id == "accent:aqua" {
+                                        root.set-accent("aqua");
+                                    } else if id == "accent:azure" {
+                                        root.set-accent("azure");
+                                    } else if id == "accent:violet" {
+                                        root.set-accent("violet");
+                                    }
+                                }
+                            }
+                        }
+
+                        PushButton {
+                            text: "Tracklist";
+                            glyph: "list";
+                            enabled: root.queue-rows.length > 0;
+                            clicked => {
+                                root.queue-visible = !root.queue-visible;
+                            }
+                        }
+                    }
+                }
+
+                // Cover art
+                Rectangle {
+                    width: left.width;
+                    height: left.width;
+                    border-radius: 14px;
+                    border-width: 1px;
+                    border-color: Theme.surface-border;
+                    background: Theme.surface2;
+                    clip: true;
+
+                    if !root.has-cover: Text {
+                        text: "No Album Art";
+                        color: Theme.muted;
+                        font-size: 12px;
+                    }
+
+                    if root.has-cover: Image {
+                        width: 100%;
+                        height: 100%;
+                        source: root.cover;
+                        image-fit: ImageFit.cover;
+                    }
+
+                    Tooltip {
+                        TipBox {
+                            text: "Double-click anywhere or press F11 for fullscreen\nF1 shows all keyboard shortcuts";
+                        }
+                    }
+                }
+
+                Text {
+                    text: root.track-title;
+                    wrap: word-wrap;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: Theme.title;
+                }
+
+                Text {
+                    text: root.track-artist;
+                    wrap: word-wrap;
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: Theme.artist;
+                }
+
+                // Seek bar
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: root.position-text;
+                        font-size: 12px;
+                        color: Theme.muted;
+                        vertical-alignment: center;
+                    }
+
+                    HSlider {
+                        horizontal-stretch: 1;
+                        minimum: 0;
+                        maximum: max(root.seek-max, 1);
+                        value <=> root.seek-value;
+                        pressed => {
+                            root.seek-pressed();
+                        }
+                        released(v) => {
+                            root.seek-released(v);
+                        }
+                    }
+
+                    Text {
+                        text: root.duration-text;
+                        font-size: 12px;
+                        color: Theme.muted;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Audio badge
+                if root.specs-text != "": Rectangle {
+                    border-radius: 4px;
+                    background: Theme.badge-bg;
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        padding-top: 4px;
+                        padding-bottom: 4px;
+                        Text {
+                            text: root.specs-text;
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: Theme.badge-text;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+
+                // Shuffle, previous, play, next, repeat, mute and volume
+                HorizontalLayout {
+                    spacing: 5px;
+                    PushButton {
+                        width: 32px;
+                        role: "iconToggle";
+                        checked: root.shuffle;
+                        icon: "shuffle";
+                        icon-color: root.shuffle ? Theme.accent : Theme.icon-muted;
+                        tooltip: root.shuffle ? "Shuffle: on   ( S )" : "Shuffle: off   ( S )";
+                        clicked => {
+                            root.toggle-shuffle();
+                        }
+                    }
+
+                    PushButton {
+                        width: 40px;
+                        role: "iconButton";
+                        icon: "prev";
+                        tooltip: "Previous track   ( Ctrl+← )";
+                        clicked => {
+                            root.previous();
+                        }
+                    }
+
+                    PushButton {
+                        width: 52px;
+                        role: "iconButton";
+                        icon: root.playing ? "pause" : "play";
+                        tooltip: "Play / pause   ( Space )";
+                        clicked => {
+                            root.toggle-play();
+                        }
+                    }
+
+                    PushButton {
+                        width: 40px;
+                        role: "iconButton";
+                        icon: "next";
+                        tooltip: "Next track   ( Ctrl+→ )";
+                        clicked => {
+                            root.next();
+                        }
+                    }
+
+                    PushButton {
+                        width: 32px;
+                        role: "iconToggle";
+                        checked: root.repeat != "off";
+                        icon: root.repeat == "track" ? "repeat_one" : "repeat";
+                        icon-color: root.repeat != "off" ? Theme.accent : Theme.icon-muted;
+                        tooltip: root.repeat-tip;
+                        clicked => {
+                            root.cycle-repeat();
+                        }
+                    }
+
+                    Rectangle {
+                        width: 4px;
+                    }
+
+                    PushButton {
+                        width: 28px;
+                        role: "iconFlat";
+                        icon: root.muted ? "mute" : "volume";
+                        icon-color: root.muted ? Theme.accent : Theme.icon-muted;
+                        tooltip: root.muted ? "Unmute   ( M )" : "Mute   ( M )";
+                        clicked => {
+                            root.toggle-mute();
+                        }
+                    }
+
+                    HSlider {
+                        horizontal-stretch: 1;
+                        minimum: 0;
+                        maximum: 100;
+                        value <=> root.volume;
+                        tooltip: "Volume";
+                        moved(v) => {
+                            root.volume-changed(round(v));
+                        }
+                    }
+                }
+
+                // Lyrics sync:  [ − ]  +0.0 s  [ + ]  [Reset]            [あ]
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Lyrics sync:";
+                        font-size: 12px;
+                        color: Theme.dim;
+                        vertical-alignment: center;
+                    }
+
+                    PushButton {
+                        width: 32px;
+                        text: "−";
+                        tooltip: "Show lyrics earlier by 0.1 s   ( [ )";
+                        clicked => {
+                            root.offset-step(-100);
+                        }
+                    }
+
+                    Text {
+                        min-width: 52px;
+                        text: root.offset-text;
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: Theme.text-soft;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+
+                    PushButton {
+                        width: 32px;
+                        text: "+";
+                        tooltip: "Show lyrics later by 0.1 s   ( ] )";
+                        clicked => {
+                            root.offset-step(100);
+                        }
+                    }
+
+                    PushButton {
+                        width: 56px;
+                        text: "Reset";
+                        tooltip: "Reset lyrics offset   ( \\ )";
+                        clicked => {
+                            root.offset-reset();
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    // Romaji arrives in M5; the button is there so the row looks the same.
+                    PushButton {
+                        width: 36px;
+                        text: "あ";
+                        role: "toggle";
+                        enabled: false;
+                        tooltip: "Show Japanese lyrics as romaji   ( R )";
+                    }
+                }
+            }
+
+            // ------------------------------------------------------------------
+            // Tracklist drawer
+            // ------------------------------------------------------------------
+            if root.queue-visible: VerticalLayout {
+                width: 280px;
+                spacing: 10px;
+
+                HorizontalLayout {
+                    Text {
+                        text: root.queue-title;
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: Theme.title;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+
+                    PushButton {
+                        width: 26px;
+                        height: 26px;
+                        min-h: 26px;
+                        glyph: "close";
+                        clicked => {
+                            root.queue-visible = false;
+                        }
+                    }
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                    background: Theme.surface;
+                    border-width: 1px;
+                    border-color: Theme.surface-border;
+                    border-radius: 8px;
+                    clip: true;
+
+                    queue-list := Flickable {
+                        x: 5px;
+                        y: 5px;
+                        width: parent.width - 10px;
+                        height: parent.height - 10px;
+                        content-height: rows.preferred-height;
+
+                        rows := VerticalLayout {
+                            width: queue-list.width;
+                            spacing: 2px;
+                            alignment: start;
+                            for row[i] in root.queue-rows: Rectangle {
+                                height: 44px;
+                                border-radius: 6px;
+                                background: i == root.queue-current ? Theme.sel : row-touch.has-hover ? Theme.hover : transparent;
+
+                                Text {
+                                    x: 10px;
+                                    width: parent.width - 20px;
+                                    height: 100%;
+                                    text: row;
+                                    overflow: elide;
+                                    vertical-alignment: center;
+                                    font-size: 12px;
+                                    font-weight: i == root.queue-current ? 700 : 400;
+                                    color: i == root.queue-current ? Theme.sel-text : Theme.list-text;
+                                }
+
+                                row-touch := TouchArea {
+                                    clicked => {
+                                        root.queue-current = i;
+                                    }
+                                    double-clicked => {
+                                        root.queue-play(i);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ------------------------------------------------------------------
+            // Lyrics
+            // ------------------------------------------------------------------
+            lyrics-area := Rectangle {
+                horizontal-stretch: 1;
+
+                if root.lyrics-message != "": VerticalLayout {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 100px;
+                    alignment: start;
+                    Text {
+                        text: root.lyrics-message;
+                        wrap: word-wrap;
+                        font-size: 16px;
+                        font-weight: root.lyrics-message-kind == "status" ? 500 : 400;
+                        color: root.lyrics-message-kind == "status" ? Theme.artist : Theme.faint;
+                    }
+                }
+
+                lyrics-flick := Flickable {
+                    content-y <=> root.lyrics-scroll;
+                    content-height: max(self.height, cards.preferred-height);
+
+                    TouchArea {
+                        double-clicked => {
+                            root.toggle-fullscreen();
+                        }
+                    }
+
+                    cards := VerticalLayout {
+                        width: lyrics-flick.width;
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        padding-top: 100px;
+                        padding-bottom: 160px;
+                        spacing: 10px;
+                        alignment: start;
+
+                        for line[i] in root.lines: LyricCard {
+                            main: line.main;
+                            sub: line.sub;
+                            active: line.active;
+                            synced: root.synced;
+                            fullscreen: root.fullscreen;
+                            rescale-count: root.rescale-count;
+                            clicked => {
+                                root.line-clicked(i);
+                            }
+                            double-clicked => {
+                                root.toggle-fullscreen();
+                            }
+                            scroll-request(y, h) => {
+                                let most = max(0px, lyrics-flick.content-height - lyrics-flick.height);
+                                root.scroll-lyrics-to(clamp(y - (lyrics-flick.height - h) / 2, 0px, most));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Shown while files are dragged over the window (`_show_drop_overlay`).
+        if root.drop-visible: Rectangle {
+            x: 14px;
+            y: 14px;
+            width: parent.width - 28px;
+            height: parent.height - 28px;
+            background: Theme.overlay;
+            border-width: 2px;
+            border-color: Theme.accent;
+            border-radius: 18px;
+
+            VerticalLayout {
+                alignment: center;
+                spacing: 4px;
+                Text {
+                    text: root.drop-headline;
+                    font-size: 22px;
+                    font-weight: 600;
+                    color: Theme.title;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: root.drop-detail;
+                    font-size: 13px;
+                    font-weight: 400;
+                    color: Theme.muted;
+                    horizontal-alignment: center;
+                }
+            }
+        }
+    }
+
+    // Rust bumps this when the window comes back from the taskbar. Changing the color of
+    // this invisible full-window layer makes the renderer repaint every pixel, instead of
+    // only the parts it thinks changed, which left parts of the window unpainted on Windows.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
     }
 }

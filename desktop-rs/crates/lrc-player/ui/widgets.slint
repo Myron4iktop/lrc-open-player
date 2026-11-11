@@ -1,0 +1,222 @@
+// Buttons, sliders and tooltips styled like `app_stylesheet` in lrcplayer.py.
+//
+// None of these take keyboard focus, so Space and the other shortcuts always reach the
+// window, as the Python app arranges with `setFocusPolicy(NoFocus)`.
+
+import { Theme } from "theme.slint";
+import { MediaIcon } from "icons.slint";
+
+// What a QToolTip looks like in the app.
+export component TipBox inherits Rectangle {
+    in property <string> text;
+    background: Theme.menu;
+    border-width: 1px;
+    border-color: Theme.menu-border;
+    HorizontalLayout {
+        padding-left: 6px;
+        padding-right: 6px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        Text {
+            text: root.text;
+            color: Theme.text-soft;
+            font-size: 12px;
+        }
+    }
+}
+
+// QPushButton. `role` is the Qt object name the stylesheet keys on:
+// "" (a plain button), "toggle" and "iconToggle" (checkable), "iconButton", "iconFlat".
+export component PushButton {
+    in property <string> text;
+    in property <string> icon;          // a MediaIcon kind, or ""
+    in property <color> icon-color: Theme.icon;
+    in property <string> role;
+    in property <bool> enabled: true;
+    in property <bool> checked;
+    in property <length> font-size: 13px;
+    in property <string> tooltip;
+    // A symbol drawn next to the text, since Windows fonts lack these characters:
+    // "menu" puts "  ▾" after it, "list" puts "☰ " before it, and "close" is a lone "✕".
+    in property <string> glyph;
+    callback clicked();
+    callback double-clicked();
+
+    property <bool> icon-only: root.role == "iconButton" || root.role == "iconToggle" || root.role == "iconFlat";
+    property <bool> flat: root.role == "iconFlat";
+    property <bool> on: root.checked && (root.role == "toggle" || root.role == "iconToggle");
+
+    in property <length> min-h: 34px;
+    min-height: root.min-h;
+    min-width: content.preferred-width + (root.icon-only ? 0px : 22px);
+    property <color> fg: !root.enabled ? Theme.text-disabled : root.on ? Theme.toggle-text : Theme.text;
+    property <float> em: root.font-size / 1px;
+
+    bg := Rectangle {
+        border-radius: 6px;
+        border-width: root.flat ? 0px : 1px;
+        background: !root.enabled ? Theme.btn-disabled
+            : root.on ? Theme.toggle-bg
+            : touch.has-hover ? Theme.btn-hover
+            : root.flat ? transparent : Theme.btn;
+        border-color: !root.enabled ? Theme.btn-disabled-border
+            : root.on ? Theme.toggle-border : Theme.btn-border;
+
+        content := HorizontalLayout {
+            alignment: center;
+            spacing: root.font-size * (root.glyph == "menu" ? 0.45 : 0.35);
+
+            if root.glyph == "list": Path {
+                // ☰: three bars.
+                width: root.font-size * 0.85;
+                height: root.font-size * 0.7;
+                y: (parent.height - self.height) / 2;
+                viewbox-width: 12;
+                viewbox-height: 10;
+                stroke: root.fg;
+                stroke-width: max(1.4px, root.font-size * 0.11);
+                commands: "M 0 1 L 12 1 M 0 5 L 12 5 M 0 9 L 12 9";
+            }
+
+            label := Text {
+                text: root.text;
+                visible: root.text != "";
+                font-size: root.font-size;
+                font-weight: 600;
+                color: root.fg;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            if root.glyph == "menu": Path {
+                // "  ▾": a small filled down triangle after a gap.
+                width: root.font-size * 0.5;
+                height: root.font-size * 0.3;
+                y: (parent.height - self.height) / 2 + 1px;
+                viewbox-width: 10;
+                viewbox-height: 6;
+                fill: root.fg;
+                commands: "M 0 0 L 10 0 L 5 6 Z";
+            }
+
+            if root.glyph == "close": Path {
+                // ✕
+                width: 8px;
+                height: 8px;
+                y: (parent.height - self.height) / 2;
+                viewbox-width: 10;
+                viewbox-height: 10;
+                stroke: root.fg;
+                stroke-width: 1.3px;
+                commands: "M 1 1 L 9 9 M 9 1 L 1 9";
+            }
+        }
+
+        if root.icon != "": MediaIcon {
+            kind: root.icon;
+            color: root.icon-color;
+        }
+
+        touch := TouchArea {
+            enabled: root.enabled;
+            clicked => {
+                root.clicked();
+            }
+            double-clicked => {
+                root.double-clicked();
+            }
+        }
+    }
+
+    if root.tooltip != "": Tooltip {
+        TipBox {
+            text: root.tooltip;
+        }
+    }
+
+    // A drop-down menu, placed relative to the button.
+    @children
+}
+
+// QSlider with the app's groove, accent fill and round white handle.
+//
+// `pressed` and `released` are the drag; `moved` reports every value while dragging.
+export component HSlider {
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    in-out property <float> value;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    out property <bool> dragging: touch.pressed;
+    callback pressed();
+    callback moved(float);
+    callback released(float);
+
+    min-height: 18px;
+    min-width: 50px;
+
+    property <length> handle-size: 14px;
+    property <float> span: max(root.maximum - root.minimum, 1);
+    property <float> ratio: clamp((root.value - root.minimum) / root.span, 0, 1);
+    property <length> track: root.width - root.handle-size;
+
+    function value-at(x: length) -> float {
+        root.minimum + clamp((x - root.handle-size / 2) / max(root.track, 1px), 0, 1) * root.span
+    }
+
+    Rectangle {
+        y: (root.height - 5px) / 2;
+        x: root.handle-size / 2;
+        width: root.track;
+        height: 5px;
+        border-radius: 2px;
+        background: Theme.groove;
+    }
+
+    Rectangle {
+        y: (root.height - 5px) / 2;
+        x: root.handle-size / 2;
+        width: root.track * root.ratio;
+        height: 5px;
+        border-radius: 2px;
+        background: Theme.accent;
+    }
+
+    Rectangle {
+        x: root.track * root.ratio;
+        y: (root.height - root.handle-size) / 2;
+        width: root.handle-size;
+        height: root.handle-size;
+        border-radius: root.handle-size / 2;
+        background: Theme.handle;
+        border-width: 1px;
+        border-color: Theme.handle-border;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        pointer-event(event) => {
+            if event.button == PointerEventButton.left {
+                if event.kind == PointerEventKind.down {
+                    root.pressed();
+                    root.value = root.value-at(self.mouse-x);
+                    root.moved(root.value);
+                } else if event.kind == PointerEventKind.up {
+                    root.released(root.value);
+                }
+            }
+        }
+        moved => {
+            if self.pressed {
+                root.value = root.value-at(self.mouse-x);
+                root.moved(root.value);
+            }
+        }
+    }
+
+    if root.tooltip != "": Tooltip {
+        TipBox {
+            text: root.tooltip;
+        }
+    }
+}
