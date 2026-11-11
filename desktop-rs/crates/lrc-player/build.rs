@@ -13,6 +13,13 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         let mut res = winresource::WindowsResource::new();
         res.set_icon("../../../desktop/favicon.ico");
+        // The version tab in Properties, and the name Task Manager and the "Windows
+        // protected your PC" prompt show. The version numbers come from Cargo.toml.
+        res.set("ProductName", "LRC Open Player");
+        res.set("FileDescription", "LRC Open Player");
+        res.set("OriginalFilename", "LRCOpenPlayer.exe");
+        res.set("InternalName", "LRCOpenPlayer");
+        res.set("LegalCopyright", "Free software under the GNU GPL v3.0");
         res.compile().expect("could not add the icon to the .exe");
     }
 }

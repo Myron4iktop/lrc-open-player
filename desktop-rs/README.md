@@ -1,6 +1,6 @@
 # LRC Open Player, Rust port
 
-A native Rust rewrite of the Windows player in `desktop/`. It is not finished yet: the Python player keeps shipping until this one passes the testing checklist in the port plan.
+The Windows player, rewritten in Rust from the Python player in `desktop/`. This is the version that is released.
 
 ## Layout
 
@@ -18,6 +18,12 @@ cargo build --release -p lrc-player
 ```
 
 The finished program is `desktop-rs/target/release/LRCOpenPlayer.exe`. Every pull request also builds it on GitHub: open the run under **Actions → desktop-rs** and download the `LRCOpenPlayer` artifact.
+
+## Releasing
+
+1. Set the new `version` in `Cargo.toml` (under `[workspace.package]`) and update `RELEASE_NOTES.md`.
+2. On GitHub, run **Actions → release → Run workflow**. It builds the `.exe`, writes `THIRD_PARTY_LICENSES.html` (every crate's license text, from `about.toml` and `about.hbs` with [cargo-about](https://github.com/EmbarkStudios/cargo-about)) and puts them in a **draft** release.
+3. Check the draft under **Releases**, then press **Publish release**. That makes it public and creates the `v…` tag.
 
 Lindera downloads its dictionary from lindera.dev while building `lrc-romaji` (and so `lrc-player`), so that build needs the internet. `cargo test -p lrc-core` doesn't.
 

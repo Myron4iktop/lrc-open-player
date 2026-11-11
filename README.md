@@ -28,26 +28,30 @@ Press `F1` in the player for every keyboard shortcut.
 - Search LRCLIB and compare every match (length, synced or plain) before choosing one
 - Preview and convert Japanese lyrics to romaji, and save `.lrc` files the player picks up
 
-## Running the player from source
+## Download
 
-You need Windows and Python 3.11 or newer.
+Get **LRCOpenPlayer.exe** from [Releases](https://github.com/Myron4iktop/lrc-open-player/releases) and run it; there is nothing to install. Windows SmartScreen may say "Windows protected your PC" because the program isn't signed with a paid certificate: click **More info**, then **Run anyway**.
+
+## Building the player
+
+The player is written in Rust, in `desktop-rs/`. You need [Rust](https://rustup.rs/) (stable) and, on Windows, the Visual Studio C++ build tools that rustup asks for.
+
+```
+cd desktop-rs
+cargo build --release -p lrc-player
+```
+
+The finished program is `desktop-rs/target/release/LRCOpenPlayer.exe`. See [desktop-rs/README.md](desktop-rs/README.md) for the tests and the code layout.
+
+### The previous Python version
+
+The original player, in `desktop/`, still runs. It needs Python 3.11 or newer:
 
 ```
 cd desktop
 pip install -r requirements.txt
 python lrcplayer.py
 ```
-
-## Building the player (.exe)
-
-From the `desktop` folder:
-
-```
-pip install pyinstaller
-pyinstaller --onefile --windowed --clean --name LRCOpenPlayer --icon favicon.ico --add-data "favicon.ico;." --hidden-import shlex --collect-all fugashi --collect-all unidic_lite --collect-all cutlet lrcplayer.py
-```
-
-The finished program is `desktop/dist/LRCOpenPlayer.exe`. Close any running copy first, including the one in the tray, or Windows won't let it be replaced.
 
 ## Building the Android app
 
