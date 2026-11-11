@@ -9718,5 +9718,2459 @@
     "text": "+0.0 s"
    }
   ]
+ },
+ "align": {
+  "lines": [
+   {
+    "line": "[Verse]",
+    "header": true,
+    "clauses": [
+     "[Verse]"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "【サビ】",
+    "header": true,
+    "clauses": [
+     "【サビ】"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(Verse 2)",
+    "header": true,
+    "clauses": [
+     "(Verse 2)"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(Chorus x2)",
+    "header": true,
+    "clauses": [
+     "(Chorus x2)"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(x2)",
+    "header": true,
+    "clauses": [
+     "(x2)"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "( × 3 )",
+    "header": true,
+    "clauses": [
+     "( × 3 )"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "Chorus x2",
+    "header": true,
+    "clauses": [
+     "Chorus x2"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "Repeat chorus:",
+    "header": true,
+    "clauses": [
+     "Repeat chorus:"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "PRE-CHORUS",
+    "header": true,
+    "clauses": [
+     "PRE-CHORUS"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "Bridge 2:",
+    "header": true,
+    "clauses": [
+     "Bridge 2:"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(come on)",
+    "header": false,
+    "clauses": [
+     "(come on)"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "Bridge over water",
+    "header": false,
+    "clauses": [
+     "Bridge over water"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "Intro",
+    "header": true,
+    "clauses": [
+     "Intro"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "rap",
+    "header": true,
+    "clauses": [
+     "rap"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "[00:01.00]stamped",
+    "header": false,
+    "clauses": [
+     "[00:01.00]stamped"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "[ti:Title]",
+    "header": true,
+    "clauses": [
+     "[ti:Title]"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "  spaced  ",
+    "header": false,
+    "clauses": [
+     "  spaced  "
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "♪",
+    "header": false,
+    "clauses": [
+     "♪"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "[00:02.00]♪",
+    "header": false,
+    "clauses": [
+     "[00:02.00]♪"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "I'm provoked by the sun, my body heats",
+    "header": false,
+    "clauses": [
+     "I'm provoked by the sun,",
+     "my body heats"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "one, two, three, four",
+    "header": false,
+    "clauses": [
+     "one,",
+     "two,",
+     "three,",
+     "four"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "a,b",
+    "header": false,
+    "clauses": [
+     "a,b"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "a、 b、 c",
+    "header": false,
+    "clauses": [
+     "a、",
+     "b、",
+     "c"
+    ],
+    "used": [
+     true,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "x; y: z，w",
+    "header": false,
+    "clauses": [
+     "x;",
+     "y:",
+     "z，w"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "1, 2, 3, 4, 5, 6, 7, 8, 9",
+    "header": false,
+    "clauses": [
+     "1, 2, 3, 4, 5, 6, 7, 8, 9"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "a, b, c, d, e, f, g, h",
+    "header": false,
+    "clauses": [
+     "a,",
+     "b,",
+     "c,",
+     "d,",
+     "e,",
+     "f,",
+     "g,",
+     "h"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "trailing,  ",
+    "header": false,
+    "clauses": [
+     "trailing,  "
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": ", leading",
+    "header": false,
+    "clauses": [
+     ",",
+     "leading"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "sun,　moon",
+    "header": false,
+    "clauses": [
+     "sun,",
+     "moon"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "tab,\tsep",
+    "header": false,
+    "clauses": [
+     "tab,",
+     "sep"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "line break",
+    "header": false,
+    "clauses": [
+     "line break"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "verse",
+    "header": true,
+    "clauses": [
+     "verse"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(spoken)",
+    "header": true,
+    "clauses": [
+     "(spoken)"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "(Verse 2",
+    "header": false,
+    "clauses": [
+     "(Verse 2"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   {
+    "line": "[Chorus] text",
+    "header": false,
+    "clauses": [
+     "[Chorus] text"
+    ],
+    "used": [
+     false,
+     false,
+     false,
+     false
+    ]
+   }
+  ],
+  "texts_sets": [
+   [
+    "I can hear your voice",
+    "from beyond the distant sky",
+    ""
+   ],
+   [
+    "",
+    "",
+    ""
+   ],
+   [
+    "The night is ending,",
+    "and the light shines in"
+   ],
+   []
+  ],
+  "clean": [
+   {
+    "text": "[Verse]\n【サビ】\n(Verse 2)\n(Chorus x2)\n(x2)\n( × 3 )\nChorus x2\nRepeat chorus:\nPRE-CHORUS\nBridge 2:\n(come on)\nBridge over water\nIntro\nrap\n[00:01.00]stamped\n[ti:Title]\n  spaced  \n♪\n[00:02.00]♪\nI'm provoked by the sun, my body heats\none, two, three, four\na,b\na、 b、 c\nx; y: z，w\n1, 2, 3, 4, 5, 6, 7, 8, 9\na, b, c, d, e, f, g, h\ntrailing,  \n, leading\nsun,　moon\ntab,\tsep\nline break\nverse\n(spoken)\n(Verse 2\n[Chorus] text",
+    "lines": [
+     "[Verse]",
+     "【サビ】",
+     "(Verse 2)",
+     "(Chorus x2)",
+     "(x2)",
+     "( × 3 )",
+     "Chorus x2",
+     "Repeat chorus:",
+     "PRE-CHORUS",
+     "Bridge 2:",
+     "(come on)",
+     "Bridge over water",
+     "Intro",
+     "rap",
+     "stamped",
+     "spaced",
+     "I'm provoked by the sun, my body heats",
+     "one, two, three, four",
+     "a,b",
+     "a、 b、 c",
+     "x; y: z，w",
+     "1, 2, 3, 4, 5, 6, 7, 8, 9",
+     "a, b, c, d, e, f, g, h",
+     "trailing,",
+     ", leading",
+     "sun,　moon",
+     "tab,\tsep",
+     "line",
+     "break",
+     "verse",
+     "(spoken)",
+     "(Verse 2",
+     "[Chorus] text"
+    ]
+   },
+   {
+    "text": "[ar:x]\n[00:01.00][00:02.00] two \n\n♪\r\nlast",
+    "lines": [
+     "two",
+     "last"
+    ]
+   },
+   {
+    "text": "",
+    "lines": []
+   }
+  ],
+  "match_in_order": [
+   {
+    "n": 0,
+    "lines": [
+     "[Verse]",
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "(x2)",
+     "Last line"
+    ],
+    "texts": []
+   },
+   {
+    "n": 3,
+    "lines": [
+     "[Verse]",
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "(x2)",
+     "Last line"
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky"
+    ]
+   },
+   {
+    "n": 6,
+    "lines": [
+     "[Verse]",
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "(x2)",
+     "Last line"
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "Last line"
+    ]
+   },
+   {
+    "n": 10,
+    "lines": [
+     "[Verse]",
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "(x2)",
+     "Last line"
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "Last line",
+     "",
+     "",
+     "",
+     ""
+    ]
+   }
+  ],
+  "messages": [
+   {
+    "originals": [
+     "君の声",
+     "遠い空",
+     "ラララ"
+    ],
+    "translations": [
+     "[Verse]",
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "The night is ending, and the light shines in",
+     "one, two, three",
+     "(x2)",
+     "Last line"
+    ],
+    "messages": [
+     {
+      "role": "system",
+      "content": "You align song lyrics with a translation of them. You never translate, rewrite or comment; you only match line numbers."
+     },
+     {
+      "role": "user",
+      "content": "Below are the lines of a song as they are sung (O1, O2, …) and a translation of the same song (T1, T2, …). The translation may split or join lines differently, leave out repeated parts, add section labels like [Chorus], or say \"(repeat)\".\n\nFor every sung line, give the translation line(s) that say the same thing.\n\nRules:\n- Answer with exactly one line per sung line, from O1 to O3, in order, and nothing else.\n- Format: O<number>: T<number>   or   O<number>: T<number> T<number>   or   O<number>: none\n- Use several T numbers, in reading order, when one sung line is translated across several translation lines.\n- Longer translation lines are shown in parts (T5.1, T5.2 …). When the whole line belongs to one sung line, just write T5. Only when one translation line covers two or more sung lines, give each sung line the part(s) that translate it.\n- The same T line may be used for several sung lines, for example a chorus that is sung twice but translated once.\n- Use \"none\" when nothing fits: vocalisations, ad-libs, or lines the translation leaves out.\n- Never give section labels or notes such as [Chorus] or (x2) as a translation.\n\nExample\nSung:\nO1: 君の声が聞こえる\nO2: 遠い空の向こうから\nO3: ラララ\nO4: 夜が明けて\nO5: 光が差す\nO6: 君の声が聞こえる\nTranslation:\nT1: [Verse]\nT2: I can hear your voice\nT3: from beyond\nT4: the distant sky\nT5.1: The night is ending,\nT5.2: and the light shines in\nAnswer:\nO1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2\n\nNow the real song.\nSung:\nO1: 君の声\nO2: 遠い空\nO3: ラララ\nTranslation:\nT1: [Verse]\nT2: I can hear your voice\nT3: from beyond\nT4: the distant sky\nT5.1: The night is ending,\nT5.2: and the light shines in\nT6.1: one,\nT6.2: two,\nT6.3: three\nT7: (x2)\nT8: Last line\nAnswer:"
+     }
+    ]
+   },
+   {
+    "originals": [],
+    "translations": [],
+    "messages": [
+     {
+      "role": "system",
+      "content": "You align song lyrics with a translation of them. You never translate, rewrite or comment; you only match line numbers."
+     },
+     {
+      "role": "user",
+      "content": "Below are the lines of a song as they are sung (O1, O2, …) and a translation of the same song (T1, T2, …). The translation may split or join lines differently, leave out repeated parts, add section labels like [Chorus], or say \"(repeat)\".\n\nFor every sung line, give the translation line(s) that say the same thing.\n\nRules:\n- Answer with exactly one line per sung line, from O1 to O0, in order, and nothing else.\n- Format: O<number>: T<number>   or   O<number>: T<number> T<number>   or   O<number>: none\n- Use several T numbers, in reading order, when one sung line is translated across several translation lines.\n- Longer translation lines are shown in parts (T5.1, T5.2 …). When the whole line belongs to one sung line, just write T5. Only when one translation line covers two or more sung lines, give each sung line the part(s) that translate it.\n- The same T line may be used for several sung lines, for example a chorus that is sung twice but translated once.\n- Use \"none\" when nothing fits: vocalisations, ad-libs, or lines the translation leaves out.\n- Never give section labels or notes such as [Chorus] or (x2) as a translation.\n\nExample\nSung:\nO1: 君の声が聞こえる\nO2: 遠い空の向こうから\nO3: ラララ\nO4: 夜が明けて\nO5: 光が差す\nO6: 君の声が聞こえる\nTranslation:\nT1: [Verse]\nT2: I can hear your voice\nT3: from beyond\nT4: the distant sky\nT5.1: The night is ending,\nT5.2: and the light shines in\nAnswer:\nO1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2\n\nNow the real song.\nSung:\n\nTranslation:\n\nAnswer:"
+     }
+    ]
+   },
+   {
+    "originals": [
+     "a"
+    ],
+    "translations": [
+     "x, y"
+    ],
+    "messages": [
+     {
+      "role": "system",
+      "content": "You align song lyrics with a translation of them. You never translate, rewrite or comment; you only match line numbers."
+     },
+     {
+      "role": "user",
+      "content": "Below are the lines of a song as they are sung (O1, O2, …) and a translation of the same song (T1, T2, …). The translation may split or join lines differently, leave out repeated parts, add section labels like [Chorus], or say \"(repeat)\".\n\nFor every sung line, give the translation line(s) that say the same thing.\n\nRules:\n- Answer with exactly one line per sung line, from O1 to O1, in order, and nothing else.\n- Format: O<number>: T<number>   or   O<number>: T<number> T<number>   or   O<number>: none\n- Use several T numbers, in reading order, when one sung line is translated across several translation lines.\n- Longer translation lines are shown in parts (T5.1, T5.2 …). When the whole line belongs to one sung line, just write T5. Only when one translation line covers two or more sung lines, give each sung line the part(s) that translate it.\n- The same T line may be used for several sung lines, for example a chorus that is sung twice but translated once.\n- Use \"none\" when nothing fits: vocalisations, ad-libs, or lines the translation leaves out.\n- Never give section labels or notes such as [Chorus] or (x2) as a translation.\n\nExample\nSung:\nO1: 君の声が聞こえる\nO2: 遠い空の向こうから\nO3: ラララ\nO4: 夜が明けて\nO5: 光が差す\nO6: 君の声が聞こえる\nTranslation:\nT1: [Verse]\nT2: I can hear your voice\nT3: from beyond\nT4: the distant sky\nT5.1: The night is ending,\nT5.2: and the light shines in\nAnswer:\nO1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2\n\nNow the real song.\nSung:\nO1: a\nTranslation:\nT1.1: x,\nT1.2: y\nAnswer:"
+     }
+    ]
+   }
+  ],
+  "translations": [
+   "[Verse]",
+   "I can hear your voice",
+   "from beyond",
+   "the distant sky",
+   "The night is ending, and the light shines in",
+   "one, two, three",
+   "(x2)",
+   "Last line"
+  ],
+  "answers": [
+   {
+    "text": "O1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2",
+    "n_rows": 6,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ],
+     [
+      4,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ],
+     [
+      5,
+      [
+       [
+        5,
+        2
+       ]
+      ]
+     ],
+     [
+      6,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "",
+     "The night is ending",
+     "and the light shines in",
+     "I can hear your voice"
+    ]
+   },
+   {
+    "text": "O1: T2\nO2: T3 T4\nO3: none\nO4: T5.1\nO5: T5.2\nO6: T2",
+    "n_rows": 3,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     ""
+    ]
+   },
+   {
+    "text": "<think>let me see O1: T9</think>\nO1: T2\nO2: T3-T4\nO3: T6.1-3\nO4: T6.1-T6.2\nO5: T5\nO6: T1",
+    "n_rows": 6,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        1
+       ],
+       [
+        6,
+        2
+       ],
+       [
+        6,
+        3
+       ]
+      ]
+     ],
+     [
+      4,
+      [
+       [
+        6,
+        1
+       ],
+       [
+        6,
+        2
+       ]
+      ]
+     ],
+     [
+      5,
+      [
+       [
+        5,
+        0
+       ]
+      ]
+     ],
+     [
+      6,
+      [
+       [
+        1,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "one, two, three",
+     "one, two",
+     "The night is ending, and the light shines in",
+     ""
+    ]
+   },
+   {
+    "text": "<think>let me see O1: T9</think>\nO1: T2\nO2: T3-T4\nO3: T6.1-3\nO4: T6.1-T6.2\nO5: T5\nO6: T1",
+    "n_rows": 3,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        1
+       ],
+       [
+        6,
+        2
+       ],
+       [
+        6,
+        3
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "one, two, three"
+    ]
+   },
+   {
+    "text": "reasoning text</think>O1 → T2\n**O2**: T3, T4\n- O3 = n/a\n> O4 -> T5.2 (the rest)\nO5: T5.1 // note",
+    "n_rows": 6,
+    "count": 5,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ],
+     [
+      4,
+      [
+       [
+        5,
+        2
+       ]
+      ]
+     ],
+     [
+      5,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "",
+     "and the light shines in",
+     "The night is ending",
+     null
+    ]
+   },
+   {
+    "text": "reasoning text</think>O1 → T2\n**O2**: T3, T4\n- O3 = n/a\n> O4 -> T5.2 (the rest)\nO5: T5.1 // note",
+    "n_rows": 3,
+    "count": 5,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     ""
+    ]
+   },
+   {
+    "text": "O1: T2\nO2: T3\nO3: <think>still",
+    "n_rows": 6,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1: T2\nO2: T3\nO3: <think>still",
+    "n_rows": 3,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     ""
+    ]
+   },
+   {
+    "text": "Answer:\n`O1: T2`\n•  O2 – T3 to T4\nO 3 : T6.2\no4: t6.3\nO5: T6.1.\nO6: T99\nO7: T2\nO0: T2",
+    "n_rows": 6,
+    "count": 8,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ],
+     [
+      4,
+      [
+       [
+        6,
+        3
+       ]
+      ]
+     ],
+     [
+      5,
+      [
+       [
+        6,
+        1
+       ]
+      ]
+     ],
+     [
+      6,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "two",
+     "three",
+     "one",
+     ""
+    ]
+   },
+   {
+    "text": "Answer:\n`O1: T2`\n•  O2 – T3 to T4\nO 3 : T6.2\no4: t6.3\nO5: T6.1.\nO6: T99\nO7: T2\nO0: T2",
+    "n_rows": 3,
+    "count": 8,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ],
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond the distant sky",
+     "one, two, three"
+    ]
+   },
+   {
+    "text": "O1: T1.1-T1.999999999\nO2: T5.1-T5.999999999999999999999\nO3: T2-T9\nO4: T4-T2\nO5: T6.3-T6.1",
+    "n_rows": 6,
+    "count": 5,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        1,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        5,
+        1
+       ],
+       [
+        5,
+        2
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      4,
+      [
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      5,
+      [
+       [
+        6,
+        3
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "",
+     "The night is ending, and the light shines in",
+     "I can hear your voice",
+     "the distant sky",
+     "two, three",
+     null
+    ]
+   },
+   {
+    "text": "O1: T1.1-T1.999999999\nO2: T5.1-T5.999999999999999999999\nO3: T2-T9\nO4: T4-T2\nO5: T6.3-T6.1",
+    "n_rows": 3,
+    "count": 5,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        1,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        5,
+        1
+       ],
+       [
+        5,
+        2
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "",
+     "The night is ending, and the light shines in",
+     "I can hear your voice"
+    ]
+   },
+   {
+    "text": "O1: T2 \"I can hear\"\nO2: T3 «from»\nO3: T4 # x\nO4: nothing\nO5: skip\nO6: —",
+    "n_rows": 6,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        4,
+        0
+       ]
+      ]
+     ],
+     [
+      4,
+      []
+     ],
+     [
+      5,
+      []
+     ],
+     [
+      6,
+      []
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     "",
+     "",
+     ""
+    ]
+   },
+   {
+    "text": "O1: T2 \"I can hear\"\nO2: T3 «from»\nO3: T4 # x\nO4: nothing\nO5: skip\nO6: —",
+    "n_rows": 3,
+    "count": 6,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        4,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky"
+    ]
+   },
+   {
+    "text": "O1:\nT2\nO2: T3\r\nO3: T4\r\n",
+    "n_rows": 6,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        4,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1:\nT2\nO2: T3\r\nO3: T4\r\n",
+    "n_rows": 3,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        4,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     "the distant sky"
+    ]
+   },
+   {
+    "text": "O１: T２\nO2: T٣",
+    "n_rows": 6,
+    "count": 2,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O１: T２\nO2: T٣",
+    "n_rows": 3,
+    "count": 2,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "I can hear your voice",
+     "from beyond",
+     null
+    ]
+   },
+   {
+    "text": "no answer at all",
+    "n_rows": 6,
+    "count": 0,
+    "mapping": [],
+    "texts": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "no answer at all",
+    "n_rows": 3,
+    "count": 0,
+    "mapping": [],
+    "texts": [
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "",
+    "n_rows": 6,
+    "count": 0,
+    "mapping": [],
+    "texts": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "",
+    "n_rows": 3,
+    "count": 0,
+    "mapping": [],
+    "texts": [
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1: T5.1\nO2: T5.1\nO3: T6.2",
+    "n_rows": 6,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "The night is ending, and the light shines in",
+     "The night is ending",
+     "one, two, three",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1: T5.1\nO2: T5.1\nO3: T6.2",
+    "n_rows": 3,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        5,
+        1
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "The night is ending, and the light shines in",
+     "The night is ending",
+     "one, two, three"
+    ]
+   },
+   {
+    "text": "O1: T6.2\nO2: none\nO3: T6.3",
+    "n_rows": 6,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ],
+     [
+      2,
+      []
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        3
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "one, two",
+     "",
+     "three",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1: T6.2\nO2: none\nO3: T6.3",
+    "n_rows": 3,
+    "count": 3,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        6,
+        2
+       ]
+      ]
+     ],
+     [
+      2,
+      []
+     ],
+     [
+      3,
+      [
+       [
+        6,
+        3
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "one, two",
+     "",
+     "three"
+    ]
+   },
+   {
+    "text": "O1: T8 T7 T8\nO1: T3\nO2: T2.5\nO3: T5.3",
+    "n_rows": 6,
+    "count": 4,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        5,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "from beyond",
+     "I can hear your voice",
+     "The night is ending, and the light shines in",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "text": "O1: T8 T7 T8\nO1: T3\nO2: T2.5\nO3: T5.3",
+    "n_rows": 3,
+    "count": 4,
+    "mapping": [
+     [
+      1,
+      [
+       [
+        3,
+        0
+       ]
+      ]
+     ],
+     [
+      2,
+      [
+       [
+        2,
+        0
+       ]
+      ]
+     ],
+     [
+      3,
+      [
+       [
+        5,
+        0
+       ]
+      ]
+     ]
+    ],
+    "texts": [
+     "from beyond",
+     "I can hear your voice",
+     "The night is ending, and the light shines in"
+    ]
+   }
+  ],
+  "strip_thinking": [
+   {
+    "text": "<think>a</think>b",
+    "out": "b"
+   },
+   {
+    "text": "<THINK>a</Think>b<think>c</think>d",
+    "out": "bd"
+   },
+   {
+    "text": "x</think>y</think>z",
+    "out": "z"
+   },
+   {
+    "text": "pre<think>open",
+    "out": "pre"
+   },
+   {
+    "text": "İ</think>after",
+    "out": "fter"
+   },
+   {
+    "text": "plain",
+    "out": "plain"
+   },
+   {
+    "text": "<think>never closed",
+    "out": ""
+   },
+   {
+    "text": "a</THINK>b<THINK>c",
+    "out": "b"
+   }
+  ]
+ },
+ "ai": {
+  "urls": [
+   {
+    "url": "localhost:1234",
+    "out": "http://localhost:1234/v1"
+   },
+   {
+    "url": " http://127.0.0.1:1234/v1/chat/completions/ ",
+    "out": "http://127.0.0.1:1234/v1"
+   },
+   {
+    "url": "http://x:11434/api",
+    "out": "http://x:11434/v1"
+   },
+   {
+    "url": "http://x:11434/api/",
+    "out": "http://x:11434/v1"
+   },
+   {
+    "url": "",
+    "out": ""
+   },
+   {
+    "url": "   ",
+    "out": ""
+   },
+   {
+    "url": "HTTPS://Host/v1/models?x=1",
+    "out": "https://Host/v1/models"
+   },
+   {
+    "url": "http://h/v1/completions",
+    "out": "http://h/v1"
+   },
+   {
+    "url": "h:8080/v1/models/",
+    "out": "http://h:8080/v1"
+   },
+   {
+    "url": "http://h/custom/path//",
+    "out": "http://h/custom/path"
+   },
+   {
+    "url": "http://h/chat/completions",
+    "out": "http://h/v1"
+   },
+   {
+    "url": "https://openrouter.ai/api/v1",
+    "out": "https://openrouter.ai/api/v1"
+   },
+   {
+    "url": "http://[::1]:1234",
+    "out": "http://[::1]:1234/v1"
+   },
+   {
+    "url": "http://h/v1#frag",
+    "out": "http://h/v1"
+   },
+   {
+    "url": "http://h?q=1",
+    "out": "http://h/v1"
+   },
+   {
+    "url": "ftp://h",
+    "out": "ftp://h/v1"
+   },
+   {
+    "url": "http://user@h:1/x/COMPLETIONS",
+    "out": "http://user@h:1/x"
+   },
+   {
+    "url": "http://h/v1/chat/completions/models",
+    "out": "http://h/v1/chat/completions"
+   },
+   {
+    "url": "\thttp://h/v1",
+    "out": "http://h/v1"
+   }
+  ],
+  "http_errors": [
+   {
+    "status": 401,
+    "body": "eyJlcnJvciI6IHsibWVzc2FnZSI6ICJiYWQga2V5In19",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server refused the request (HTTP 401). Check the API key."
+   },
+   {
+    "status": 403,
+    "body": "",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server refused the request (HTTP 403). Check the API key."
+   },
+   {
+    "status": 402,
+    "body": "eyJlcnJvciI6IHsibWVzc2FnZSI6ICJJbnN1ZmZpY2llbnQgY3JlZGl0cyJ9fQ==",
+    "endpoint": "/chat/completions",
+    "model": "m",
+    "text": "The account has run out of credits (HTTP 402). Insufficient credits"
+   },
+   {
+    "status": 402,
+    "body": "",
+    "endpoint": "/chat/completions",
+    "model": "m",
+    "text": "The account has run out of credits (HTTP 402)."
+   },
+   {
+    "status": 429,
+    "body": "YnVzeQ==",
+    "endpoint": "/chat/completions",
+    "model": "m",
+    "text": "Too many requests right now (HTTP 429). Free models are often busy; wait a minute or pick another model."
+   },
+   {
+    "status": 404,
+    "body": "eyJlcnJvciI6ICJtb2RlbCBub3QgZm91bmQifQ==",
+    "endpoint": "/chat/completions",
+    "model": "qwen",
+    "text": "The server doesn't have the model “qwen” loaded: model not found"
+   },
+   {
+    "status": 400,
+    "body": "eyJlcnJvciI6IHsibWVzc2FnZSI6ICJVbmtub3duIE1PREVMIHgifX0=",
+    "endpoint": "/chat/completions",
+    "model": "x",
+    "text": "The server doesn't have the model “x” loaded: Unknown MODEL x"
+   },
+   {
+    "status": 400,
+    "body": "eyJlcnJvciI6IHsibWVzc2FnZSI6ICJVbmtub3duIE1PREVMIHgifX0=",
+    "endpoint": "/chat/completions",
+    "model": "",
+    "text": "The server answered with an error (HTTP 400): Unknown MODEL x"
+   },
+   {
+    "status": 404,
+    "body": "Tm90IEZvdW5k",
+    "endpoint": "/models",
+    "model": "",
+    "text": "There's no /models at this address (HTTP 404). OpenAI-compatible servers usually end in /v1."
+   },
+   {
+    "status": 500,
+    "body": "eyJtZXNzYWdlIjogImJvb20ifQ==",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500): boom"
+   },
+   {
+    "status": 500,
+    "body": "ICB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHggIA==",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   {
+    "status": 500,
+    "body": "WzEsIDJd",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500): [1, 2]"
+   },
+   {
+    "status": 500,
+    "body": "eyJlcnJvciI6IHsiY29kZSI6IDV9fQ==",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500)."
+   },
+   {
+    "status": 503,
+    "body": "",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 503)."
+   },
+   {
+    "status": 500,
+    "body": "eyJlcnJvciI6IG51bGx9",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500): None"
+   },
+   {
+    "status": 500,
+    "body": "Imp1c3QgdGV4dCI=",
+    "endpoint": "/models",
+    "model": "",
+    "text": "The server answered with an error (HTTP 500): just text"
+   }
+  ],
+  "models": [
+   "qwen/qwen3-32b",
+   "qwen/qwen3-235b",
+   "meta/llama:free",
+   "Paid/Big",
+   "odd"
+  ],
+  "pricing": {
+   "qwen/qwen3-32b": [
+    1e-07,
+    3e-07
+   ],
+   "qwen/qwen3-235b": [
+    2e-06,
+    6e-06
+   ],
+   "meta/llama:free": [
+    0.0,
+    0.0
+   ],
+   "Paid/Big": [
+    3.333e-06,
+    1.11e-05
+   ]
+  },
+  "costs": [
+   {
+    "typed": "",
+    "text": "",
+    "error": false
+   },
+   {
+    "typed": "  ",
+    "text": "",
+    "error": false
+   },
+   {
+    "typed": "qwen",
+    "text": "2 matching models: pick one from the list.",
+    "error": false
+   },
+   {
+    "typed": "QWEN3-32",
+    "text": "1 matching model: pick one from the list.",
+    "error": false
+   },
+   {
+    "typed": "qwen/qwen3-32b",
+    "text": "About $0.0008 per song",
+    "error": false
+   },
+   {
+    "typed": "qwen/qwen3-235b",
+    "text": "About $0.015 per song",
+    "error": false
+   },
+   {
+    "typed": "meta/llama:free",
+    "text": "Free model: usually slower, and limited to a few requests a minute.",
+    "error": false
+   },
+   {
+    "typed": "Paid/Big",
+    "text": "About $0.027 per song",
+    "error": false
+   },
+   {
+    "typed": "odd",
+    "text": "",
+    "error": false
+   },
+   {
+    "typed": "zzz",
+    "text": "OpenRouter has no model called “zzz”.",
+    "error": true
+   },
+   {
+    "typed": " qwen/qwen3-32b ",
+    "text": "About $0.0008 per song",
+    "error": false
+   }
+  ]
+ },
+ "editor": {
+  "sync": [
+   {
+    "text": "one\n\ntwo\n  three  ",
+    "entries": [
+     {
+      "text": "one",
+      "time": null,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "two",
+      "time": null,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "three",
+      "time": null,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "one\ntwo\nthree",
+    "lrc": "",
+    "missing": 3
+   },
+   {
+    "text": "[ar:Artist]\n[00:05.00]five\n[00:01.00]one\n[00:01.10]uno\n[00:03.00]\n[00:04.00]♪\n[00:06.00][00:08.00]twice",
+    "entries": [
+     {
+      "text": "one",
+      "time": 1000,
+      "sub": "uno",
+      "break": false
+     },
+     {
+      "text": "",
+      "time": 3000,
+      "sub": "",
+      "break": true
+     },
+     {
+      "text": "",
+      "time": 4000,
+      "sub": "",
+      "break": true
+     },
+     {
+      "text": "five",
+      "time": 5000,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "twice",
+      "time": 6000,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "twice",
+      "time": 8000,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "[00:01.00]one\n[00:01.00]uno\n[00:03.00]\n[00:04.00]\n[00:05.00]five\n[00:06.00]twice\n[00:08.00]twice",
+    "lrc": "[00:01.00]one\n[00:01.00]uno\n[00:03.00]\n[00:04.00]\n[00:05.00]five\n[00:06.00]twice\n[00:08.00]twice\n",
+    "missing": 0
+   },
+   {
+    "text": "[00:01.00]a\n[00:01.00]b\n[00:01.00]c\nplain line",
+    "entries": [
+     {
+      "text": "a",
+      "time": 1000,
+      "sub": "b",
+      "break": false
+     },
+     {
+      "text": "c",
+      "time": 1000,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "plain line",
+      "time": null,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "[00:01.00]a\n[00:01.00]b\n[00:01.00]c\nplain line",
+    "lrc": "[00:01.00]a\n[00:01.00]b\n[00:01.00]c\n",
+    "missing": 1
+   },
+   {
+    "text": "[00:02.00]line\n[00:02.20]not paired\n[00:02.30]paired",
+    "entries": [
+     {
+      "text": "line",
+      "time": 2000,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "not paired",
+      "time": 2200,
+      "sub": "paired",
+      "break": false
+     }
+    ],
+    "as_text": "[00:02.00]line\n[00:02.20]not paired\n[00:02.20]paired",
+    "lrc": "[00:02.00]line\n[00:02.20]not paired\n[00:02.20]paired\n",
+    "missing": 0
+   },
+   {
+    "text": "plain\n[00:01.00]stamped\n[00:00.50]earlier",
+    "entries": [
+     {
+      "text": "plain",
+      "time": null,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "stamped",
+      "time": 1000,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "earlier",
+      "time": 500,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "plain\n[00:01.00]stamped\n[00:00.50]earlier",
+    "lrc": "[00:00.50]earlier\n[00:01.00]stamped\n",
+    "missing": 1
+   },
+   {
+    "text": "[00:01.00]\n[00:01.05]sub after break",
+    "entries": [
+     {
+      "text": "",
+      "time": 1000,
+      "sub": "",
+      "break": true
+     },
+     {
+      "text": "sub after break",
+      "time": 1050,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "[00:01.00]\n[00:01.05]sub after break",
+    "lrc": "[00:01.00]\n[00:01.05]sub after break\n",
+    "missing": 0
+   },
+   {
+    "text": "[01:02:34]colon\n[1:02,5]comma\n[00:00.0005]tiny",
+    "entries": [
+     {
+      "text": "tiny",
+      "time": 0,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "colon",
+      "time": 62340,
+      "sub": "",
+      "break": false
+     },
+     {
+      "text": "comma",
+      "time": 62500,
+      "sub": "",
+      "break": false
+     }
+    ],
+    "as_text": "[00:00.00]tiny\n[01:02.34]colon\n[01:02.50]comma",
+    "lrc": "[00:00.00]tiny\n[01:02.34]colon\n[01:02.50]comma\n",
+    "missing": 0
+   },
+   {
+    "text": "",
+    "entries": [],
+    "as_text": "",
+    "lrc": "",
+    "missing": 0
+   }
+  ],
+  "translation": [
+   {
+    "cards": [
+     [
+      1000,
+      "Hello",
+      ""
+     ],
+     [
+      2000,
+      "♪",
+      ""
+     ],
+     [
+      3000,
+      "World",
+      "Monde"
+     ],
+     [
+      4000,
+      "Spin",
+      ""
+     ]
+    ],
+    "texts": [
+     "Bonjour",
+     "Monde!",
+     "spin"
+    ],
+    "lrc": "[00:01.00]Hello\n[00:01.00]Bonjour\n[00:02.00]\n[00:03.00]World\n[00:03.00]Monde!\n[00:04.00]Spin\n"
+   },
+   {
+    "cards": [
+     [
+      0,
+      "a",
+      ""
+     ],
+     [
+      61250,
+      "b",
+      ""
+     ],
+     [
+      3599990,
+      "c",
+      ""
+     ]
+    ],
+    "texts": [
+     "",
+     " x ",
+     "C"
+    ],
+    "lrc": "[00:00.00]a\n[01:01.25]b\n[01:01.25]x\n[59:59.99]c\n"
+   }
+  ],
+  "row_times": [
+   {
+    "ms": 0,
+    "text": "0:00.0"
+   },
+   {
+    "ms": 1000,
+    "text": "0:01.0"
+   },
+   {
+    "ms": 59950,
+    "text": "0:60.0"
+   },
+   {
+    "ms": 59949,
+    "text": "0:59.9"
+   },
+   {
+    "ms": 61250,
+    "text": "1:01.2"
+   },
+   {
+    "ms": 61350,
+    "text": "1:01.4"
+   },
+   {
+    "ms": 600000,
+    "text": "10:00.0"
+   },
+   {
+    "ms": 3599999,
+    "text": "59:60.0"
+   },
+   {
+    "ms": 25,
+    "text": "0:00.0"
+   },
+   {
+    "ms": 75,
+    "text": "0:00.1"
+   }
+  ]
  }
 }

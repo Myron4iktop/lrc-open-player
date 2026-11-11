@@ -51,6 +51,33 @@ pub fn hook_window_events(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     });
 }
 
+/// The same repaint for another window (the editors): `bump` changes its `repaint-count`.
+pub fn hook_repaint<C: ComponentHandle + 'static>(c: &C, bump: fn(&C)) {
+    let weak = c.as_weak();
+    c.window().on_winit_window_event(move |_, event| {
+        let again = match event {
+            winit::event::WindowEvent::Occluded(false)
+            | winit::event::WindowEvent::Focused(true) => true,
+            winit::event::WindowEvent::Resized(_) => false,
+            _ => return EventResult::Propagate,
+        };
+        if let Some(c) = weak.upgrade() {
+            bump(&c);
+            c.window().request_redraw();
+        }
+        if again {
+            let weak = weak.clone();
+            slint::Timer::single_shot(std::time::Duration::from_millis(150), move || {
+                if let Some(c) = weak.upgrade() {
+                    bump(&c);
+                    c.window().request_redraw();
+                }
+            });
+        }
+        EventResult::Propagate
+    });
+}
+
 /// Makes the next frame repaint the whole window (see `repaint-count` in main.slint).
 ///
 /// After the window is restored from the taskbar, the renderer sometimes drew only the
@@ -112,6 +139,79 @@ mod win {
         let _ = unsafe { SetCurrentProcessExplicitAppUserModelID(&id) };
     }
 
+    /// Keeps a Start Menu shortcut to this .exe that carries the player's taskbar identity.
+    /// That shortcut is where Windows finds the name for the media panel by the clock, which
+    /// otherwise says "Unknown app". A portable .exe has no installer to make one, so it is
+    /// made at start-up, and made again when the .exe has moved. Failing is harmless.
+    pub fn ensure_start_menu_shortcut() {
+        if let Err(e) = try_start_menu_shortcut() {
+            eprintln!("Start Menu shortcut: {e}");
+        }
+    }
+
+    fn try_start_menu_shortcut() -> windows::core::Result<()> {
+        use windows::Win32::Foundation::{E_FAIL, MAX_PATH};
+        use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+        use windows::Win32::System::Com::StructuredStorage::{PROPVARIANT, PropVariantClear};
+        use windows::Win32::System::Com::{
+            CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx,
+            IPersistFile, STGM_READ,
+        };
+        use windows::Win32::System::Variant::VT_LPWSTR;
+        use windows::Win32::UI::Shell::PropertiesSystem::IPropertyStore;
+        use windows::Win32::UI::Shell::{IShellLinkW, SHStrDupW, ShellLink};
+        use windows::core::Interface;
+
+        let fail = || windows::core::Error::from(E_FAIL);
+        let exe = std::env::current_exe().map_err(|_| fail())?;
+        let folder = std::path::PathBuf::from(std::env::var_os("APPDATA").ok_or_else(fail)?)
+            .join(r"Microsoft\Windows\Start Menu\Programs");
+        let shortcut = folder.join(format!("{}.lnk", lrc_core::APP_TITLE));
+        let shortcut_w = HSTRING::from(shortcut.as_os_str());
+
+        // SAFETY: plain COM calls on this thread, with valid, NUL-terminated strings and
+        // buffers that outlive each call. The window toolkit later asks for the same
+        // threading model.
+        unsafe {
+            let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+            let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)?;
+            let file: IPersistFile = link.cast()?;
+
+            if shortcut.exists() && file.Load(&shortcut_w, STGM_READ).is_ok() {
+                let mut target = [0u16; MAX_PATH as usize];
+                if link.GetPath(&mut target, std::ptr::null_mut(), 0).is_ok() {
+                    let len = target.iter().position(|&c| c == 0).unwrap_or(target.len());
+                    let target = String::from_utf16_lossy(&target[..len]);
+                    if std::path::Path::new(&target) == exe {
+                        return Ok(()); // already there and pointing here
+                    }
+                }
+            }
+
+            let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)?;
+            link.SetPath(&HSTRING::from(exe.as_os_str()))?;
+            link.SetDescription(&HSTRING::from(lrc_core::APP_TITLE))?;
+
+            let store: IPropertyStore = link.cast()?;
+            let mut id = PROPVARIANT::default();
+            {
+                let inner = &mut *id.Anonymous.Anonymous;
+                inner.vt = VT_LPWSTR;
+                inner.Anonymous.pwszVal = SHStrDupW(&HSTRING::from(lrc_core::APP_USER_MODEL_ID))?;
+            }
+            let set = store
+                .SetValue(&PKEY_AppUserModel_ID, &id)
+                .and_then(|()| store.Commit());
+            let _ = PropVariantClear(&mut id);
+            set?;
+
+            std::fs::create_dir_all(&folder).map_err(|_| fail())?;
+            let file: IPersistFile = link.cast()?;
+            file.Save(&shortcut_w, true)?;
+        }
+        Ok(())
+    }
+
     /// Slint only sets the small (title bar) icon. The taskbar and Alt+Tab use the big one,
     /// so both are loaded from the .exe's own icon, which Windows picks at the right size.
     pub fn set_icons_from_exe(window: &crate::MainWindow) {
@@ -127,7 +227,7 @@ mod win {
 }
 
 #[cfg(windows)]
-pub use win::{set_app_user_model_id, set_icons_from_exe};
+pub use win::{ensure_start_menu_shortcut, set_app_user_model_id, set_icons_from_exe};
 
 /// Moves the window back onto a screen if the remembered position is off every one
 /// (a monitor unplugged since), as Qt's `restoreGeometry` does.
@@ -156,4 +256,53 @@ pub fn keep_on_screen(ui: &MainWindow) {
             }
         }
     });
+}
+
+/// `raise_()` and `activateWindow()`: brings the window back in front of the others.
+pub fn bring_to_front(ui: &MainWindow) {
+    raise(ui.window());
+}
+
+/// `raise_()` + `activateWindow()` for any window (the editors).
+pub fn raise(window: &slint::Window) {
+    window.with_winit_window(|w| w.focus_window());
+}
+
+/// `QDesktopServices.openUrl`: opens a web page in the default browser.
+pub fn open_url(url: &str) {
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Shell::ShellExecuteW;
+        use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+        use windows::core::HSTRING;
+        // SAFETY: plain strings in, nothing kept.
+        unsafe {
+            ShellExecuteW(
+                None,
+                &HSTRING::from("open"),
+                &HSTRING::from(url),
+                None,
+                None,
+                SW_SHOWNORMAL,
+            );
+        }
+    }
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let _ = std::process::Command::new("xdg-open").arg(url).spawn();
+}
+
+/// The encryption for saved API keys: DPAPI on Windows, none elsewhere (keys saved
+/// encrypted then read as empty, as in the Python app).
+pub fn cipher() -> Option<&'static dyn lrc_core::ai::Cipher> {
+    #[cfg(windows)]
+    {
+        static DPAPI: crate::win::dpapi::Dpapi = crate::win::dpapi::Dpapi;
+        Some(&DPAPI)
+    }
+    #[cfg(not(windows))]
+    {
+        None
+    }
 }

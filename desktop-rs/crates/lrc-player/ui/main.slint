@@ -12,7 +12,8 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
-export { DetailsDialog, DetailRow, QuestionDialog } from "dialogs.slint";
+export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
+export { SyncDialog, SyncRowData, TranslationDialog, TranslationRowData, AiSettingsDialog, AnswerDialog } from "editors.slint";
 export { Theme, LyricLineData }
 
 export component MainWindow inherits Window {
@@ -60,6 +61,8 @@ export component MainWindow inherits Window {
     in property <int> rescale-count;
     // --- Window ---
     in-out property <bool> fullscreen;
+    // The あ button (`btn_romaji`) is on.
+    in property <bool> romaji-on;
     in property <bool> drop-visible;
     in property <string> drop-headline;
     in property <string> drop-detail;
@@ -68,6 +71,16 @@ export component MainWindow inherits Window {
     in property <bool> smooth-animation;
     in property <string> accent-key: "coral";
     in property <[image]> accent-icons;
+    // --- Visualizer and tray ---
+    in property <string> visualizer-mode: "off";
+    // The spectrum, drawn by Rust into the bottom of the lyrics area.
+    in property <image> viz-frame;
+    in property <color> viz-accent;
+    in property <float> viz-alpha;
+    out property <length> lyrics-width: lyrics-area.width;
+    out property <length> lyrics-height: lyrics-area.height;
+    in property <bool> close-to-tray;
+    in property <bool> tray-available;
 
     callback open-file();
     callback open-album();
@@ -93,6 +106,13 @@ export component MainWindow inherits Window {
     callback queue-play(int);
     callback line-clicked(int);
     callback toggle-fullscreen();
+    callback set-visualizer(string);
+    callback cycle-visualizer();
+    callback set-close-to-tray(bool);
+    callback open-sync();
+    callback open-translation();
+    callback open-ai-settings();
+    callback toggle-romaji();
 
     // Menus follow the theme too (they are drawn by Slint's own style).
     public function sync-color-scheme() {
@@ -158,6 +178,14 @@ export component MainWindow inherits Window {
                     root.show-details();
                     return accept;
                 }
+                if k == "t" && event.modifiers.shift && root.has-track {
+                    root.open-translation();
+                    return accept;
+                }
+                if k == "t" && root.has-track {
+                    root.open-sync();
+                    return accept;
+                }
             }
             if event.text == Key.F1 {
                 root.show-shortcuts();
@@ -198,6 +226,10 @@ export component MainWindow inherits Window {
             }
             if !event.modifiers.control && !event.modifiers.alt && !event.modifiers.shift && !event.modifiers.meta {
                 let k = event.text.to-lowercase();
+                if k == "r" {
+                    root.toggle-romaji();
+                    return accept;
+                }
                 if k == "s" {
                     root.toggle-shuffle();
                     return accept;
@@ -208,6 +240,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "m" {
                     root.toggle-mute();
+                    return accept;
+                }
+                if k == "v" {
+                    root.cycle-visualizer();
                     return accept;
                 }
             }
@@ -276,8 +312,8 @@ export component MainWindow inherits Window {
                                     { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
                                     { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
                                     { id: "-" },
-                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: true },
-                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: true },
+                                    { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: !root.has-track },
+                                    { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: !root.has-track },
                                     { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
                                 ];
                                 activated(id) => {
@@ -285,6 +321,10 @@ export component MainWindow inherits Window {
                                         root.load-lrc();
                                     } else if id == "search" {
                                         root.search-online();
+                                    } else if id == "sync" {
+                                        root.open-sync();
+                                    } else if id == "translate" {
+                                        root.open-translation();
                                     } else if id == "embed" {
                                         root.embed-lyrics();
                                     }
@@ -314,8 +354,8 @@ export component MainWindow inherits Window {
                                     { id: "viz", title: "Visualizer", sub: 3 },
                                     { id: "smooth", title: "Smooth animation (GPU)", checkable: true, checked: root.smooth-animation },
                                     { id: "-" },
-                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, disabled: true },
-                                    { id: "ai", title: "AI alignment…", disabled: true },
+                                    { id: "tray", title: "Keep playing in tray when closed", checkable: true, checked: root.close-to-tray, disabled: !root.tray-available },
+                                    { id: "ai", title: "AI alignment…" },
                                     { id: "shortcuts", title: "Keyboard shortcuts", shortcut: "F1" },
                                 ];
                                 sub-check-col: [true, true, true];
@@ -334,14 +374,16 @@ export component MainWindow inherits Window {
                                         { id: "accent:violet", title: "Violet", checkable: true, icon: root.accent-icons[6] },
                                     ],
                                     [
-                                        { id: "viz:off", title: "Off", checkable: true, checked: true },
-                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, disabled: true },
-                                        { id: "viz:wave", title: "Soft wave", checkable: true, disabled: true },
+                                        { id: "viz:off", title: "Off", checkable: true, checked: root.visualizer-mode == "off" },
+                                        { id: "viz:bars", title: "Spectrum bars", checkable: true, checked: root.visualizer-mode == "bars" },
+                                        { id: "viz:wave", title: "Soft wave", checkable: true, checked: root.visualizer-mode == "wave" },
                                     ],
                                 ];
                                 activated(id) => {
                                     if id == "shortcuts" {
                                         root.show-shortcuts();
+                                    } else if id == "ai" {
+                                        root.open-ai-settings();
                                     } else if id == "details" {
                                         root.show-details();
                                     } else if id == "smooth" {
@@ -362,6 +404,10 @@ export component MainWindow inherits Window {
                                         root.set-accent("azure");
                                     } else if id == "accent:violet" {
                                         root.set-accent("violet");
+                                    } else if id == "viz:off" || id == "viz:bars" || id == "viz:wave" {
+                                        root.set-visualizer(id == "viz:off" ? "off" : id == "viz:bars" ? "bars" : "wave");
+                                    } else if id == "tray" {
+                                        root.set-close-to-tray(!root.close-to-tray);
                                     }
                                 }
                             }
@@ -609,13 +655,15 @@ export component MainWindow inherits Window {
                         horizontal-stretch: 1;
                     }
 
-                    // Romaji arrives in M5; the button is there so the row looks the same.
                     PushButton {
                         width: 36px;
                         text: "あ";
                         role: "toggle";
-                        enabled: false;
+                        checked: root.romaji-on;
                         tooltip: "Show Japanese lyrics as romaji   ( R )";
+                        clicked => {
+                            root.toggle-romaji();
+                        }
                     }
                 }
             }
@@ -703,6 +751,16 @@ export component MainWindow inherits Window {
             // ------------------------------------------------------------------
             lyrics-area := Rectangle {
                 horizontal-stretch: 1;
+
+                // `VisualizerBackdrop`: behind the lyrics, at the bottom.
+                if root.visualizer-mode != "off": Image {
+                    x: 0;
+                    width: parent.width;
+                    height: self.source.height * 1phx;
+                    y: parent.height - self.height;
+                    source: root.viz-frame;
+                    image-fit: fill;
+                }
 
                 if root.lyrics-message != "": VerticalLayout {
                     padding-left: 10px;

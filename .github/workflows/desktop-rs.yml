@@ -46,6 +46,8 @@ jobs:
       - run: pip install -r tools/requirements.txt
       - name: Check that tests/fixtures/pure.json matches the Python app
         run: python tools/make_fixtures.py pure --check
+      - name: Check that the romaji samples match the Python app's cutlet
+        run: python tools/make_fixtures.py romaji crates/lrc-romaji/tests/fixtures/lrc crates/lrc-romaji/tests/fixtures/romaji.json --check
       - name: Make tagged songs in all six formats
         run: python tools/make_fixtures.py media "$RUNNER_TEMP/media"
       - uses: actions/upload-artifact@v4
@@ -84,6 +86,17 @@ jobs:
       - run: cargo test -p lrc-core --locked
       # Decoding and seeking in every format, resampling and the output clock (no sound device needed).
       - run: cargo test -p lrc-player --locked
+      # Romaji with each dictionary. Lindera downloads it while building.
+      - run: cargo test -p lrc-romaji --locked
+      - run: cargo test -p lrc-romaji --locked --no-default-features --features ipadic
+      - name: Compare the romaji with cutlet's, for both dictionaries
+        run: |
+          for dict in unidic ipadic; do
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cargo run -q -p lrc-romaji --release --locked --no-default-features --features "$dict" \
+              --example compare -- crates/lrc-romaji/tests/fixtures/romaji.json | tee -a "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -119,6 +132,11 @@ jobs:
       - run: cargo test -p lrc-core --locked
       - run: cargo test -p lrc-player --locked
       - run: cargo build -p lrc-player --release --locked
+      - name: Record the size of the exe
+        shell: bash
+        run: |
+          bytes=$(stat -c %s target/release/LRCOpenPlayer.exe)
+          echo "LRCOpenPlayer.exe: $bytes bytes ($((bytes / 1048576)) MB)" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: LRCOpenPlayer

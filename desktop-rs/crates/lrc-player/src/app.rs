@@ -1,8 +1,10 @@
-//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py, minus what later
-//! milestones bring (romaji, tray, media keys, visualizer, editors).
+//! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py.
+//! The lyrics editors and the AI settings window are in [`editors`].
 //!
 //! The rules live in `lrc-core` (`queue`, `window`, `lrc`, `theme`) and are tested there;
 //! this file wires them to the Slint window and the audio engine.
+
+mod editors;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -20,19 +22,25 @@ use lrc_core::session::{
     self as memory, PLACEMENT_KEY, Placement, PlaybackSnapshot, Remembered, RestorePlan, Snapshot,
     WindowSnapshot,
 };
+use lrc_core::system::{self as sys, TrayTexts};
 use lrc_core::tags::{
     TrackInfo, extract_metadata_and_cover, read_track_tags, write_embedded_lyrics,
 };
 use lrc_core::text::{read_lyrics_file, write_lrc};
 use lrc_core::theme::{ACCENTS, Palette, build_palette, known_accent, known_theme, parse_color};
+use lrc_core::visualizer as viz;
 use lrc_core::window::{self as rules, AfterFetch, DropAction, SaveOffer, lrc_path_for};
+use lrc_romaji::Romaji;
 use slint::{
     Color, ComponentHandle, Image, Model, ModelRc, PhysicalPosition, PhysicalSize, Rgba8Pixel,
     SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel,
 };
 
 use crate::audio::{Event, Player, State};
+use crate::media::{MediaCommand, MediaControls};
 use crate::session::{SMOOTH_ANIMATION_KEY, SMOOTH_ANIMATION_TITLE, Store};
+use crate::tray::{Tray, TrayCommand, TrayItem};
+use crate::visualizer::Visualizer;
 use crate::{
     DetailRow, DetailsDialog, LyricLineData, MainWindow, QuestionDialog, ShortcutRow,
     ShortcutsDialog, Theme,
@@ -103,6 +111,29 @@ pub struct App {
     queue_wanted: bool,
     /// The windowed position from before fullscreen, saved instead of the full screen.
     windowed_placement: Option<Placement>,
+
+    visualizer: Visualizer,
+    /// The visualizer's 33 ms tick; runs only while there is something to animate.
+    viz_timer: Timer,
+    /// The media flyout, once the window exists (`media_controls`).
+    media: Option<MediaControls>,
+    tray: Option<Tray>,
+    /// "Keep playing in tray when closed".
+    close_to_tray: bool,
+    /// The window was closed to the tray.
+    window_hidden: bool,
+    /// Quit was asked for: closing the window really quits (`_quitting`).
+    quit_requested: bool,
+    /// "Sync lyrics", "Add translation" and "AI alignment", while open.
+    sync: Option<editors::SyncWindow>,
+    translate: Option<editors::TranslateWindow>,
+    ai_window: Option<editors::AiWindow>,
+    /// `self.romaji`: loaded on a worker the first time romaji is switched on.
+    romaji: Option<Arc<Romaji>>,
+    romaji_loading: bool,
+    /// `romaji_enabled`: the lyrics show romaji. The あ button can be on a moment
+    /// before this, while the dictionary loads.
+    romaji_enabled: bool,
 }
 
 /// The timers the app runs on; keep them alive as long as the window.
@@ -147,8 +178,23 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         closing: false,
         queue_wanted: false,
         windowed_placement: None,
+        visualizer: Visualizer::new(),
+        viz_timer: Timer::default(),
+        media: None,
+        tray: None,
+        close_to_tray: false,
+        window_hidden: false,
+        quit_requested: false,
+        sync: None,
+        translate: None,
+        ai_window: None,
+        romaji: None,
+        romaji_loading: false,
+        romaji_enabled: false,
     }));
     APP.with(|a| *a.borrow_mut() = Rc::downgrade(&app));
+    // Before the settings come back, which turn close-to-tray on only if there is a tray.
+    app.borrow_mut().init_tray(ui);
     app.borrow_mut().restore_session_ui(ui);
     connect(ui, &app);
 
@@ -159,7 +205,7 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         if let Some(app) = weak.upgrade()
             && let Ok(mut app) = app.try_borrow_mut()
         {
-            app.tick();
+            crate::errors::guard(|| app.tick());
         }
     });
 
@@ -174,7 +220,7 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
                 && let Ok(mut app) = app.try_borrow_mut()
                 && let Some(ui) = app.ui.upgrade()
             {
-                app.save_session(&ui, false);
+                crate::errors::guard(|| app.save_session(&ui, false));
             }
         },
     );
@@ -238,14 +284,15 @@ fn message_later(level: rfd::MessageLevel, title: &str, text: String) {
 }
 
 /// Runs `f` on the app and the window, unless either is gone or the app is busy (a
-/// modal dialog is open further up the stack).
+/// modal dialog is open further up the stack). A panic in `f` is reported and the app
+/// carries on (`install_error_handler`).
 fn with_app(app: &Weak<RefCell<App>>, f: impl FnOnce(&mut App, &MainWindow)) {
     let Some(app) = app.upgrade() else { return };
     let Ok(mut app) = app.try_borrow_mut() else {
         return;
     };
     let Some(ui) = app.ui.upgrade() else { return };
-    f(&mut app, &ui);
+    crate::errors::guard(|| f(&mut app, &ui));
 }
 
 fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
@@ -321,6 +368,9 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         let _ = slint::spawn_local(async move { embed_shown_lyrics(&weak).await });
     });
     on!(on_show_shortcuts, |a, _ui| a.show_shortcuts());
+    on!(on_open_sync, |a, ui| a.open_sync_dialog(ui));
+    on!(on_open_translation, |a, ui| a.open_translation_dialog(ui));
+    on!(on_open_ai_settings, |a, ui| a.open_ai_settings(ui));
     on!(on_set_smooth_animation, |a, ui, on| a
         .set_smooth_animation(ui, on));
     on!(on_set_theme, |a, ui, theme| {
@@ -362,14 +412,44 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     });
     on!(on_line_clicked, |a, _ui, row| a.line_clicked(row));
     on!(on_toggle_fullscreen, |a, ui| a.toggle_fullscreen(ui));
+    on!(on_set_visualizer, |a, ui, mode| a
+        .set_visualizer(ui, &mode, true));
+    on!(on_cycle_visualizer, |a, ui| {
+        let mode = viz::next_mode(a.visualizer.mode());
+        a.set_visualizer(ui, mode, true)
+    });
+    on!(on_set_close_to_tray, |a, ui, on| {
+        a.close_to_tray = on && a.tray.is_some();
+        ui.set_close_to_tray(a.close_to_tray);
+        a.store.set(sys::TRAY_ON_CLOSE_KEY, a.close_to_tray)
+    });
+    on!(on_toggle_romaji, |a, ui| {
+        let on = !ui.get_romaji_on();
+        a.set_romaji_enabled(ui, on)
+    });
 
     let weak = Rc::downgrade(app);
     ui.window().on_close_requested(move || {
-        if let Some(app) = weak.upgrade()
-            && let Ok(mut app) = app.try_borrow_mut()
-        {
-            app.close();
+        // Either way the window goes; only a real close stops the event loop.
+        let to_tray = with_app_ret(&weak, |a, _ui| a.close_to_tray()).unwrap_or(false);
+        if to_tray {
+            with_app(&weak, |a, ui| a.close_to_tray_now(ui));
+            return slint::CloseRequestResponse::HideWindow;
         }
+        // Unsaved edits: asked first, and the user may choose to keep editing.
+        if editors::editors_need_asking() {
+            let _ = slint::spawn_local(async {
+                if editors::try_close_editors().await {
+                    app_call(|a, ui| {
+                        a.close();
+                        let _ = ui.hide();
+                    });
+                    let _ = slint::quit_event_loop();
+                }
+            });
+            return slint::CloseRequestResponse::KeepWindowShown;
+        }
+        with_app(&weak, |a, _ui| a.close());
         let _ = slint::quit_event_loop();
         slint::CloseRequestResponse::HideWindow
     });
@@ -395,20 +475,26 @@ async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
     if !embed_lyrics_in_file(app, &path, &text).await {
         return;
     }
-    let lrc_path = lrc_path_for(&path);
-    if !lrc_path.exists() {
+    if !offer_lrc_update(&path, &text).await {
         message_later(
             rfd::MessageLevel::Info,
             rules::EMBED_TITLE,
             rules::embed_done_text(&file_name(&path)),
         );
-        return;
     }
-    // A .lrc next to the song wins over what was just embedded, so reopening the song
-    // would show the old lyrics. Offer to bring it in line.
-    let question = rules::update_lrc_question(&file_name(&path), &file_name(&lrc_path));
+}
+
+/// After an embed: a .lrc next to the song wins over what was just embedded, so
+/// reopening the song would show the old lyrics. Offers to bring it in line. False
+/// when there is no such .lrc (nothing was asked).
+pub(super) async fn offer_lrc_update(path: &Path, text: &str) -> bool {
+    let lrc_path = lrc_path_for(path);
+    if !lrc_path.exists() {
+        return false;
+    }
+    let question = rules::update_lrc_question(&file_name(path), &file_name(&lrc_path));
     if ask_yes_no(rules::EMBED_TITLE, &question).await
-        && let Err(error) = write_lrc(&lrc_path, &text)
+        && let Err(error) = write_lrc(&lrc_path, text)
     {
         message_later(
             rfd::MessageLevel::Warning,
@@ -416,6 +502,7 @@ async fn embed_shown_lyrics(app: &Weak<RefCell<App>>) {
             rules::save_failed_text(&file_name(&lrc_path), &error),
         );
     }
+    true
 }
 
 /// `embed_lyrics_in_file`: asks first, then writes the lyrics into the song's tags.
@@ -461,7 +548,7 @@ fn color(p: &Palette, name: &str) -> Color {
 
 /// Puts a palette into a window's `Theme` global. Every Slint window has its own copy of
 /// the global, so each window is filled.
-fn fill_theme(t: &Theme<'_>, p: &Palette) {
+pub(crate) fn fill_theme(t: &Theme<'_>, p: &Palette) {
     t.set_dark(p.dark);
     t.set_inactive_opacity(p.inactive_opacity as f32);
     macro_rules! set {
@@ -583,6 +670,7 @@ impl App {
         if let Some(dialog) = &self.question {
             fill_theme(&dialog.global::<Theme>(), &p);
         }
+        self.theme_editors(&p);
         ui.invoke_sync_color_scheme();
         ui.set_theme_key(self.theme.into());
         ui.set_accent_key(self.accent.into());
@@ -592,6 +680,9 @@ impl App {
             .map(|(key, _, hex)| swatch_icon(hex, *key == self.accent, ring))
             .collect();
         ui.set_accent_icons(ModelRc::from(Rc::new(VecModel::from(icons))));
+        ui.set_viz_accent(color(&p, "accent"));
+        ui.set_viz_alpha(p.viz_alpha as f32);
+        crate::errors::set_palette(p.clone());
         // `_rescale_cards`: the playing line goes back to the middle.
         ui.set_rescale_count(ui.get_rescale_count().wrapping_add(1));
         crate::platform::apply_title_bar(ui, p.dark);
@@ -782,6 +873,16 @@ impl App {
     fn set_playlist(&mut self, ui: &MainWindow, files: Vec<PathBuf>, source: Source) {
         self.queue.set_playlist(files, source);
         self.populate_queue_list(ui);
+        self.update_navigation();
+    }
+
+    /// `_update_navigation`: whether the media flyout's Previous and Next work.
+    fn update_navigation(&mut self) {
+        let has_playlist = !self.queue.playlist().is_empty();
+        let has_next = self.queue.has_next();
+        if let Some(media) = &mut self.media {
+            media.set_navigation(has_playlist, has_next);
+        }
     }
 
     /// `_populate_queue_list`.
@@ -816,6 +917,7 @@ impl App {
     /// A song the user picked in the tracklist (`play_index`).
     fn play_index(&mut self, ui: &MainWindow, index: usize) {
         self.queue.pick(index);
+        self.update_navigation();
         self.load_track_by_index(ui, index, true, 0);
     }
 
@@ -834,6 +936,7 @@ impl App {
         let path = self.queue.playlist()[index].clone();
         ui.set_queue_current(index as i32);
         self.player.load(&path);
+        self.visualizer.clear(); // `sourceChanged`
         if start_ms > 0 {
             self.player.seek(start_ms);
         }
@@ -849,7 +952,7 @@ impl App {
         ui.set_track_title(meta.info.title.as_str().into());
         ui.set_track_artist(meta.info.artist.as_str().into());
         ui.set_specs_text(rules::specs_text(&meta.info).into());
-        match meta.cover {
+        match &meta.cover {
             Some(cover) => {
                 let (w, h) = (cover.image.width(), cover.image.height());
                 let buf =
@@ -862,7 +965,19 @@ impl App {
                 ui.set_has_cover(false);
             }
         }
+        let has_next = self.queue.has_next();
+        if let Some(media) = &mut self.media {
+            // "Previous" restarts the song when it isn't the first one.
+            media.set_track(
+                &meta.info,
+                meta.cover.as_ref().map(|c| &c.image),
+                true,
+                has_next,
+            );
+            media.update_timeline(0, meta.info.duration_sec * 1000, true);
+        }
         self.info = Some(meta.info);
+        self.update_tray(ui);
 
         if !self.show_own_lyrics(ui, &path) {
             self.search_lyrics_online(ui, false);
@@ -931,10 +1046,13 @@ impl App {
         let rows: Vec<LyricLineData> = parsed
             .lines
             .iter()
-            .map(|LyricLine { main, sub, .. }| LyricLineData {
-                main: main.into(),
-                sub: sub.into(),
-                active: false,
+            .map(|LyricLine { main, sub, .. }| {
+                let (main, sub) = self.display_for(main, sub);
+                LyricLineData {
+                    main: main.into(),
+                    sub: sub.into(),
+                    active: false,
+                }
             })
             .collect();
         self.shown = parsed.lines;
@@ -944,6 +1062,81 @@ impl App {
         if pos > 0 {
             self.sync_lyrics_to_position(pos);
         }
+    }
+
+    /// `_display_for`: the (main, sub) a lyric card shows.
+    fn display_for(&self, main: &str, sub: &str) -> (String, String) {
+        let romaji = self.romaji.as_deref().filter(|_| self.romaji_enabled);
+        lrc_romaji::display_for(
+            romaji.is_some(),
+            |t| romaji.map(|r| r.convert(t)).unwrap_or_default(),
+            main,
+            sub,
+        )
+    }
+
+    /// `set_romaji_enabled`. The first time, the dictionary loads on a worker and the
+    /// lyrics switch once it's there, so the window never waits for it.
+    fn set_romaji_enabled(&mut self, ui: &MainWindow, enabled: bool) {
+        ui.set_romaji_on(enabled);
+        if enabled && self.romaji.is_none() {
+            if !self.romaji_loading {
+                self.romaji_loading = true;
+                let spawned = std::thread::Builder::new().name("romaji".into()).spawn(|| {
+                    let loaded = Romaji::load();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        app_call(|a, ui| a.romaji_loaded(ui, loaded));
+                    });
+                });
+                if let Err(e) = spawned {
+                    self.romaji_loaded(ui, Err(e.to_string()));
+                }
+            }
+            return;
+        }
+        self.apply_romaji(ui, enabled);
+    }
+
+    fn romaji_loaded(&mut self, ui: &MainWindow, loaded: Result<Romaji, String>) {
+        self.romaji_loading = false;
+        match loaded {
+            Ok(romaji) => {
+                self.romaji = Some(Arc::new(romaji));
+                // Switched off again while it loaded: nothing to change.
+                if ui.get_romaji_on() {
+                    self.apply_romaji(ui, true);
+                }
+            }
+            Err(e) => {
+                ui.set_romaji_on(false);
+                message_later(
+                    rfd::MessageLevel::Warning,
+                    "Romaji unavailable",
+                    format!(
+                        "Romaji conversion needs its Japanese dictionary, which could not be loaded.\n\nDetails: {e}"
+                    ),
+                );
+            }
+        }
+    }
+
+    fn apply_romaji(&mut self, ui: &MainWindow, enabled: bool) {
+        self.romaji_enabled = enabled;
+        ui.set_romaji_on(enabled);
+        self.store.set("lyrics/romaji", enabled);
+        for (row, line) in self.shown.iter().enumerate() {
+            let (main, sub) = self.display_for(&line.main, &line.sub);
+            if let Some(mut data) = self.lines.row_data(row) {
+                data.main = main.into();
+                data.sub = sub.into();
+                self.lines.set_row_data(row, data);
+            }
+        }
+        // `_rescale_cards`: the playing line goes back to the middle.
+        ui.set_rescale_count(ui.get_rescale_count().wrapping_add(1));
+        // The editors show the sung lines the same way.
+        self.sync_refresh(false);
+        self.translate_fill_table();
     }
 
     /// `_sync_lyrics_to_position`: lights up the line for `pos_ms`.
@@ -1010,6 +1203,10 @@ impl App {
 
     fn seek_to(&mut self, ms: u64) {
         self.player.seek(ms);
+        let duration = self.player.duration_ms();
+        if let Some(media) = &mut self.media {
+            media.update_timeline(ms, duration, true);
+        }
     }
 
     fn play_previous(&mut self, ui: &MainWindow) {
@@ -1033,6 +1230,8 @@ impl App {
         if persist {
             self.store.set("playback/shuffle", on);
         }
+        self.update_navigation();
+        self.update_tray(ui);
     }
 
     /// `set_repeat`: repeat-track loops inside the player, which is gapless.
@@ -1044,6 +1243,8 @@ impl App {
         self.player.set_looping(repeat == Repeat::Track);
         ui.set_repeat(repeat.key().into());
         ui.set_repeat_tip(repeat.tooltip().into());
+        self.update_tray(ui);
+        self.update_navigation();
     }
 
     fn toggle_mute(&mut self, ui: &MainWindow) {
@@ -1364,6 +1565,7 @@ impl App {
         let repeat = Repeat::from_key(&s.get_str("playback/repeat", "off"));
         let placement = s.raw(PLACEMENT_KEY).and_then(Placement::from_json);
         self.queue_wanted = s.get_bool("ui/queue_open", false);
+        let romaji = s.get_bool("lyrics/romaji", false);
         ui.set_smooth_animation(s.get_bool(SMOOTH_ANIMATION_KEY, false));
 
         self.apply_theme(ui, &theme, &accent, false);
@@ -1372,7 +1574,21 @@ impl App {
         self.set_lyrics_offset(ui, offset, false);
         self.set_shuffle(ui, shuffle, false);
         self.set_repeat(ui, repeat, false);
-        // The visualizer, romaji and close-to-tray settings are kept for M5 and M6.
+        let mode = self.store.settings.get_str("ui/visualizer", "off");
+        // Off unless turned on in the View menu: the Python app starts with it on, but on
+        // Windows 11 the new tray icon hides behind the ^ arrow, so closing the window looked
+        // like quitting while the song kept playing. The Python app's own key isn't read:
+        // it saves "on" at every start, whether or not anyone chose it.
+        self.close_to_tray =
+            self.store.settings.get_bool(sys::TRAY_ON_CLOSE_KEY, false) && self.tray.is_some();
+        ui.set_close_to_tray(self.close_to_tray);
+        self.set_visualizer(ui, &mode, false);
+        if romaji {
+            // Deferred, as the Python app does, so the first paint isn't held up.
+            Timer::single_shot(Duration::ZERO, || {
+                app_call(|a, ui| a.set_romaji_enabled(ui, true));
+            });
+        }
 
         if let Some(p) = placement {
             let window = ui.window();
@@ -1539,12 +1755,17 @@ impl App {
     /// and their answers ignored, the session is saved, and the music stops.
     fn close(&mut self) {
         self.quitting.store(true, Ordering::Relaxed);
+        self.viz_timer.stop();
         self.cancel_scan();
         if let Some(ui) = self.ui.upgrade() {
             self.save_session(&ui, true);
         }
         self.closing = true; // nothing below may overwrite the snapshot just saved
+        if let Some(media) = &mut self.media {
+            media.shutdown();
+        }
         self.player.stop();
+        self.tray = None; // takes the icon out of the tray
         if let Some(dialog) = &self.shortcuts {
             let _ = dialog.hide();
         }
@@ -1554,6 +1775,7 @@ impl App {
         if let Some(dialog) = &self.question {
             let _ = dialog.hide();
         }
+        self.close_editors();
     }
 
     // -------------------------------------------------------------------------
@@ -1623,19 +1845,34 @@ impl App {
                     // `_on_duration_changed`
                     ui.set_seek_max(duration_ms as f32);
                     ui.set_duration_text(rules::format_time(duration_ms).into());
+                    let pos = self.player.position_ms();
+                    if let Some(media) = &mut self.media {
+                        media.update_timeline(pos, duration_ms, true);
+                    }
                 }
-                Event::StateChanged(state) => ui.set_playing(state == State::Playing),
-                // `_on_media_status_changed`: no editors yet (M7), so nothing holds a song.
+                Event::StateChanged(state) => self.playback_state_changed(&ui, state),
+                // `_on_media_status_changed`.
                 Event::EndOfMedia => {
-                    if self.queue.repeat() == Repeat::Track {
+                    if self.editor_open() {
+                        // stay on the song whose lyrics are being edited
+                    } else if self.queue.repeat() == Repeat::Track {
                         self.player.seek(0);
                         self.player.play();
                     } else if self.queue.has_next() {
                         self.play_next(&ui);
                     }
                 }
-                // The Python app has no handler for player errors; M6 adds the message.
-                Event::Error(message) => eprintln!("playback error: {message}"),
+                // The Python app shows nothing when Qt can't play a file; here the
+                // error message says why (checklist item 18).
+                Event::Error(message) => {
+                    eprintln!("playback error: {message}");
+                    let name = self
+                        .queue
+                        .current_path()
+                        .map(|p| file_name(p))
+                        .unwrap_or_default();
+                    crate::errors::report(message.clone(), format!("{name}\n\n{message}"));
+                }
             }
         }
         if self.player.duration_ms() == 0 {
@@ -1647,7 +1884,251 @@ impl App {
             ui.set_seek_value(pos as f32);
             ui.set_position_text(rules::format_time(pos).into());
         }
+        let duration = self.player.duration_ms();
+        if let Some(media) = &mut self.media {
+            media.update_timeline(pos, duration, false);
+        }
         self.sync_lyrics_to_position(pos);
+    }
+
+    /// `_on_playback_state_changed`.
+    fn playback_state_changed(&mut self, ui: &MainWindow, state: State) {
+        ui.set_playing(state == State::Playing);
+        let (pos, duration) = (self.player.position_ms(), self.player.duration_ms());
+        if let Some(media) = &mut self.media {
+            media.set_playback_state(state);
+            media.update_timeline(pos, duration, true);
+        }
+        self.update_tray(ui);
+        self.wake_visualizer();
+    }
+
+    // -------------------------------------------------------------------------
+    // Visualizer (`set_visualizer`, `VisualizerBackdrop`)
+    // -------------------------------------------------------------------------
+
+    fn set_visualizer(&mut self, ui: &MainWindow, mode: &str, persist: bool) {
+        self.visualizer.set_mode(mode, &self.player);
+        let mode = self.visualizer.mode();
+        ui.set_visualizer_mode(mode.into());
+        if persist {
+            self.store.set("ui/visualizer", mode);
+        }
+        if mode == "off" {
+            self.viz_timer.stop();
+            ui.set_viz_frame(Image::default());
+        } else {
+            self.start_viz_timer();
+        }
+    }
+
+    /// `_wake`: the music started again, so the bars may move.
+    fn wake_visualizer(&mut self) {
+        if self.visualizer.mode() != "off" && !self.viz_timer.running() {
+            self.start_viz_timer();
+        }
+    }
+
+    fn start_viz_timer(&mut self) {
+        self.viz_timer.start(
+            TimerMode::Repeated,
+            Duration::from_millis(viz::TICK_MS),
+            || app_call(|a, ui| a.viz_tick(ui)),
+        );
+    }
+
+    fn viz_tick(&mut self, ui: &MainWindow) {
+        let playing = self.player.state() == State::Playing;
+        let pos = self.player.position_ms();
+        let keep_going = self.visualizer.tick(playing, pos);
+        let frame = self.visualizer.render(
+            ui.get_lyrics_width(),
+            ui.get_lyrics_height(),
+            ui.window().scale_factor(),
+            {
+                let c = ui.get_viz_accent();
+                [c.red(), c.green(), c.blue(), c.alpha()]
+            },
+            f64::from(ui.get_viz_alpha()),
+        );
+        ui.set_viz_frame(frame);
+        if !keep_going {
+            self.viz_timer.stop(); // paused or stopped: nothing to animate
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Media flyout (`WindowsMediaControls` and the `_smtc_*` slots)
+    // -------------------------------------------------------------------------
+
+    /// Connects the media flyout and media keys. Needs the native window, so it runs
+    /// once the window is shown.
+    pub fn init_media_controls(&mut self, _ui: &MainWindow) {
+        self.media = MediaControls::new(|command| {
+            let _ = slint::invoke_from_event_loop(move || {
+                app_call(|a, ui| a.media_command(ui, command));
+            });
+        });
+        // The last session's song was loaded before the window, and so the flyout, existed:
+        // without this the flyout stayed empty until the next song.
+        let current = self.queue.current_path().cloned();
+        let has_next = self.queue.has_next();
+        let (state, pos, duration) = (
+            self.player.state(),
+            self.player.position_ms(),
+            self.player.duration_ms(),
+        );
+        let Some(media) = &mut self.media else {
+            return;
+        };
+        match current {
+            Some(path) => {
+                let meta = extract_metadata_and_cover(&path);
+                let duration = duration.max(meta.info.duration_sec * 1000);
+                media.set_track(
+                    &meta.info,
+                    meta.cover.as_ref().map(|c| &c.image),
+                    true,
+                    has_next,
+                );
+                media.set_playback_state(state);
+                media.update_timeline(pos, duration, true);
+            }
+            None => self.update_navigation(),
+        }
+    }
+
+    fn media_command(&mut self, ui: &MainWindow, command: MediaCommand) {
+        let has_playlist = !self.queue.playlist().is_empty();
+        match command {
+            MediaCommand::Play => {
+                if has_playlist && self.player.state() != State::Playing {
+                    self.player.play();
+                }
+            }
+            MediaCommand::Pause => {
+                if self.player.state() == State::Playing {
+                    self.player.pause();
+                }
+            }
+            MediaCommand::Next => self.play_next(ui),
+            MediaCommand::Previous => self.play_previous(ui),
+            MediaCommand::Seek(ms) => {
+                if has_playlist {
+                    self.seek_to(ms);
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Tray (`_init_tray`, `_update_tray`, `_on_tray_activated`, `closeEvent`)
+    // -------------------------------------------------------------------------
+
+    fn init_tray(&mut self, ui: &MainWindow) {
+        let texts = self.tray_texts(ui);
+        // The tray runs on a thread of its own; its clicks come back to this one.
+        self.tray = Tray::new(texts, |command| {
+            let _ = slint::invoke_from_event_loop(move || {
+                app_call(|a, ui| a.tray_command(ui, command));
+            });
+        });
+        ui.set_tray_available(self.tray.is_some());
+    }
+
+    fn tray_texts(&self, ui: &MainWindow) -> TrayTexts {
+        let track = self
+            .info
+            .as_ref()
+            .filter(|_| self.queue.current().is_some())
+            .map(|i| (i.title.as_str(), i.artist.as_str()));
+        let shown = !self.window_hidden && !ui.window().is_minimized();
+        sys::tray_texts(
+            track,
+            self.player.state() == State::Playing,
+            self.queue.repeat(),
+            shown,
+        )
+    }
+
+    fn update_tray(&mut self, ui: &MainWindow) {
+        if let Some(tray) = &self.tray {
+            tray.update(self.tray_texts(ui), self.queue.shuffle());
+        }
+    }
+
+    fn tray_command(&mut self, ui: &MainWindow, command: TrayCommand) {
+        match command {
+            TrayCommand::Clicked | TrayCommand::DoubleClicked => self.toggle_window(ui),
+            TrayCommand::MiddleClicked => self.toggle_play(),
+            TrayCommand::Menu(item) => match item {
+                TrayItem::Now => {}
+                TrayItem::Play => self.toggle_play(),
+                TrayItem::Next => self.play_next(ui),
+                TrayItem::Previous => self.play_previous(ui),
+                TrayItem::Shuffle => {
+                    let on = !self.queue.shuffle();
+                    self.set_shuffle(ui, on, true);
+                }
+                TrayItem::Repeat => {
+                    let r = self.queue.repeat().next();
+                    self.set_repeat(ui, r, true);
+                }
+                TrayItem::Window => self.toggle_window(ui),
+                TrayItem::Quit => {
+                    // Unsaved edits are asked about first, with the app not borrowed.
+                    let _ = slint::spawn_local(async {
+                        if editors::try_close_editors().await {
+                            app_call(|a, ui| a.quit_app(ui));
+                        }
+                    });
+                }
+            },
+        }
+    }
+
+    fn toggle_window(&mut self, ui: &MainWindow) {
+        if !self.window_hidden && !ui.window().is_minimized() {
+            self.window_hidden = true;
+            let _ = ui.hide();
+        } else {
+            self.show_window(ui);
+        }
+        self.update_tray(ui);
+    }
+
+    fn show_window(&mut self, ui: &MainWindow) {
+        self.window_hidden = false;
+        let _ = ui.show();
+        ui.window().set_minimized(false);
+        crate::platform::bring_to_front(ui);
+    }
+
+    /// `_close_to_tray`.
+    fn close_to_tray(&self) -> bool {
+        self.tray.is_some() && self.close_to_tray && !self.quit_requested
+    }
+
+    /// `closeEvent` with close-to-tray on: the music keeps playing and the window goes,
+    /// with a hint the first time.
+    fn close_to_tray_now(&mut self, ui: &MainWindow) {
+        self.save_session(ui, true);
+        self.window_hidden = true;
+        self.update_tray(ui);
+        if !self.store.settings.get_bool("ui/tray_hint_shown", false) {
+            if let Some(tray) = &self.tray {
+                tray.show_message(sys::TRAY_HINT_TITLE, sys::TRAY_HINT_TEXT, sys::TRAY_HINT_MS);
+            }
+            self.store.set("ui/tray_hint_shown", true);
+        }
+    }
+
+    /// `quit_app`: Quit in the tray menu.
+    fn quit_app(&mut self, ui: &MainWindow) {
+        self.quit_requested = true;
+        self.close(); // saves the window's place first, as `closeEvent` does
+        let _ = ui.hide();
+        let _ = slint::quit_event_loop();
     }
 }
 

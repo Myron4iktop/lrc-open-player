@@ -6,12 +6,22 @@ slint::include_modules!();
 
 mod app;
 mod audio;
+mod errors;
+mod media;
 mod platform;
 mod session;
+mod tray;
+mod visualizer;
+#[cfg(windows)]
+mod win;
 
 fn main() -> Result<(), slint::PlatformError> {
+    // Before anything else, so every panic on the UI thread is reported.
+    errors::install();
     #[cfg(windows)]
     platform::set_app_user_model_id();
+    #[cfg(windows)]
+    platform::ensure_start_menu_shortcut();
 
     // Slint's software renderer draws the small transport icons crisply, as the Python
     // app's QPainter does; its OpenGL renderer blurs shapes this small. View → Smooth
@@ -43,6 +53,7 @@ fn main() -> Result<(), slint::PlatformError> {
     platform::apply_title_bar(&window, window.global::<Theme>().get_dark());
     platform::hook_window_events(&window, &app);
     platform::keep_on_screen(&window);
+    app.borrow_mut().init_media_controls(&window);
     window.invoke_focus_window();
     // The last playlist comes back once the window is up (`QTimer.singleShot(0, …)`),
     // unless a debug build was told to open something else.
@@ -63,6 +74,7 @@ fn main() -> Result<(), slint::PlatformError> {
     if let Some(path) = std::env::var_os("LRC_DEV_OPEN") {
         app.borrow_mut().open_path(&window, path.into());
     }
-    slint::run_event_loop()?;
+    // Not `run_event_loop`: that ends when the window closes to the tray.
+    slint::run_event_loop_until_quit()?;
     window.hide()
 }

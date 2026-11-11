@@ -29,22 +29,31 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [Lofty](https://github.com/Serial-ATA/lofty-rs) | Reading and writing tags | MIT or Apache-2.0 |
 | [encoding_rs](https://github.com/hsivonen/encoding_rs) | Reading lyrics files in older code pages | (MIT or Apache-2.0) and BSD-3-Clause |
 | [ureq](https://github.com/algesten/ureq) | Looking up lyrics on LRCLIB | MIT or Apache-2.0 |
-| [rustls](https://github.com/rustls/rustls), [ring](https://github.com/briansmith/ring) | Secure connections | Apache-2.0, ISC or MIT; Apache-2.0 and ISC |
+| [rustls](https://github.com/rustls/rustls), [ring](https://github.com/briansmith/ring) | Secure connections (LRCLIB and the AI alignment client) | Apache-2.0, ISC or MIT; Apache-2.0 and ISC |
+| [rustls-platform-verifier](https://github.com/rustls/rustls-platform-verifier) | Checking certificates with the system's own store | MIT or Apache-2.0 |
 | [webpki-roots](https://github.com/rustls/webpki-roots) | Fallback list of trusted certificates | CDLA-Permissive-2.0 |
 | [serde_json](https://github.com/serde-rs/json) | Reading LRCLIB's answers and the settings file | MIT or Apache-2.0 |
+| [base64](https://github.com/marshallpierce/rust-base64) | Storing the AI keys in the settings file | MIT or Apache-2.0 |
 | [regex](https://github.com/rust-lang/regex) | Matching timestamps and tags | MIT or Apache-2.0 |
 | [caseless](https://github.com/unicode-rs/rust-caseless) | Comparing text without case, like Python's `casefold` | MIT |
 | [fastrand](https://github.com/smol-rs/fastrand) | Shuffle order | MIT or Apache-2.0 |
-| [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song, and the settings file, safely | MIT or Apache-2.0 |
+| [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song and the settings file safely, and the private temp folder for the media flyout's cover | MIT or Apache-2.0 |
 | [Symphonia](https://github.com/pdeljanov/Symphonia) | Decoding audio | MPL-2.0 |
 | [symphonia-adapter-libopus](https://github.com/aschey/symphonia-adapters) | Opus decoding for Symphonia | MIT or Apache-2.0 |
 | [libopus](https://opus-codec.org/) (through [opusic-sys](https://github.com/DoumanAsh/opusic-sys)) | Decoding Opus | BSD-3-Clause |
 | [cpal](https://github.com/RustAudio/cpal) | Audio output | Apache-2.0 |
-| [Rubato](https://github.com/HEnquist/rubato) (with [audioadapter](https://github.com/HEnquist/audioadapter-rs), [RustFFT](https://github.com/ejmahler/RustFFT) and [RealFFT](https://github.com/HEnquist/realfft)) | Resampling to the output's rate | MIT; MIT or Apache-2.0 |
+| [Rubato](https://github.com/HEnquist/rubato) (with [audioadapter](https://github.com/HEnquist/audioadapter-rs) and [RealFFT](https://github.com/HEnquist/realfft)) | Resampling to the output's rate | MIT; MIT or Apache-2.0 |
+| [RustFFT](https://github.com/ejmahler/RustFFT) | Resampling, and the visualizer's spectrum | MIT or Apache-2.0 |
+| [tiny-skia](https://github.com/linebender/tiny-skia) | Drawing the visualizer | BSD-3-Clause |
 | [rtrb](https://github.com/mgeier/rtrb) | Passing audio to the output without locks | MIT or Apache-2.0 |
 | [rfd](https://github.com/PolyMeilex/rfd) | File dialogs | MIT |
-| [windows](https://github.com/microsoft/windows-rs) | Windows APIs | MIT or Apache-2.0 |
+| [windows](https://github.com/microsoft/windows-rs) | Windows APIs: title bar, media flyout and media keys, tray icon, encrypting the AI keys (DPAPI) | MIT or Apache-2.0 |
 | [winresource](https://github.com/BenjaminRi/winresource) (build only) | Putting the icon into the `.exe` | MIT |
+| [Lindera](https://github.com/lindera/lindera) | Splitting Japanese into words | MIT |
+| [UniDic](https://clrd.ninjal.ac.jp/unidic/) (unidic-mecab 2.1.2, embedded by default) | Japanese dictionary | BSD-3-Clause, LGPL-2.1 or GPL-2.0 |
+| [IPADIC](https://taku910.github.io/mecab/) (mecab-ipadic 2.7.0, embedded in the `ipadic` build) | Japanese dictionary | IPADIC license |
+| [cutlet](https://github.com/polm/cutlet) (its rules and kana tables, ported to Rust) | Japanese to romaji | MIT |
+| [unicode-normalization](https://github.com/unicode-rs/unicode-normalization) | Normalizing Japanese text before romaji | MIT or Apache-2.0 |
 
 ## LRC Companion (Android)
 
