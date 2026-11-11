@@ -4,6 +4,7 @@ import sys
 import html
 import json
 import math
+import hashlib
 import time
 import array
 import atexit
@@ -1455,8 +1456,8 @@ SHORTCUTS_HTML = """
 <tr><td><b>Space</b></td><td>Play / pause</td></tr>
 <tr><td><b>Ctrl+← / Ctrl+→</b></td><td>Previous / next track</td></tr>
 <tr><td><b>F11</b> or double-click</td><td>Fullscreen (Esc to leave)</td></tr>
-<tr><td><b>[ / ]</b></td><td>Show lyrics 0.1 s earlier / later</td></tr>
-<tr><td><b>\\</b></td><td>Reset lyrics offset</td></tr>
+<tr><td><b>[ / ]</b></td><td>Show this song's lyrics 0.1 s earlier / later</td></tr>
+<tr><td><b>\\</b></td><td>Back to the default offset (Lyrics ▾ sets it)</td></tr>
 <tr><td><b>R</b></td><td>Romaji on / off</td></tr>
 <tr><td><b>S</b></td><td>Shuffle on / off</td></tr>
 <tr><td><b>L</b></td><td>Repeat: off → track → album</td></tr>
@@ -3687,6 +3688,14 @@ class LyricsSyncDialog(QDialog):
         pw = self.pw
         return 0 <= pw.current_track_idx < len(pw.playlist) and pw.playlist[pw.current_track_idx] == self.track_path
 
+    def _lyrics_time_now(self) -> int:
+        """The timestamp for "now": the playback position without the lyrics offset.
+
+        The player shows a line once position - offset reaches its timestamp, so a stamp
+        taken as the bare position would show up late (or early) by the whole offset.
+        """
+        return max(0, self.pw.player.position() - self.pw.lyrics_offset_ms)
+
     def _seek_relative(self, delta_ms: int):
         if self._track_ok():
             self.pw.seek_to(max(0, self.pw.player.position() + delta_ms))
@@ -3876,7 +3885,7 @@ class LyricsSyncDialog(QDialog):
     def _on_item_double_clicked(self, item):
         t = self.entries[self.list.row(item)]["time"]
         if t is not None and self._track_ok():
-            self.pw.seek_to(max(0, t - 1500))  # replay from just before the line
+            self.pw.seek_to(max(0, t + self.pw.lyrics_offset_ms - 1500))  # replay from just before the line
             if self.pw.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
                 self.pw.player.play()
 
@@ -3887,7 +3896,7 @@ class LyricsSyncDialog(QDialog):
         if self.cursor >= len(self.entries):
             self._set_status("Every line is stamped. Save when you're happy with it.")
             return
-        self.entries[self.cursor]["time"] = self.pw.player.position()
+        self.entries[self.cursor]["time"] = self._lyrics_time_now()
         self._select(self.cursor)
         self.cursor += 1
         self.dirty = True
@@ -3914,14 +3923,15 @@ class LyricsSyncDialog(QDialog):
         self._select(self.cursor)
         if self._track_ok():
             # rewind a little before the line so it can be stamped again
-            self.pw.seek_to(max(0, (t if t is not None else self.pw.player.position()) - 3000))
+            here = t + self.pw.lyrics_offset_ms if t is not None else self.pw.player.position()
+            self.pw.seek_to(max(0, here - 3000))
         self.dirty = True
         self._set_status("Undone. Playback jumped back 3 s so you can stamp the line again.")
 
     def insert_break(self):
         if not self.entries or not self._track_ok():
             return
-        pos = self.pw.player.position()
+        pos = self._lyrics_time_now()
         self.entries.insert(self.cursor, {"text": "", "time": pos, "sub": "", "break": True})
         self.cursor += 1
         self.dirty = True
@@ -4010,7 +4020,7 @@ class LyricsSyncDialog(QDialog):
         ok = self._track_ok()
         playing = self.pw.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
         self.btn_play.setIcon(self._icon_pause if playing else self._icon_play)
-        self.lbl_time.setText(_fmt_lrc_time(self.pw.player.position()) if ok else "--:--.--")
+        self.lbl_time.setText(_fmt_lrc_time(self._lyrics_time_now()) if ok else "--:--.--")  # what Enter would stamp
         for b in (self.btn_stamp, self.btn_break, self.btn_restart, self.btn_back, self.btn_fwd, self.btn_preview):
             b.setEnabled(ok)
         if ok:
@@ -4130,7 +4140,12 @@ class AudioLRCPlayer(QMainWindow):
         self._fetch_worker = None     # the LRCLIB lookup still wanted, if any
         self._lyrics_shown = 0        # bumped whenever lyrics go on screen, so a late lookup can tell
 
-        # Lyrics sync offset in ms. Positive = lyrics appear later, negative = earlier.
+        # Lyrics offset in ms. Positive = lyrics appear later, negative = earlier. It is a
+        # default for every song (a latency setting, such as for Bluetooth headphones) plus
+        # an adjustment for the current song, remembered per song (see _offset_key).
+        # lyrics_offset_ms is their sum, the offset actually applied.
+        self.default_offset_ms = 0
+        self.song_offset_ms = 0
         self.lyrics_offset_ms = 0
 
         # Session memory
@@ -4215,6 +4230,11 @@ class AudioLRCPlayer(QMainWindow):
         self.act_translate.setEnabled(False)
         self.act_embed_lyrics = lyrics_menu.addAction("Embed lyrics in file…")
         self.act_embed_lyrics.setEnabled(False)
+        lyrics_menu.addSeparator()
+        self.act_offset_for_all = lyrics_menu.addAction("Use this offset for all songs")
+        self.act_offset_for_all.setToolTip("Makes this song's lyrics offset the default for every song")
+        self.act_offset_for_all.setEnabled(False)
+        self.act_offset_for_all.triggered.connect(lambda: self.use_offset_for_all_songs())
         self.btn_lyrics.setMenu(lyrics_menu)
 
         # Menus are separate pop-up windows; adding the actions to the main window too
@@ -4382,9 +4402,9 @@ class AudioLRCPlayer(QMainWindow):
         self.btn_offset_minus.setFixedWidth(32)
         self.btn_offset_plus.setFixedWidth(32)
         self.btn_offset_reset.setFixedWidth(56)
-        self.btn_offset_minus.setToolTip("Show lyrics earlier by 0.1 s   ( [ )")
-        self.btn_offset_plus.setToolTip("Show lyrics later by 0.1 s   ( ] )")
-        self.btn_offset_reset.setToolTip("Reset lyrics offset   ( \\ )")
+        self.btn_offset_minus.setToolTip("Show this song's lyrics earlier by 0.1 s   ( [ )")
+        self.btn_offset_plus.setToolTip("Show this song's lyrics later by 0.1 s   ( ] )")
+        self.btn_offset_reset.setToolTip("Back to the default offset for all songs   ( \\ )")
         self.btn_romaji = QPushButton("あ")
         self.btn_romaji.setCheckable(True)
         self.btn_romaji.setFixedWidth(36)
@@ -4644,7 +4664,7 @@ class AudioLRCPlayer(QMainWindow):
 
         self.btn_offset_minus.clicked.connect(lambda: self.adjust_lyrics_offset(-100))
         self.btn_offset_plus.clicked.connect(lambda: self.adjust_lyrics_offset(+100))
-        self.btn_offset_reset.clicked.connect(lambda: self.set_lyrics_offset(0))
+        self.btn_offset_reset.clicked.connect(lambda: self.set_song_offset(0))
 
         self.player.positionChanged.connect(self._on_position_changed)
         self.player.durationChanged.connect(self._on_duration_changed)
@@ -4672,7 +4692,7 @@ class AudioLRCPlayer(QMainWindow):
         add("F11", self.toggle_fullscreen)
         add("[", lambda: self.adjust_lyrics_offset(-100), auto_repeat=True)
         add("]", lambda: self.adjust_lyrics_offset(+100), auto_repeat=True)
-        add("\\", lambda: self.set_lyrics_offset(0))
+        add("\\", lambda: self.set_song_offset(0))
         add("R", self.btn_romaji.toggle)
         add("S", lambda: self.set_shuffle(not self.shuffle_on))
         add("L", self.cycle_repeat)
@@ -4960,6 +4980,8 @@ class AudioLRCPlayer(QMainWindow):
             self.player.play()
         else:
             self.player.pause()
+
+        self.set_song_offset(self.settings.value(self._offset_key(file_path), 0, type=int), persist=False)
 
         embedded_lyrics, cover, info = extract_metadata_and_cover(file_path)
         self.current_info = info
@@ -5294,15 +5316,50 @@ class AudioLRCPlayer(QMainWindow):
     # -----------------------------------------------------
     OFFSET_LIMIT_MS = 30000
 
-    def adjust_lyrics_offset(self, delta_ms: int):
-        self.set_lyrics_offset(self.lyrics_offset_ms + delta_ms)
+    @staticmethod
+    def _offset_key(path: str) -> str:
+        """Settings key of a song's lyrics offset. A hash, because a path can't be a key name."""
+        name = os.path.normcase(os.path.abspath(path)).encode("utf-8", "surrogatepass")
+        return "lyrics/offsets/" + hashlib.sha1(name).hexdigest()[:20]
 
-    def set_lyrics_offset(self, offset_ms: int, persist: bool = True):
-        offset_ms = max(-self.OFFSET_LIMIT_MS, min(self.OFFSET_LIMIT_MS, int(offset_ms)))
-        self.lyrics_offset_ms = offset_ms
-        self.lbl_offset.setText(f"{offset_ms / 1000:+.1f} s")
+    def adjust_lyrics_offset(self, delta_ms: int):
+        """[ and ]: moves this song's lyrics, on top of the default."""
+        self.set_song_offset(self.lyrics_offset_ms + delta_ms - self.default_offset_ms)
+
+    def set_song_offset(self, song_ms: int, persist: bool = True):
+        """This song's adjustment. 0 (Reset, \\) means the song uses the default."""
+        total = max(-self.OFFSET_LIMIT_MS, min(self.OFFSET_LIMIT_MS, self.default_offset_ms + int(song_ms)))
+        self.song_offset_ms = total - self.default_offset_ms
+        if persist and 0 <= self.current_track_idx < len(self.playlist):
+            key = self._offset_key(self.playlist[self.current_track_idx])
+            if self.song_offset_ms:
+                self.settings.setValue(key, self.song_offset_ms)
+            else:
+                self.settings.remove(key)  # only songs that need an adjustment are remembered
+        self._apply_lyrics_offset()
+
+    def set_default_offset(self, default_ms: int, persist: bool = True):
+        """The offset every song starts from. Songs with an adjustment keep it on top."""
+        self.default_offset_ms = max(-self.OFFSET_LIMIT_MS, min(self.OFFSET_LIMIT_MS, int(default_ms)))
         if persist:
-            self.settings.setValue("lyrics/offset_ms", offset_ms)
+            self.settings.setValue("lyrics/offset_ms", self.default_offset_ms)
+        self._apply_lyrics_offset()
+
+    def use_offset_for_all_songs(self):
+        """Lyrics ▾ → Use this offset for all songs: the current offset becomes the default."""
+        total = self.lyrics_offset_ms
+        self.set_default_offset(total)
+        self.set_song_offset(0)
+
+    def _apply_lyrics_offset(self):
+        total = max(-self.OFFSET_LIMIT_MS, min(self.OFFSET_LIMIT_MS, self.default_offset_ms + self.song_offset_ms))
+        self.lyrics_offset_ms = total
+        self.lbl_offset.setText(f"{total / 1000:+.1f} s")
+        self.lbl_offset.setToolTip(
+            f"Default for all songs: {self.default_offset_ms / 1000:+.1f} s\n"
+            f"This song: {self.song_offset_ms / 1000:+.1f} s")
+        if hasattr(self, "act_offset_for_all"):
+            self.act_offset_for_all.setEnabled(self.song_offset_ms != 0)
         self._sync_lyrics_to_position(self.player.position())
 
     def _update_active_card(self, active_index):
@@ -5854,7 +5911,7 @@ class AudioLRCPlayer(QMainWindow):
     # Session memory (QSettings)
     # -----------------------------------------------------
     def _restore_session_ui(self):
-        """Window geometry, volume, lyrics offset. Runs before the window is shown."""
+        """Window geometry, volume, theme, the default lyrics offset and playback modes. Runs before the window is shown."""
         s = self.settings
 
         self.apply_theme(s.value("ui/theme", "dark", type=str), s.value("ui/accent", "coral", type=str), persist=False)
@@ -5862,7 +5919,7 @@ class AudioLRCPlayer(QMainWindow):
         volume = max(0, min(100, s.value("ui/volume", 80, type=int)))
         self.vol_slider.setValue(volume)  # slider signal updates the audio output
 
-        self.set_lyrics_offset(s.value("lyrics/offset_ms", 0, type=int), persist=False)
+        self.set_default_offset(s.value("lyrics/offset_ms", 0, type=int), persist=False)
         self.set_shuffle(s.value("playback/shuffle", False, type=bool), persist=False)
         self.set_repeat(s.value("playback/repeat", "off", type=str), persist=False)
         self.set_visualizer(s.value("ui/visualizer", "off", type=str), persist=False)
@@ -5936,7 +5993,6 @@ class AudioLRCPlayer(QMainWindow):
             return
         s = self.settings
         s.setValue("ui/volume", self.vol_slider.value())
-        s.setValue("lyrics/offset_ms", self.lyrics_offset_ms)
 
         # Only overwrite the remembered playback if something is actually loaded, so a
         # failed restore (e.g. drive unplugged) doesn't erase it.
