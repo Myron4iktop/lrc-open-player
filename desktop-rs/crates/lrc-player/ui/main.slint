@@ -1,6 +1,182 @@
+// M2's throwaway debug window, for testing the audio engine until M3 brings the real one.
+
+import { Button, CheckBox, Slider, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
 export component MainWindow inherits Window {
     title: "LRC Open Player";
     icon: @image-url("../../../../desktop/favicon.ico");
-    preferred-width: 960px;
-    preferred-height: 640px;
+    preferred-width: 640px;
+    preferred-height: 300px;
+
+    in property <string> track: "No song open";
+    in property <string> status: "";
+    in property <string> state-text: "Stopped";
+    in property <bool> playing;
+    in property <bool> muted;
+    in-out property <float> seek-value;
+    in property <float> duration-ms;
+    in property <string> position-text: "0:00";
+    in property <string> duration-text: "0:00";
+    in-out property <float> volume: 80;
+    in-out property <bool> repeat-track;
+    in-out property <bool> stay-at-end;
+    in-out property <bool> seeking;
+
+    callback open-files();
+    callback toggle-play();
+    callback toggle-mute();
+    callback seek-to(float);
+    callback volume-changed(float);
+    callback repeat-changed(bool);
+    callback previous();
+    callback next();
+
+    forward-focus: keys;
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == " ") {
+                root.toggle-play();
+                return accept;
+            }
+            if ((event.text == "m" || event.text == "M") && !event.modifiers.control && !event.modifiers.alt) {
+                root.toggle-mute();
+                return accept;
+            }
+            reject
+        }
+
+        VerticalBox {
+            Text {
+                text: root.track;
+                font-size: 16px;
+                font-weight: 600;
+                overflow: elide;
+            }
+
+            HorizontalBox {
+                padding: 0;
+                Text {
+                    text: root.position-text;
+                    vertical-alignment: center;
+                    min-width: 40px;
+                }
+
+                Slider {
+                    horizontal-stretch: 1;
+                    minimum: 0;
+                    maximum: max(root.duration-ms, 1);
+                    value <=> root.seek-value;
+                    enabled: root.duration-ms > 0;
+                    // Like the Python app: the bar stops following the clock while it is
+                    // held, and the song moves when it is let go.
+                    changed(v) => {
+                        root.seeking = true;
+                    }
+                    released(v) => {
+                        root.seeking = false;
+                        root.seek-to(v);
+                        keys.focus();
+                    }
+                }
+
+                Text {
+                    text: root.duration-text;
+                    vertical-alignment: center;
+                    min-width: 40px;
+                }
+            }
+
+            HorizontalBox {
+                padding: 0;
+                Button {
+                    text: "Open…";
+                    clicked => {
+                        root.open-files();
+                        keys.focus();
+                    }
+                }
+
+                Button {
+                    text: "⏮";
+                    clicked => {
+                        root.previous();
+                        keys.focus();
+                    }
+                }
+
+                Button {
+                    text: root.playing ? "Pause" : "Play";
+                    clicked => {
+                        root.toggle-play();
+                        keys.focus();
+                    }
+                }
+
+                Button {
+                    text: "⏭";
+                    clicked => {
+                        root.next();
+                        keys.focus();
+                    }
+                }
+
+                Button {
+                    text: root.muted ? "Unmute (M)" : "Mute (M)";
+                    clicked => {
+                        root.toggle-mute();
+                        keys.focus();
+                    }
+                }
+
+                Text {
+                    text: "Volume";
+                    vertical-alignment: center;
+                }
+
+                Slider {
+                    minimum: 0;
+                    maximum: 100;
+                    value <=> root.volume;
+                    min-width: 100px;
+                    changed(v) => {
+                        root.volume-changed(round(v));
+                    }
+                    released(v) => {
+                        keys.focus();
+                    }
+                }
+            }
+
+            HorizontalBox {
+                padding: 0;
+                CheckBox {
+                    text: "Repeat this track";
+                    checked <=> root.repeat-track;
+                    toggled => {
+                        root.repeat-changed(self.checked);
+                        keys.focus();
+                    }
+                }
+
+                CheckBox {
+                    text: "Pretend an editor is open (stay on the song at its end)";
+                    checked <=> root.stay-at-end;
+                    toggled => {
+                        keys.focus();
+                    }
+                }
+            }
+
+            Text {
+                text: "State: " + root.state-text;
+                color: #888;
+            }
+
+            Text {
+                text: root.status;
+                wrap: word-wrap;
+                color: #888;
+            }
+        }
+    }
 }
