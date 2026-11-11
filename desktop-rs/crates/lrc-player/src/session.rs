@@ -88,6 +88,13 @@ impl Store {
             self.save();
         }
     }
+
+    /// Removes one setting and writes the file if it was there (`QSettings.remove`).
+    pub fn remove(&mut self, key: &str) {
+        if self.settings.remove(key) {
+            self.save();
+        }
+    }
 }
 
 /// The Python app's settings, read from its registry key. Empty when it never ran.

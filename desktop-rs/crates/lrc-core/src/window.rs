@@ -17,6 +17,20 @@ pub fn format_time(ms: u64) -> String {
     format!("{}:{:02}", secs / 60, secs % 60)
 }
 
+/// The settings key of a song's own lyrics offset (`_offset_key`): a hash of its path,
+/// as a path can't be part of a key name. Paths that differ only in case are the same
+/// file on Windows, so they share one key.
+pub fn offset_key(path: &Path) -> String {
+    // FNV-1a, 64 bits: stable across Rust versions, unlike `DefaultHasher`.
+    let name = path.to_string_lossy().to_lowercase();
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
+    }
+    format!("lyrics/offsets/{hash:016x}")
+}
+
 /// An offset clamped to ±30 s (`set_lyrics_offset`).
 pub fn clamp_offset(ms: i64) -> i64 {
     ms.clamp(-OFFSET_LIMIT_MS, OFFSET_LIMIT_MS)
@@ -578,6 +592,25 @@ mod tests {
         // An .lrc among other files isn't lyrics, and on its own it's not audio either.
         assert_eq!(drop_plan(&[lrc.clone(), other], true), None);
         assert_eq!(drop_plan(&[], true), None);
+    }
+
+    #[test]
+    fn offset_keys_are_per_song_and_ignore_case() {
+        let a = offset_key(Path::new(r"D:\Music\Song.flac"));
+        assert!(a.starts_with("lyrics/offsets/") && a.len() == "lyrics/offsets/".len() + 16);
+        assert_eq!(a, offset_key(Path::new(r"d:\music\SONG.flac")));
+        assert_ne!(a, offset_key(Path::new(r"D:\Music\Other.flac")));
+        // The hash must never change, or remembered offsets would be lost.
+        assert_eq!(offset_key(Path::new("")), "lyrics/offsets/cbf29ce484222325");
+    }
+
+    #[test]
+    fn unplayable_note() {
+        assert_eq!(unplayable_text("a.mp3", " "), "Couldn't play “a.mp3”.");
+        assert_eq!(
+            unplayable_text("a.mp3", "unsupported format"),
+            "Couldn't play “a.mp3”: unsupported format"
+        );
     }
 
     #[test]

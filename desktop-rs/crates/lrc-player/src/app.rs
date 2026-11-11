@@ -83,7 +83,12 @@ pub struct App {
     line_times: Vec<i64>,
     synced: bool,
     current_line: Option<usize>,
+    /// The lyrics offset applied: the default for all songs plus this song's adjustment.
     offset_ms: i64,
+    /// The offset every song starts from (`lyrics/offset_ms`), a latency setting.
+    default_offset_ms: i64,
+    /// The current song's adjustment on top of the default (`lyrics/offsets/…`).
+    song_offset_ms: i64,
     seeking: bool,
 
     theme: &'static str,
@@ -168,6 +173,8 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         synced: false,
         current_line: None,
         offset_ms: 0,
+        default_offset_ms: 0,
+        song_offset_ms: 0,
         seeking: false,
         theme: "dark",
         accent: "coral",
@@ -413,10 +420,11 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         a.seek_to(value.max(0.0) as u64)
     });
     on!(on_offset_step, |a, ui, delta| {
-        let ms = a.offset_ms + i64::from(delta);
-        a.set_lyrics_offset(ui, ms, true)
+        let ms = a.offset_ms + i64::from(delta) - a.default_offset_ms;
+        a.set_song_offset(ui, ms, true)
     });
-    on!(on_offset_reset, |a, ui| a.set_lyrics_offset(ui, 0, true));
+    on!(on_offset_reset, |a, ui| a.set_song_offset(ui, 0, true));
+    on!(on_offset_for_all, |a, ui| a.use_offset_for_all_songs(ui));
     on!(on_queue_play, |a, ui, row| {
         if let Ok(i) = usize::try_from(row) {
             a.play_index(ui, i)
@@ -950,6 +958,8 @@ impl App {
         ui.set_queue_current(index as i32);
         self.player.load(&path);
         self.play_wanted = autoplay;
+        let song_offset = self.store.settings.get_int(&rules::offset_key(&path), 0);
+        self.set_song_offset(ui, song_offset, false);
         self.visualizer.clear(); // `sourceChanged`
         if start_ms > 0 {
             self.player.seek(start_ms);
@@ -1193,13 +1203,43 @@ impl App {
         }
     }
 
-    /// `set_lyrics_offset`: ±30 s at most, and remembered.
-    fn set_lyrics_offset(&mut self, ui: &MainWindow, ms: i64, persist: bool) {
-        self.offset_ms = rules::clamp_offset(ms);
-        if persist {
-            self.store.set("lyrics/offset_ms", self.offset_ms);
+    /// `set_song_offset`: this song's adjustment, so the offset applied stays within
+    /// ±30 s. 0 (Reset, `\\`) means the song uses the default, and isn't remembered.
+    fn set_song_offset(&mut self, ui: &MainWindow, song_ms: i64, persist: bool) {
+        let total = rules::clamp_offset(self.default_offset_ms + song_ms);
+        self.song_offset_ms = total - self.default_offset_ms;
+        if persist && let Some(path) = self.queue.current_path() {
+            let key = rules::offset_key(path);
+            if self.song_offset_ms != 0 {
+                self.store.set(&key, self.song_offset_ms);
+            } else {
+                self.store.remove(&key);
+            }
         }
+        self.apply_lyrics_offset(ui);
+    }
+
+    /// `set_default_offset`: the offset every song starts from. Songs with an adjustment
+    /// keep it on top.
+    fn set_default_offset(&mut self, ui: &MainWindow, ms: i64, persist: bool) {
+        self.default_offset_ms = rules::clamp_offset(ms);
+        if persist {
+            self.store.set("lyrics/offset_ms", self.default_offset_ms);
+        }
+        self.apply_lyrics_offset(ui);
+    }
+
+    /// Lyrics ▾ → Use this offset for all songs: the current offset becomes the default.
+    fn use_offset_for_all_songs(&mut self, ui: &MainWindow) {
+        let total = self.offset_ms;
+        self.set_default_offset(ui, total, true);
+        self.set_song_offset(ui, 0, true);
+    }
+
+    fn apply_lyrics_offset(&mut self, ui: &MainWindow) {
+        self.offset_ms = rules::clamp_offset(self.default_offset_ms + self.song_offset_ms);
         ui.set_offset_text(rules::offset_text(self.offset_ms).into());
+        ui.set_song_offset(self.song_offset_ms != 0);
         let pos = self.player.position_ms();
         self.sync_lyrics_to_position(pos);
     }
@@ -1602,7 +1642,7 @@ impl App {
         self.apply_theme(ui, &theme, &accent, false);
         ui.set_volume(volume as f32);
         self.player.set_volume(volume as f32 / 100.0);
-        self.set_lyrics_offset(ui, offset, false);
+        self.set_default_offset(ui, offset, false);
         self.set_shuffle(ui, shuffle, false);
         self.set_repeat(ui, repeat, false);
         let mode = self.store.settings.get_str("ui/visualizer", "off");
@@ -1773,7 +1813,7 @@ impl App {
         });
         let snap = Snapshot {
             volume: ui.get_volume().round() as i64,
-            offset_ms: self.offset_ms,
+            offset_ms: self.default_offset_ms,
             playback,
             window,
         };
