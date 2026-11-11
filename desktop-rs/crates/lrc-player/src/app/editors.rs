@@ -287,13 +287,17 @@ impl App {
     }
 
     fn sync_tick(&mut self) {
+        if self.sync.is_none() {
+            return;
+        }
+        let now = self.lyrics_time_now();
         let Some(w) = &self.sync else { return };
         let ok = self.track_ok(&w.track_path);
         let d = &w.dialog;
         d.set_playing(self.player.state() == State::Playing);
         d.set_time_text(
             if ok {
-                lrc::fmt_lrc_time(self.player.position_ms() as i64)
+                lrc::fmt_lrc_time(now) // what Enter would stamp
             } else {
                 "--:--.--".to_owned()
             }
@@ -395,8 +399,16 @@ impl App {
         }
     }
 
+    /// `_lyrics_time_now`: the timestamp for "now", the playback position without the
+    /// lyrics offset. The player shows a line once position - offset reaches its
+    /// timestamp, so a stamp of the bare position would show up late (or early) by the
+    /// whole offset.
+    fn lyrics_time_now(&mut self) -> i64 {
+        (self.player.position_ms() as i64 - self.offset_ms).max(0)
+    }
+
     fn sync_stamp(&mut self) {
-        let pos = self.player.position_ms() as i64;
+        let pos = self.lyrics_time_now();
         let Some(w) = &mut self.sync else { return };
         if w.ed.entries.is_empty()
             || !self
@@ -414,8 +426,11 @@ impl App {
 
     fn sync_undo(&mut self) {
         let pos = self.player.position_ms() as i64;
+        let offset = self.offset_ms;
         let Some(w) = &mut self.sync else { return };
-        let Some(rewind) = w.ed.undo(pos) else { return };
+        let Some(rewind) = w.ed.undo(pos, offset) else {
+            return;
+        };
         let path = w.track_path.clone();
         w.dialog.set_status_text(SyncEditor::UNDONE.into());
         self.sync_refresh(true);
@@ -426,7 +441,7 @@ impl App {
     }
 
     fn sync_add_break(&mut self) {
-        let pos = self.player.position_ms() as i64;
+        let pos = self.lyrics_time_now();
         let ok = self
             .sync
             .as_ref()

@@ -1,0 +1,80 @@
+name: release
+
+# Builds LRCOpenPlayer.exe from the chosen branch and puts it in a DRAFT release, with the
+# notes from desktop-rs/RELEASE_NOTES.md and the license texts it needs. Nothing is public
+# until you open the draft under Releases and press "Publish release"; that also creates
+# the tag. Run it from Actions → release → Run workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+    working-directory: desktop-rs
+
+jobs:
+  draft:
+    name: Build the exe and draft the release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop-rs
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+
+      - name: Read the version from Cargo.toml
+        id: version
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 --locked \
+            | python -c "import json, sys; print(next(p['version'] for p in json.load(sys.stdin)['packages'] if p['name'] == 'lrc-player'))")
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version $version (tag v$version)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop if that version was already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::A release ${{ steps.version.outputs.tag }} already exists (maybe as a draft). Delete the draft, or raise the version in desktop-rs/Cargo.toml."
+            exit 1
+          fi
+
+      - run: cargo test -p lrc-core --locked
+      - run: cargo build -p lrc-player --release --locked
+
+      - name: Collect the files
+        run: |
+          mkdir -p dist
+          cp target/release/LRCOpenPlayer.exe dist/
+          cargo about generate --locked -m crates/lrc-player/Cargo.toml about.hbs -o dist/THIRD_PARTY_LICENSES.html
+          cd dist
+          sha256sum LRCOpenPlayer.exe THIRD_PARTY_LICENSES.html > SHA256SUMS.txt
+          cat SHA256SUMS.txt | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "LRC Open Player ${{ steps.version.outputs.version }}" \
+            --notes-file RELEASE_NOTES.md \
+            dist/LRCOpenPlayer.exe dist/THIRD_PARTY_LICENSES.html dist/SHA256SUMS.txt
+          echo "Draft created: open Releases on GitHub to review and publish it." | tee -a "$GITHUB_STEP_SUMMARY"

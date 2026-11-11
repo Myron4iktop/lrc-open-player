@@ -46,6 +46,8 @@ export component MainWindow inherits Window {
     in property <string> repeat: "off";
     in property <string> repeat-tip: "Repeat: off   ( L )";
     in property <string> offset-text: "+0.0 s";
+    // This song has an offset of its own, on top of the default for all songs.
+    in property <bool> song-offset;
     // --- Tracklist ---
     in property <string> queue-title: "Album Tracklist";
     in property <[string]> queue-rows;
@@ -103,6 +105,7 @@ export component MainWindow inherits Window {
     callback seek-released(float);
     callback offset-step(int);
     callback offset-reset();
+    callback offset-for-all();
     callback queue-play(int);
     callback line-clicked(int);
     callback toggle-fullscreen();
@@ -159,6 +162,11 @@ export component MainWindow inherits Window {
 
     keys := FocusScope {
         key-pressed(event) => {
+            // A held key acts once (Qt shortcuts without auto-repeat), so holding Space
+            // doesn't toggle over and over. Only the offset keys repeat.
+            if event.repeat && event.text != "[" && event.text != "]" {
+                return accept;
+            }
             // Menu shortcuts first, as Qt's QActions take them before keyPressEvent.
             if event.modifiers.control && !event.modifiers.alt {
                 let k = event.text.to-lowercase();
@@ -315,6 +323,8 @@ export component MainWindow inherits Window {
                                     { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: !root.has-track },
                                     { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: !root.has-track },
                                     { id: "embed", title: "Embed lyrics in file…", disabled: !root.has-track },
+                                    { id: "-" },
+                                    { id: "offset-all", title: "Use this offset for all songs", disabled: !root.song-offset },
                                 ];
                                 activated(id) => {
                                     if id == "lrc" {
@@ -327,6 +337,8 @@ export component MainWindow inherits Window {
                                         root.open-translation();
                                     } else if id == "embed" {
                                         root.embed-lyrics();
+                                    } else if id == "offset-all" {
+                                        root.offset-for-all();
                                     }
                                 }
                             }
@@ -617,7 +629,7 @@ export component MainWindow inherits Window {
                     PushButton {
                         width: 32px;
                         text: "−";
-                        tooltip: "Show lyrics earlier by 0.1 s   ( [ )";
+                        tooltip: "Show this song's lyrics earlier by 0.1 s   ( [ )";
                         clicked => {
                             root.offset-step(-100);
                         }
@@ -636,7 +648,7 @@ export component MainWindow inherits Window {
                     PushButton {
                         width: 32px;
                         text: "+";
-                        tooltip: "Show lyrics later by 0.1 s   ( ] )";
+                        tooltip: "Show this song's lyrics later by 0.1 s   ( ] )";
                         clicked => {
                             root.offset-step(100);
                         }
@@ -645,7 +657,7 @@ export component MainWindow inherits Window {
                     PushButton {
                         width: 56px;
                         text: "Reset";
-                        tooltip: "Reset lyrics offset   ( \\ )";
+                        tooltip: "Back to the default offset for all songs   ( \\ )";
                         clicked => {
                             root.offset-reset();
                         }

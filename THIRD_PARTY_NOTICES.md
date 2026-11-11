@@ -4,22 +4,7 @@ These projects make the player and the companion app possible. Each is used unde
 
 ## Player (Windows)
 
-These are included in the built `.exe`.
-
-| Project | Used for | License |
-| --- | --- | --- |
-| [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) | Python bindings for Qt | GPL-3.0 |
-| [Qt 6](https://www.qt.io/) | Window, audio playback | LGPL-3.0 |
-| [FFmpeg](https://ffmpeg.org/) (inside Qt Multimedia) | Decoding audio | LGPL-2.1-or-later |
-| [mutagen](https://github.com/quodlibet/mutagen) | Reading and writing tags | GPL-2.0-or-later |
-| [cutlet](https://github.com/polm/cutlet) | Japanese to romaji | MIT |
-| [fugashi](https://github.com/polm/fugashi) (with MeCab) | Splitting Japanese into words | MIT, BSD-3-Clause |
-| [unidic-lite](https://github.com/polm/unidic-lite) (UniDic 2.1.2) | Japanese dictionary | MIT, BSD-3-Clause |
-| [PyWinRT](https://github.com/pywinrt/pywinrt) | Windows media controls | MIT |
-
-## Player, Rust build (in progress)
-
-The Rust port in `desktop-rs/` is not released yet. These are the libraries it uses so far.
+These are included in the released `LRCOpenPlayer.exe`, built from `desktop-rs/`. Each release also ships `THIRD_PARTY_LICENSES.html` with the full license text of every library inside it.
 
 | Project | Used for | License |
 | --- | --- | --- |
@@ -54,6 +39,21 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | [IPADIC](https://taku910.github.io/mecab/) (mecab-ipadic 2.7.0, embedded in the `ipadic` build) | Japanese dictionary | IPADIC license |
 | [cutlet](https://github.com/polm/cutlet) (its rules and kana tables, ported to Rust) | Japanese to romaji | MIT |
 | [unicode-normalization](https://github.com/unicode-rs/unicode-normalization) | Normalizing Japanese text before romaji | MIT or Apache-2.0 |
+
+## Player, previous Python version (`desktop/`)
+
+These are included in the `.exe` built with PyInstaller.
+
+| Project | Used for | License |
+| --- | --- | --- |
+| [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) | Python bindings for Qt | GPL-3.0 |
+| [Qt 6](https://www.qt.io/) | Window, audio playback | LGPL-3.0 |
+| [FFmpeg](https://ffmpeg.org/) (inside Qt Multimedia) | Decoding audio | LGPL-2.1-or-later |
+| [mutagen](https://github.com/quodlibet/mutagen) | Reading and writing tags | GPL-2.0-or-later |
+| [cutlet](https://github.com/polm/cutlet) | Japanese to romaji | MIT |
+| [fugashi](https://github.com/polm/fugashi) (with MeCab) | Splitting Japanese into words | MIT, BSD-3-Clause |
+| [unidic-lite](https://github.com/polm/unidic-lite) (UniDic 2.1.2) | Japanese dictionary | MIT, BSD-3-Clause |
+| [PyWinRT](https://github.com/pywinrt/pywinrt) | Windows media controls | MIT |
 
 ## LRC Companion (Android)
 

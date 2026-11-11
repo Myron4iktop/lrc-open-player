@@ -198,8 +198,9 @@ fn search_duration(item: &Value) -> f64 {
 /// The answer from `/api/get`, if it has lyrics. `Err` means the Python code would have
 /// raised, which sends the lookup on to the search.
 pub fn pick_from_get(data: &Value, query: &Query) -> Result<Option<FetchResult>, Raised> {
-    // LRCLIB only returns an entry of that length.
-    let exact = query.duration_sec > 0;
+    // LRCLIB only returns an entry of that length, by that artist. Without an artist (an
+    // untagged file) it is a title-only match, so it isn't trusted: see `matches` below.
+    let exact = query.duration_sec > 0 && !query.artist.is_empty();
     if !data.is_object() {
         return Ok(None);
     }
@@ -247,17 +248,17 @@ pub fn pick_from_search(results: &Value, query: &Query) -> Result<Option<FetchRe
     };
     // "Trusted" means safe to keep without asking, so /api/search hits must agree on the
     // song, not only its length: another track of the same length is a different song.
+    // Without an artist to compare (an untagged file) nothing is trusted: plenty of songs
+    // are called "Home" or "Intro" and run about as long, and a wrong .lrc saved next to
+    // the song would be shown from then on.
     let matches = |item: &Value| -> Result<bool, Raised> {
-        if !fits(item) {
+        if query.artist.is_empty() || !fits(item) {
             return Ok(false);
         }
         if !same_text(&text_of(item, "trackName")?, &query.title) {
             return Ok(false);
         }
-        if !query.artist.is_empty() && !same_text(&text_of(item, "artistName")?, &query.artist) {
-            return Ok(false);
-        }
-        Ok(true)
+        Ok(same_text(&text_of(item, "artistName")?, &query.artist))
     };
 
     for item in &results {
@@ -451,6 +452,17 @@ mod tests {
         let results = json!([{"trackName": "My Song", "duration": 0, "plainLyrics": "w"}]);
         let r = pick_from_search(&results, &query).unwrap().unwrap();
         assert!(!r.trusted);
+    }
+
+    #[test]
+    fn untagged_songs_are_never_trusted() {
+        // Same title and length, but no artist to compare: maybe another song called "Home".
+        let query = q("Home", "", 200);
+        let results = json!([{"trackName": "Home", "artistName": "Someone", "duration": 200, "syncedLyrics": "[00:01.00]x"}]);
+        let r = pick_from_search(&results, &query).unwrap().unwrap();
+        assert!(!r.trusted);
+        let data = json!({"syncedLyrics": "[00:01.00]x", "duration": 200});
+        assert!(!pick_from_get(&data, &query).unwrap().unwrap().trusted);
     }
 
     #[test]

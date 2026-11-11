@@ -200,6 +200,11 @@ export component SyncDialog inherits Window {
             if root.page != 1 {
                 return reject;
             }
+            // Only seeking, moving ▶ and nudging repeat while a key is held. A held Enter
+            // (or Backspace, Space, B…) must not stamp or undo several lines.
+            if event.repeat && event.text != Key.LeftArrow && event.text != Key.RightArrow && event.text != Key.UpArrow && event.text != Key.DownArrow && event.text != "[" && event.text != "]" {
+                return accept;
+            }
             let ctrl = event.modifiers.control;
             let none = !event.modifiers.control && !event.modifiers.alt && !event.modifiers.shift && !event.modifiers.meta;
             if event.text == Key.Return {

@@ -10,11 +10,25 @@ use crate::text::base_name;
 /// How far the lyrics offset can go either way (`OFFSET_LIMIT_MS`).
 pub const OFFSET_LIMIT_MS: i64 = 30_000;
 
-/// `_format_time`: `QTime(0, 0, 0).addMSecs(ms).toString("m:ss")`. Minutes don't
-/// count hours, as in the Python app (1:02:05 shows as 2:05).
+/// `_format_time`: minutes and seconds, with the minutes going past 60, so 75 minutes
+/// is "75:00" (a clock time would wrap around to "15:00" after an hour).
 pub fn format_time(ms: u64) -> String {
-    let secs = (ms % 86_400_000) / 1000;
-    format!("{}:{:02}", (secs / 60) % 60, secs % 60)
+    let secs = ms / 1000;
+    format!("{}:{:02}", secs / 60, secs % 60)
+}
+
+/// The settings key of a song's own lyrics offset (`_offset_key`): a hash of its path,
+/// as a path can't be part of a key name. Paths that differ only in case are the same
+/// file on Windows, so they share one key.
+pub fn offset_key(path: &Path) -> String {
+    // FNV-1a, 64 bits: stable across Rust versions, unlike `DefaultHasher`.
+    let name = path.to_string_lossy().to_lowercase();
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
+    }
+    format!("lyrics/offsets/{hash:016x}")
 }
 
 /// An offset clamped to ±30 s (`set_lyrics_offset`).
@@ -58,6 +72,22 @@ pub fn queue_row_text(number: usize, title: Option<&str>, path: &Path) -> String
             .unwrap_or_default(),
     };
     format!("{number:02}. {title}")
+}
+
+/// The mark in front of a tracklist row that couldn't be played.
+pub const UNPLAYABLE_MARK: &str = "⚠ ";
+
+/// Songs in a row skipped because they can't be played, before the player stops on one.
+pub const MAX_UNPLAYABLE_SKIPS: u32 = 5;
+
+/// The note for a song that can't be played: `Couldn't play “name”: reason`.
+pub fn unplayable_text(name: &str, reason: &str) -> String {
+    let reason = reason.trim();
+    if reason.is_empty() {
+        format!("Couldn't play “{name}”.")
+    } else {
+        format!("Couldn't play “{name}”: {reason}")
+    }
 }
 
 /// The lyric line for a playback position (`_sync_lyrics_to_position`): the last line
@@ -320,7 +350,12 @@ pub fn save_offer(
 ) -> SaveOffer {
     let mut notes = Vec::new();
     if !trusted {
-        if lrclib_length != 0 && my_length != 0 {
+        // Lengths within the match tolerance aren't another version: the hit is untrusted
+        // for another reason (no artist to compare, say).
+        if lrclib_length != 0
+            && my_length != 0
+            && (lrclib_length - my_length).abs() as f64 > crate::lrclib::MATCH_TOLERANCE_SEC
+        {
             notes.push(format!(
                 "LRCLIB only has these lyrics for a {} version of the song (this file is {}), so they may not line up.",
                 mins(lrclib_length),
@@ -328,7 +363,7 @@ pub fn save_offer(
             ));
         } else {
             notes.push(
-                "They come from a loose search, so they may belong to another version of the song."
+                "They come from a loose search, so they may belong to another version of the song, or to another song with the same name."
                     .to_owned(),
             );
         }
@@ -441,8 +476,8 @@ pub const SHORTCUTS: [(&str, &str); 17] = [
     ("Space", "Play / pause"),
     ("Ctrl+← / Ctrl+→", "Previous / next track"),
     ("F11 or double-click", "Fullscreen (Esc to leave)"),
-    ("[ / ]", "Show lyrics 0.1 s earlier / later"),
-    ("\\", "Reset lyrics offset"),
+    ("[ / ]", "Show this song's lyrics 0.1 s earlier / later"),
+    ("\\", "Back to the default offset (Lyrics ▾ sets it)"),
     ("R", "Romaji on / off"),
     ("S", "Shuffle on / off"),
     ("L", "Repeat: off → track → album"),
@@ -560,6 +595,25 @@ mod tests {
     }
 
     #[test]
+    fn offset_keys_are_per_song_and_ignore_case() {
+        let a = offset_key(Path::new(r"D:\Music\Song.flac"));
+        assert!(a.starts_with("lyrics/offsets/") && a.len() == "lyrics/offsets/".len() + 16);
+        assert_eq!(a, offset_key(Path::new(r"d:\music\SONG.flac")));
+        assert_ne!(a, offset_key(Path::new(r"D:\Music\Other.flac")));
+        // The hash must never change, or remembered offsets would be lost.
+        assert_eq!(offset_key(Path::new("")), "lyrics/offsets/cbf29ce484222325");
+    }
+
+    #[test]
+    fn unplayable_note() {
+        assert_eq!(unplayable_text("a.mp3", " "), "Couldn't play “a.mp3”.");
+        assert_eq!(
+            unplayable_text("a.mp3", "unsupported format"),
+            "Couldn't play “a.mp3”: unsupported format"
+        );
+    }
+
+    #[test]
     fn shortcut_list_matches_python() {
         let html = include_str!("../../../../desktop/lrcplayer.py");
         let start = html.find("SHORTCUTS_HTML = \"\"\"").unwrap() + 20;
@@ -626,13 +680,13 @@ mod tests {
         assert_eq!(
             o.notes,
             [
-                "They come from a loose search, so they may belong to another version of the song.",
+                "They come from a loose search, so they may belong to another version of the song, or to another song with the same name.",
                 "The player shows a .lrc file instead of the lyrics stored in the song.",
             ]
         );
         assert_eq!(
             o.full_text(),
-            "Save these lyrics as “Song.lrc”?\n\nThey come from a loose search, so they may belong to another version of the song.\n\nThe player shows a .lrc file instead of the lyrics stored in the song."
+            "Save these lyrics as “Song.lrc”?\n\nThey come from a loose search, so they may belong to another version of the song, or to another song with the same name.\n\nThe player shows a .lrc file instead of the lyrics stored in the song."
         );
     }
 

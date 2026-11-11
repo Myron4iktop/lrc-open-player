@@ -2923,7 +2923,7 @@ checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "lrc-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "caseless",
@@ -2942,7 +2942,7 @@ dependencies = [
 
 [[package]]
 name = "lrc-player"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "cpal",
  "image",
@@ -2964,7 +2964,7 @@ dependencies = [
 
 [[package]]
 name = "lrc-romaji"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "lindera",
  "lrc-core",

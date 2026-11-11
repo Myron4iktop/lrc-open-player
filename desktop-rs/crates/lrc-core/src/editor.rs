@@ -289,8 +289,9 @@ impl SyncEditor {
     }
 
     /// `undo`: takes the last stamp back (a break goes away). Returns where to rewind
-    /// to, from the undone stamp (or `pos_ms`) minus 3 s.
-    pub fn undo(&mut self, pos_ms: i64) -> Option<i64> {
+    /// to: 3 s before where the undone stamp plays (its time plus the lyrics offset), or
+    /// before `pos_ms` (the playback position) if it had none.
+    pub fn undo(&mut self, pos_ms: i64, offset_ms: i64) -> Option<i64> {
         if self.cursor == 0 || self.entries.is_empty() {
             return None;
         }
@@ -304,7 +305,7 @@ impl SyncEditor {
         self.cursor = i;
         self.select(self.cursor);
         self.dirty = true;
-        Some((t.unwrap_or(pos_ms) - 3000).max(0))
+        Some((t.map_or(pos_ms, |t| t + offset_ms) - 3000).max(0))
     }
 
     pub const UNDONE: &'static str =
@@ -761,7 +762,10 @@ mod tests {
         ed.stamp(1000);
         ed.stamp(2000);
         assert!(ed.insert_break(2500));
-        assert_eq!(ed.undo(9000), Some(0)); // the break goes away, back 3 s from it
+        assert_eq!(ed.undo(9000, 0), Some(0)); // the break goes away, back 3 s from it
+        ed.stamp(2500);
+        // Stamped at 2.5 s with a +1 s offset, the line plays at 3.5 s: back 3 s from there.
+        assert_eq!(ed.undo(9000, 1000), Some(500));
         assert_eq!(ed.entries.len(), 3);
         assert_eq!(
             ed.nudge(-100),

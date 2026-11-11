@@ -83,7 +83,12 @@ pub struct App {
     line_times: Vec<i64>,
     synced: bool,
     current_line: Option<usize>,
+    /// The lyrics offset applied: the default for all songs plus this song's adjustment.
     offset_ms: i64,
+    /// The offset every song starts from (`lyrics/offset_ms`), a latency setting.
+    default_offset_ms: i64,
+    /// The current song's adjustment on top of the default (`lyrics/offsets/…`).
+    song_offset_ms: i64,
     seeking: bool,
 
     theme: &'static str,
@@ -92,6 +97,14 @@ pub struct App {
 
     scan_token: u64,
     scan_cancel: Option<Arc<AtomicBool>>,
+    /// The LRCLIB lookup still wanted, if any: set to stop it after its current request.
+    fetch_cancel: Option<Arc<AtomicBool>>,
+    /// Bumped whenever lyrics go on screen, so a late lookup can tell (`_lyrics_shown`).
+    lyrics_shown: u64,
+    /// The current song was loaded to be played, not just restored paused (`_play_wanted`).
+    play_wanted: bool,
+    /// Songs in a row that couldn't be played (`_unplayable_run`).
+    unplayable_run: u32,
 
     hovered: Vec<PathBuf>,
     dropped: Vec<PathBuf>,
@@ -160,12 +173,18 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         synced: false,
         current_line: None,
         offset_ms: 0,
+        default_offset_ms: 0,
+        song_offset_ms: 0,
         seeking: false,
         theme: "dark",
         accent: "coral",
         queue_was_visible: false,
         scan_token: 0,
         scan_cancel: None,
+        fetch_cancel: None,
+        lyrics_shown: 0,
+        play_wanted: false,
+        unplayable_run: 0,
         hovered: Vec::new(),
         dropped: Vec::new(),
         drop_pending: false,
@@ -401,10 +420,11 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         a.seek_to(value.max(0.0) as u64)
     });
     on!(on_offset_step, |a, ui, delta| {
-        let ms = a.offset_ms + i64::from(delta);
-        a.set_lyrics_offset(ui, ms, true)
+        let ms = a.offset_ms + i64::from(delta) - a.default_offset_ms;
+        a.set_song_offset(ui, ms, true)
     });
-    on!(on_offset_reset, |a, ui| a.set_lyrics_offset(ui, 0, true));
+    on!(on_offset_reset, |a, ui| a.set_song_offset(ui, 0, true));
+    on!(on_offset_for_all, |a, ui| a.use_offset_for_all_songs(ui));
     on!(on_queue_play, |a, ui, row| {
         if let Ok(i) = usize::try_from(row) {
             a.play_index(ui, i)
@@ -933,9 +953,13 @@ impl App {
         if !self.queue.set_current(index) {
             return;
         }
+        self.cancel_lyrics_search(); // skipping through an album shouldn't queue up lookups
         let path = self.queue.playlist()[index].clone();
         ui.set_queue_current(index as i32);
         self.player.load(&path);
+        self.play_wanted = autoplay;
+        let song_offset = self.store.settings.get_int(&rules::offset_key(&path), 0);
+        self.set_song_offset(ui, song_offset, false);
         self.visualizer.clear(); // `sourceChanged`
         if start_ms > 0 {
             self.player.seek(start_ms);
@@ -1038,6 +1062,7 @@ impl App {
 
     /// `parse_and_display_lyrics`.
     pub fn parse_and_display_lyrics(&mut self, ui: &MainWindow, content: &str) {
+        self.lyrics_shown += 1;
         self.clear_lyrics(ui);
         let parsed = lrc::parse(content);
         self.synced = parsed.synced;
@@ -1178,13 +1203,43 @@ impl App {
         }
     }
 
-    /// `set_lyrics_offset`: ±30 s at most, and remembered.
-    fn set_lyrics_offset(&mut self, ui: &MainWindow, ms: i64, persist: bool) {
-        self.offset_ms = rules::clamp_offset(ms);
-        if persist {
-            self.store.set("lyrics/offset_ms", self.offset_ms);
+    /// `set_song_offset`: this song's adjustment, so the offset applied stays within
+    /// ±30 s. 0 (Reset, `\\`) means the song uses the default, and isn't remembered.
+    fn set_song_offset(&mut self, ui: &MainWindow, song_ms: i64, persist: bool) {
+        let total = rules::clamp_offset(self.default_offset_ms + song_ms);
+        self.song_offset_ms = total - self.default_offset_ms;
+        if persist && let Some(path) = self.queue.current_path() {
+            let key = rules::offset_key(path);
+            if self.song_offset_ms != 0 {
+                self.store.set(&key, self.song_offset_ms);
+            } else {
+                self.store.remove(&key);
+            }
         }
+        self.apply_lyrics_offset(ui);
+    }
+
+    /// `set_default_offset`: the offset every song starts from. Songs with an adjustment
+    /// keep it on top.
+    fn set_default_offset(&mut self, ui: &MainWindow, ms: i64, persist: bool) {
+        self.default_offset_ms = rules::clamp_offset(ms);
+        if persist {
+            self.store.set("lyrics/offset_ms", self.default_offset_ms);
+        }
+        self.apply_lyrics_offset(ui);
+    }
+
+    /// Lyrics ▾ → Use this offset for all songs: the current offset becomes the default.
+    fn use_offset_for_all_songs(&mut self, ui: &MainWindow) {
+        let total = self.offset_ms;
+        self.set_default_offset(ui, total, true);
+        self.set_song_offset(ui, 0, true);
+    }
+
+    fn apply_lyrics_offset(&mut self, ui: &MainWindow) {
+        self.offset_ms = rules::clamp_offset(self.default_offset_ms + self.song_offset_ms);
         ui.set_offset_text(rules::offset_text(self.offset_ms).into());
+        ui.set_song_offset(self.song_offset_ms != 0);
         let pos = self.player.position_ms();
         self.sync_lyrics_to_position(pos);
     }
@@ -1339,18 +1394,30 @@ impl App {
             i64::try_from(info.duration_sec).unwrap_or(i64::MAX),
             info.title_from_tags,
         );
+        self.cancel_lyrics_search();
         self.show_lyrics_message(ui, rules::SEARCHING_TEXT, "status");
-        let quitting = self.quitting.clone();
-        // A result for a song that is no longer current is dropped when it arrives.
+        let cancel = Arc::new(AtomicBool::new(false));
+        self.fetch_cancel = Some(cancel.clone());
+        // A result for a song that is no longer current, or that arrives after other
+        // lyrics went on screen (a file loaded, an edit previewed), is dropped.
+        let shown = self.lyrics_shown;
         let _ = std::thread::Builder::new()
             .name("lrclib".into())
             .spawn(move || {
-                if let Some(found) = lrclib::fetch(&query, &quitting) {
+                if let Some(found) = lrclib::fetch(&query, &cancel) {
                     let _ = slint::invoke_from_event_loop(move || {
-                        app_call(|a, ui| a.online_lyrics_fetched(ui, found, path, manual));
+                        app_call(|a, ui| a.online_lyrics_fetched(ui, found, path, manual, shown));
                     });
                 }
             });
+    }
+
+    /// `_cancel_lyrics_search`: the running LRCLIB lookup is no longer wanted. It stops
+    /// after its current request and sends nothing back.
+    fn cancel_lyrics_search(&mut self) {
+        if let Some(cancel) = self.fetch_cancel.take() {
+            cancel.store(true, Ordering::Relaxed);
+        }
     }
 
     fn online_lyrics_fetched(
@@ -1359,9 +1426,13 @@ impl App {
         found: FetchResult,
         path: PathBuf,
         manual: bool,
+        shown: u64,
     ) {
         if self.closing || !self.is_current(&path) {
             return; // a late answer for a song that is no longer current
+        }
+        if shown != self.lyrics_shown {
+            return; // other lyrics were put on screen while this search ran; they stay
         }
         if found.lyrics.is_empty() {
             if manual && self.show_own_lyrics(ui, &path) {
@@ -1571,7 +1642,7 @@ impl App {
         self.apply_theme(ui, &theme, &accent, false);
         ui.set_volume(volume as f32);
         self.player.set_volume(volume as f32 / 100.0);
-        self.set_lyrics_offset(ui, offset, false);
+        self.set_default_offset(ui, offset, false);
         self.set_shuffle(ui, shuffle, false);
         self.set_repeat(ui, repeat, false);
         let mode = self.store.settings.get_str("ui/visualizer", "off");
@@ -1742,7 +1813,7 @@ impl App {
         });
         let snap = Snapshot {
             volume: ui.get_volume().round() as i64,
-            offset_ms: self.offset_ms,
+            offset_ms: self.default_offset_ms,
             playback,
             window,
         };
@@ -1757,6 +1828,7 @@ impl App {
         self.quitting.store(true, Ordering::Relaxed);
         self.viz_timer.stop();
         self.cancel_scan();
+        self.cancel_lyrics_search();
         if let Some(ui) = self.ui.upgrade() {
             self.save_session(&ui, true);
         }
@@ -1837,11 +1909,60 @@ impl App {
     // The clock
     // -------------------------------------------------------------------------
 
+    /// `_on_unplayable`: the song can't be played (missing, damaged, or a format the
+    /// decoder doesn't know). It is marked ⚠ in the tracklist and, while an album is
+    /// playing, skipped. After a few in a row it stops skipping: a whole album that won't
+    /// play (an unplugged drive) shouldn't race to its end. Then the reason is shown.
+    fn on_unplayable(&mut self, ui: &MainWindow, message: &str) {
+        let Some(index) = self.queue.current() else {
+            return;
+        };
+        let name = file_name(&self.queue.playlist()[index]);
+        let problem = rules::unplayable_text(&name, message);
+        eprintln!("{problem}");
+        self.unplayable_run += 1;
+        self.flag_queue_row(ui, index, true);
+        if self.play_wanted
+            && self.queue.playlist().len() > 1
+            && self.queue.has_next()
+            && self.queue.repeat() != Repeat::Track
+            && !self.editor_open()
+            && self.unplayable_run <= rules::MAX_UNPLAYABLE_SKIPS
+        {
+            self.play_next(ui);
+            return;
+        }
+        self.cancel_lyrics_search();
+        self.lyrics_shown += 1; // a lookup that has already answered must not replace this note
+        self.show_lyrics_message(ui, &problem, "empty");
+    }
+
+    /// Marks a tracklist row as unplayable (⚠), or clears the mark (`_flag_queue_item`).
+    fn flag_queue_row(&self, ui: &MainWindow, index: usize, problem: bool) {
+        let rows = ui.get_queue_rows();
+        let Some(text) = rows.row_data(index) else {
+            return;
+        };
+        let plain = text.strip_prefix(rules::UNPLAYABLE_MARK).unwrap_or(&text);
+        let wanted = if problem {
+            format!("{}{plain}", rules::UNPLAYABLE_MARK)
+        } else {
+            plain.to_owned()
+        };
+        if wanted != text.as_str() {
+            rows.set_row_data(index, wanted.into());
+        }
+    }
+
     fn tick(&mut self) {
         let Some(ui) = self.ui.upgrade() else { return };
         for event in self.player.poll() {
             match event {
                 Event::Loaded { duration_ms } => {
+                    self.unplayable_run = 0;
+                    if let Some(index) = self.queue.current() {
+                        self.flag_queue_row(&ui, index, false); // it plays (again): no mark
+                    }
                     // `_on_duration_changed`
                     ui.set_seek_max(duration_ms as f32);
                     ui.set_duration_text(rules::format_time(duration_ms).into());
@@ -1862,17 +1983,7 @@ impl App {
                         self.play_next(&ui);
                     }
                 }
-                // The Python app shows nothing when Qt can't play a file; here the
-                // error message says why (checklist item 18).
-                Event::Error(message) => {
-                    eprintln!("playback error: {message}");
-                    let name = self
-                        .queue
-                        .current_path()
-                        .map(|p| file_name(p))
-                        .unwrap_or_default();
-                    crate::errors::report(message.clone(), format!("{name}\n\n{message}"));
-                }
+                Event::Error(message) => self.on_unplayable(&ui, &message),
             }
         }
         if self.player.duration_ms() == 0 {
