@@ -25,7 +25,16 @@ The Rust port in `desktop-rs/` is not released yet. These are the libraries it u
 | --- | --- | --- |
 | [Slint](https://slint.dev/) | Window and user interface | GPL-3.0 (one of its license options) |
 | [winit](https://github.com/rust-windowing/winit) | Window icon on Windows | Apache-2.0 |
-| [image](https://github.com/image-rs/image) | Reading the app icon | MIT or Apache-2.0 |
+| [image](https://github.com/image-rs/image) | Reading the app icon and cover art | MIT or Apache-2.0 |
+| [Lofty](https://github.com/Serial-ATA/lofty-rs) | Reading and writing tags | MIT or Apache-2.0 |
+| [encoding_rs](https://github.com/hsivonen/encoding_rs) | Reading lyrics files in older code pages | (MIT or Apache-2.0) and BSD-3-Clause |
+| [ureq](https://github.com/algesten/ureq) | Looking up lyrics on LRCLIB | MIT or Apache-2.0 |
+| [rustls](https://github.com/rustls/rustls), [ring](https://github.com/briansmith/ring) | Secure connections | Apache-2.0, ISC or MIT; Apache-2.0 and ISC |
+| [webpki-roots](https://github.com/rustls/webpki-roots) | Fallback list of trusted certificates | CDLA-Permissive-2.0 |
+| [serde_json](https://github.com/serde-rs/json) | Reading LRCLIB's answers | MIT or Apache-2.0 |
+| [regex](https://github.com/rust-lang/regex) | Matching timestamps and tags | MIT or Apache-2.0 |
+| [caseless](https://github.com/unicode-rs/rust-caseless) | Comparing text without case, like Python's `casefold` | MIT |
+| [tempfile](https://github.com/Stebalien/tempfile) | Writing lyrics into a song safely | MIT or Apache-2.0 |
 | [windows](https://github.com/microsoft/windows-rs) | Windows APIs | MIT or Apache-2.0 |
 | [winresource](https://github.com/BenjaminRi/winresource) (build only) | Putting the icon into the `.exe` | MIT |
 
