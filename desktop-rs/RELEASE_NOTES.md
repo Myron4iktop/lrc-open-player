@@ -1,6 +1,10 @@
-The first release of LRC Open Player: a Windows music player built around synced lyrics. It finds lyrics for your songs on [LRCLIB](https://lrclib.net), shows Japanese lyrics as romaji with a translation underneath, and lets you sync lyrics and line up translations yourself.
+LRC Open Player 1.1 lets you build a tracklist from songs anywhere on your computer, and choose which version of a song's lyrics to use when [LRCLIB](https://lrclib.net) has several.
 
-This version is a native rewrite of the player in Rust: one `.exe`, nothing to install, and it starts fast.
+## What's new
+
+- **Add songs to the tracklist that is playing.** Open ▾ → Add songs to tracklist… (`Ctrl+Shift+A`), the **+** button above the tracklist, or hold `Shift` while dropping songs or folders onto the window. The music carries on, the new songs go to the end, and the list is still there the next time you start the player.
+- **Choose the version of the lyrics.** Turn on Lyrics ▾ → Let me choose the version, and Lyrics ▾ → Search online lists every version LRCLIB has, with its length next to your file's. Pick one and it shows in the player straight away, so you can watch whether the lines keep time with the song. "Use these lyrics" keeps it; Cancel puts the old lyrics back.
+- Open ▾ → Audio files… can open several songs at once.
 
 ## Download
 
@@ -15,7 +19,7 @@ Download **LRCOpenPlayer.exe** below and run it. It needs Windows 10 or 11 (64-b
 - Sync lyrics (`Ctrl+T`) and add a translation (`Ctrl+Shift+T`), line by line or with optional AI alignment
 - Save lyrics as a `.lrc` file or embed them in the audio file
 - Lyrics a little early or late? `[` and `]` fix that song, and Lyrics ▾ → Use this offset for all songs sets a default (for Bluetooth headphones, say)
-- Albums, shuffle, repeat, drag and drop, dark and light themes, an optional visualizer
+- Albums and tracklists of your own, shuffle, repeat, drag and drop, dark and light themes, an optional visualizer
 - Windows media keys and the media flyout, a tray icon, and it remembers where you left off
 - Plays FLAC, MP3, M4A (AAC and ALAC), OGG, Opus and WAV
 
