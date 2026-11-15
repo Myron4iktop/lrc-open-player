@@ -12,7 +12,7 @@ import { PushButton, HSlider, TipBox } from "widgets.slint";
 import { LyricCard, LyricLineData } from "lyrics.slint";
 import { DropMenu } from "menu.slint";
 export { ShortcutsDialog, ShortcutRow } from "shortcuts.slint";
-export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog } from "dialogs.slint";
+export { DetailsDialog, DetailRow, QuestionDialog, ErrorDialog, LyricsChoicesDialog, ChoiceRowData } from "dialogs.slint";
 export { SyncDialog, SyncRowData, TranslationDialog, TranslationRowData, AiSettingsDialog, AnswerDialog } from "editors.slint";
 export { Theme, LyricLineData }
 
@@ -53,12 +53,18 @@ export component MainWindow inherits Window {
     in property <[string]> queue-rows;
     in-out property <int> queue-current: -1;
     in-out property <bool> queue-visible;
+    // A row to scroll the tracklist to (songs were just added), or -1. Rust sets the row
+    // and bumps the count; the list scrolls and sets the row back to -1.
+    in-out property <int> queue-reveal: -1;
+    in property <int> queue-reveal-count;
     // --- Lyrics ---
     in property <[LyricLineData]> lines;
     in property <bool> synced;
     in property <string> lyrics-message;
     // "status" (lyricsStatus) or "empty" (lyricsEmpty), the two looks of a note.
     in property <string> lyrics-message-kind: "status";
+    // Lyrics ▾ → Let me choose the version: a search lists every version LRCLIB has.
+    in property <bool> choose-lyrics;
     in-out property <length> lyrics-scroll;
     in property <int> rescale-count;
     // --- Window ---
@@ -68,6 +74,8 @@ export component MainWindow inherits Window {
     in property <bool> drop-visible;
     in property <string> drop-headline;
     in property <string> drop-detail;
+    // A third, fainter line: how to add to the tracklist instead of replacing it.
+    in property <string> drop-hint;
     in property <string> theme-key: "dark";
     // View → Smooth animation: GPU drawing, from the next start.
     in property <bool> smooth-animation;
@@ -86,8 +94,10 @@ export component MainWindow inherits Window {
 
     callback open-file();
     callback open-album();
+    callback add-songs();
     callback load-lrc();
     callback search-online();
+    callback set-choose-lyrics(bool);
     callback embed-lyrics();
     callback show-details();
     callback show-shortcuts();
@@ -176,6 +186,10 @@ export component MainWindow inherits Window {
                 }
                 if k == "o" {
                     root.open-file();
+                    return accept;
+                }
+                if k == "a" && event.modifiers.shift {
+                    root.add-songs();
                     return accept;
                 }
                 if k == "l" && !event.modifiers.shift {
@@ -292,12 +306,16 @@ export component MainWindow inherits Window {
                                 y: 0;
                                 widest-shortcut: "Ctrl+Shift+O";
                                 entries: [
-                                    { id: "file", title: "Audio file…", shortcut: "Ctrl+O" },
+                                    { id: "file", title: "Audio files…", shortcut: "Ctrl+O" },
                                     { id: "album", title: "Album folder…", shortcut: "Ctrl+Shift+O" },
+                                    { id: "-" },
+                                    { id: "add", title: "Add songs to tracklist…", shortcut: "Ctrl+Shift+A" },
                                 ];
                                 activated(id) => {
                                     if id == "file" {
                                         root.open-file();
+                                    } else if id == "add" {
+                                        root.add-songs();
                                     } else {
                                         root.open-album();
                                     }
@@ -316,9 +334,11 @@ export component MainWindow inherits Window {
                                 x: 0;
                                 y: 0;
                                 widest-shortcut: "Ctrl+Shift+T";
+                                check-col: true;
                                 entries: [
                                     { id: "lrc", title: "Load LRC file…", shortcut: "Ctrl+L" },
-                                    { id: "search", title: "Search online (LRCLIB)", disabled: !root.has-track },
+                                    { id: "search", title: root.choose-lyrics ? "Search online (LRCLIB)…" : "Search online (LRCLIB)", disabled: !root.has-track },
+                                    { id: "choose", title: "Let me choose the version", checkable: true, checked: root.choose-lyrics },
                                     { id: "-" },
                                     { id: "sync", title: "Sync lyrics…", shortcut: "Ctrl+T", disabled: !root.has-track },
                                     { id: "translate", title: "Add translation…", shortcut: "Ctrl+Shift+T", disabled: !root.has-track },
@@ -331,6 +351,8 @@ export component MainWindow inherits Window {
                                         root.load-lrc();
                                     } else if id == "search" {
                                         root.search-online();
+                                    } else if id == "choose" {
+                                        root.set-choose-lyrics(!root.choose-lyrics);
                                     } else if id == "sync" {
                                         root.open-sync();
                                     } else if id == "translate" {
@@ -701,6 +723,22 @@ export component MainWindow inherits Window {
                         width: 26px;
                         height: 26px;
                         min-h: 26px;
+                        text: "+";
+                        font-size: 15px;
+                        tooltip: "Add songs to the tracklist   ( Ctrl+Shift+A )";
+                        clicked => {
+                            root.add-songs();
+                        }
+                    }
+
+                    Rectangle {
+                        width: 6px;
+                    }
+
+                    PushButton {
+                        width: 26px;
+                        height: 26px;
+                        min-h: 26px;
                         glyph: "close";
                         clicked => {
                             root.queue-visible = false;
@@ -721,7 +759,27 @@ export component MainWindow inherits Window {
                         y: 5px;
                         width: parent.width - 10px;
                         height: parent.height - 10px;
-                        content-height: rows.preferred-height;
+                        // The rows' height, from their number (44 px each, 2 px apart)
+                        // and not from `rows.preferred-height`: rows just added aren't
+                        // laid out yet, and the list couldn't scroll down to them.
+                        content-height: max(0px, root.queue-rows.length * 46px - 2px);
+
+                        // Scrolls a row Rust asked for to the middle. `init` covers a
+                        // drawer that was opened by the same change that asked.
+                        property <int> reveal-count: root.queue-reveal-count;
+                        function reveal() {
+                            if root.queue-reveal >= 0 && self.height > 0 {
+                                let most = max(0px, self.content-height - self.height);
+                                self.content-y = -clamp(root.queue-reveal * 46px - (self.height - 44px) / 2, 0px, most);
+                                root.queue-reveal = -1;
+                            }
+                        }
+                        changed reveal-count => {
+                            self.reveal();
+                        }
+                        init => {
+                            self.reveal();
+                        }
 
                         rows := VerticalLayout {
                             width: queue-list.width;
@@ -857,6 +915,14 @@ export component MainWindow inherits Window {
                     font-size: 13px;
                     font-weight: 400;
                     color: Theme.muted;
+                    horizontal-alignment: center;
+                }
+
+                if root.drop-hint != "": Text {
+                    text: root.drop-hint;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: Theme.dim;
                     horizontal-alignment: center;
                 }
             }

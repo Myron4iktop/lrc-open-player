@@ -5,7 +5,9 @@
 //! `set_shuffle`, `cycle_repeat` and the order bookkeeping in `load_track_by_index`.
 //! The window asks this what to play and then plays it.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+use crate::session::same_path;
 
 /// Repeat mode (`repeat_mode`): off, the current track, or the whole album.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -70,7 +72,8 @@ pub enum Source {
     None,
     /// One song.
     File(PathBuf),
-    /// Several songs dropped at once; the path is the first one's folder.
+    /// Several songs dropped at once, or a playlist that songs were added to; the path
+    /// is the first one's folder (the album folder, for an album that songs were added to).
     Files(PathBuf),
     /// An album folder.
     Folder(PathBuf),
@@ -155,6 +158,43 @@ impl Queue {
         self.source = source;
         self.current = None;
         self.rebuild_order(None);
+    }
+
+    /// Adds songs to the end of the playlist without disturbing the song that plays
+    /// (not in the Python app). Songs already in the playlist are left out, as are
+    /// repeats among `files`. Returns how many were added.
+    ///
+    /// The playlist is then a list of songs rather than one folder or one song, so its
+    /// source becomes [`Source::Files`] and the whole list is remembered. Under shuffle
+    /// each new song lands somewhere after the current one, so it is still heard in
+    /// this round.
+    pub fn append(&mut self, files: Vec<PathBuf>) -> usize {
+        let old = self.playlist.len();
+        for file in files {
+            if !self.playlist.iter().any(|p| same_path(p, &file)) {
+                self.playlist.push(file);
+            }
+        }
+        let added = self.playlist.len() - old;
+        if added == 0 {
+            return 0;
+        }
+        let folder_of = |p: &Path| p.parent().map(Path::to_path_buf).unwrap_or_default();
+        self.source = match std::mem::take(&mut self.source) {
+            Source::None => Source::Files(folder_of(&self.playlist[0])),
+            Source::File(song) => Source::Files(folder_of(&song)),
+            Source::Files(folder) | Source::Folder(folder) => Source::Files(folder),
+        };
+        for index in old..self.playlist.len() {
+            if self.shuffle {
+                let after = self.order_pos.map_or(0, |p| p + 1).min(self.order.len());
+                let at = self.rng.usize(after..=self.order.len());
+                self.order.insert(at, index);
+            } else {
+                self.order.push(index);
+            }
+        }
+        added
     }
 
     /// Playing order: album order, or a shuffled copy that starts with `first`
@@ -406,6 +446,95 @@ mod tests {
             assert_eq!(Repeat::from_key(r.key()), r);
         }
         assert_eq!(Repeat::from_key("bogus"), Repeat::Off);
+    }
+
+    fn songs(names: &[&str]) -> Vec<PathBuf> {
+        names.iter().map(PathBuf::from).collect()
+    }
+
+    #[test]
+    fn added_songs_play_after_the_album() {
+        let mut q = queue(2);
+        play(&mut q, 1);
+        assert!(!q.has_next());
+        assert_eq!(q.append(songs(&["/x/a.flac", "/y/b.flac"])), 2);
+        assert_eq!(q.playlist().len(), 4);
+        // Still on the same song, which now has one after it.
+        assert_eq!(q.current(), Some(1));
+        assert!(q.has_next());
+        assert_eq!(q.next_track(), Some(2));
+        play(&mut q, 2);
+        assert_eq!(q.next_track(), Some(3));
+        assert_eq!(q.previous_track(0), Some(Previous::Play(1)));
+        // An album with songs added is a list of songs, kept under the album's folder.
+        assert_eq!(q.source(), &Source::Files("album".into()));
+    }
+
+    #[test]
+    fn songs_already_in_the_playlist_are_not_added_twice() {
+        let mut q = queue(2);
+        assert_eq!(q.append(songs(&["1.mp3", "./0.mp3"])), 0);
+        // Nothing new: the playlist is still the album it was.
+        assert_eq!(q.source(), &Source::Folder("album".into()));
+        assert_eq!(q.append(songs(&["new.mp3", "1.mp3", "new.mp3"])), 1);
+        assert_eq!(q.playlist().len(), 3);
+        assert_eq!(q.order(), [0, 1, 2]);
+    }
+
+    #[test]
+    fn adding_to_one_song_or_to_nothing_makes_a_list() {
+        let mut q = Queue::new();
+        q.set_playlist(songs(&["/m/one.mp3"]), Source::File("/m/one.mp3".into()));
+        play(&mut q, 0);
+        assert_eq!(q.append(songs(&["/other/two.mp3"])), 1);
+        assert_eq!(q.source(), &Source::Files("/m".into()));
+        assert_eq!(q.next_track(), Some(1));
+
+        let mut q = Queue::new();
+        assert_eq!(q.append(songs(&["/m/a.mp3", "/m/b.mp3"])), 2);
+        assert_eq!(q.source(), &Source::Files("/m".into()));
+        assert_eq!(q.current(), None);
+        assert_eq!(q.start_index(), 0);
+    }
+
+    #[test]
+    fn songs_added_under_shuffle_come_after_the_current_one() {
+        for seed in 0..200 {
+            let mut q = Queue::with_rng(fastrand::Rng::with_seed(seed));
+            q.set_playlist(
+                (0..6).map(|i| PathBuf::from(format!("{i}"))).collect(),
+                Source::Folder("album".into()),
+            );
+            q.set_shuffle(true);
+            // Two songs into the shuffled round.
+            let (first, second) = (q.order()[0], q.order()[1]);
+            play(&mut q, first);
+            play(&mut q, second);
+            let played = q.order()[..2].to_vec();
+            assert_eq!(q.append(songs(&["new-a", "new-b", "new-c"])), 3);
+            assert_eq!(&q.order()[..2], played, "seed {seed}");
+            let mut sorted = q.order().to_vec();
+            sorted.sort();
+            assert_eq!(sorted, (0..9).collect::<Vec<_>>(), "seed {seed}");
+            // The round goes on from the current song and reaches every new one.
+            let mut heard = Vec::new();
+            while let Some(next) = q.next_track() {
+                heard.push(next);
+                play(&mut q, next);
+            }
+            assert_eq!(heard.len(), 7, "seed {seed}");
+            assert!([6, 7, 8].iter().all(|i| heard.contains(i)), "seed {seed}");
+        }
+    }
+
+    #[test]
+    fn songs_added_under_shuffle_before_anything_played() {
+        let mut q = queue(3);
+        q.set_shuffle(true);
+        assert_eq!(q.append(songs(&["new"])), 1);
+        let mut sorted = q.order().to_vec();
+        sorted.sort();
+        assert_eq!(sorted, [0, 1, 2, 3]);
     }
 
     #[test]

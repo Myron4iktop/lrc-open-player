@@ -54,4 +54,8 @@ On Linux, building the player needs the ALSA headers (`libasound2-dev`) and CMak
 
 The Rust build keeps its settings in `%APPDATA%\LRCOpenPlayer\settings.json`, with the same key names as the Python app (`ui/theme`, `playback/last_track`, …). The first time it starts, it copies the Python app's settings from `HKEY_CURRENT_USER\Software\LRCPlayer\MinimalistLRCPlayer` (all but the window position, a Qt blob). After that the two apps keep their own settings, and the Rust build never writes to the registry. Delete `settings.json` to import again.
 
-One key is new in the Rust build: `ui/smooth_animation` (View → Smooth animation). When it is `true`, the window is drawn with the GPU (Slint's FemtoVG renderer over OpenGL) instead of the software renderer, from the next start; if the GPU can't be used, the software renderer is used after all.
+Two keys are new in the Rust build. The first is `ui/smooth_animation` (View → Smooth animation). When it is `true`, the window is drawn with the GPU (Slint's FemtoVG renderer over OpenGL) instead of the software renderer, from the next start; if the GPU can't be used, the software renderer is used after all.
+
+The second is `lyrics/choose_version` (Lyrics → Let me choose the version). When it is `true`, Lyrics → Search online lists every version LRCLIB has for the song instead of taking the likeliest one. Songs opened without lyrics are still looked up the usual way.
+
+A tracklist that songs were added to (Open → Add songs to tracklist…, or a drop with Shift held) is remembered as a list of songs, in `playback/files`, like songs dropped together.

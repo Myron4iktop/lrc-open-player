@@ -4,6 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::library::is_supported_audio;
+use crate::lrclib::Candidate;
 use crate::tags::TrackInfo;
 use crate::text::base_name;
 
@@ -169,6 +170,12 @@ pub enum DropAction {
         folders: Vec<PathBuf>,
         audio: Vec<PathBuf>,
     },
+    /// Read these folders and songs, then add them to the end of the tracklist
+    /// ([`add_drop_plan`]; not in the Python app).
+    Add {
+        folders: Vec<PathBuf>,
+        audio: Vec<PathBuf>,
+    },
 }
 
 /// A drop's action and the two lines the overlay shows while dragging.
@@ -214,16 +221,7 @@ pub fn drop_plan(paths: &[PathBuf], has_track: bool) -> Option<DropPlan> {
             });
         }
     }
-    let folders: Vec<PathBuf> = paths
-        .iter()
-        .filter(|p| p.is_dir())
-        .map(|p| (*p).clone())
-        .collect();
-    let audio: Vec<PathBuf> = paths
-        .iter()
-        .filter(|p| p.is_file() && is_supported_audio(&lower_name(p)))
-        .map(|p| (*p).clone())
-        .collect();
+    let (folders, audio) = folders_and_songs(&paths);
     if folders.len() == 1 && audio.is_empty() {
         let detail = folder_name(&folders[0]);
         return Some(DropPlan {
@@ -249,6 +247,55 @@ pub fn drop_plan(paths: &[PathBuf], has_track: bool) -> Option<DropPlan> {
         });
     }
     None
+}
+
+/// The folders and the songs among dropped paths; anything else is left out.
+fn folders_and_songs(paths: &[&PathBuf]) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    let folders = paths
+        .iter()
+        .filter(|p| p.is_dir())
+        .map(|p| (*p).clone())
+        .collect();
+    let audio = paths
+        .iter()
+        .filter(|p| p.is_file() && is_supported_audio(&lower_name(p)))
+        .map(|p| (*p).clone())
+        .collect();
+    (folders, audio)
+}
+
+/// The overlay's hint under a drop that would replace a tracklist.
+pub const DROP_ADD_HINT: &str = "Hold Shift to add to the tracklist instead";
+
+/// What a drop of `paths` does with Shift held while a tracklist is open: the songs,
+/// and the songs of the folders, join the end of the tracklist and the music carries
+/// on. `None` when there is no song or folder among them (a lone .lrc still shows as
+/// lyrics, by [`drop_plan`]). Not in the Python app.
+pub fn add_drop_plan(paths: &[PathBuf]) -> Option<DropPlan> {
+    let paths: Vec<&PathBuf> = paths.iter().filter(|p| !p.as_os_str().is_empty()).collect();
+    let (folders, audio) = folders_and_songs(&paths);
+    let detail = match (folders.as_slice(), audio.as_slice()) {
+        ([], []) => return None,
+        ([folder], []) => folder_name(folder),
+        ([], [song]) => base_name(song),
+        _ => format!("{} items", folders.len() + audio.len()),
+    };
+    Some(DropPlan {
+        action: DropAction::Add { folders, audio },
+        headline: "Drop to add to the tracklist".into(),
+        detail,
+    })
+}
+
+impl DropPlan {
+    /// The drop would start a new tracklist, so with one open the overlay says how to
+    /// add to it instead ([`DROP_ADD_HINT`]).
+    pub fn replaces_tracklist(&self) -> bool {
+        matches!(
+            self.action,
+            DropAction::Folder(_) | DropAction::File(_) | DropAction::Files { .. }
+        )
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -400,6 +447,92 @@ pub fn save_offer(
     }
 }
 
+// ---------------------------------------------------------------------------------------
+// Choosing between LRCLIB's versions (not in the Python app)
+// ---------------------------------------------------------------------------------------
+
+/// Lyrics ▾ → "Let me choose from LRCLIB's versions": a search by hand lists every
+/// version instead of taking the likeliest one. Off unless turned on.
+pub const CHOOSE_LYRICS_KEY: &str = "lyrics/choose_version";
+/// The title of the window that lists them.
+pub const CHOICES_TITLE: &str = "Lyrics on LRCLIB";
+/// The line under its heading.
+pub const CHOICES_HINT: &str = "Pick a version to try it in the player. The song keeps playing, so you can see whether the lines keep time.";
+
+/// The heading of the list: `5 versions of “Song” by Artist`.
+pub fn choices_heading(count: usize, title: &str, artist: &str) -> String {
+    let by = if artist.is_empty() || artist == "Unknown Artist" {
+        String::new()
+    } else {
+        format!(" by {artist}")
+    };
+    format!("{count} versions of “{title}”{by}")
+}
+
+/// One row of the list of versions.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChoiceRow {
+    /// `Track — Artist`.
+    pub title: String,
+    /// Length (and how far it is from the song's), album and number of lines.
+    pub detail: String,
+    /// "Synced" or "Plain text".
+    pub kind: &'static str,
+    pub synced: bool,
+}
+
+/// How a version is listed. `my_length` is the song's length in whole seconds (0 when
+/// unknown); the entry's length is compared with it, since a version a few seconds
+/// longer or shorter is usually another release whose lines drift.
+pub fn choice_row(c: &Candidate, my_length: i64) -> ChoiceRow {
+    let title = match (c.track.is_empty(), c.artist.is_empty()) {
+        (false, false) => format!("{} — {}", c.track, c.artist),
+        (false, true) => c.track.clone(),
+        (true, false) => c.artist.clone(),
+        (true, true) => "Untitled".to_owned(),
+    };
+    let mut parts = Vec::new();
+    if c.duration_sec > 0 {
+        let length = mins(c.duration_sec);
+        parts.push(match c.length_gap(my_length) {
+            None => length,
+            Some(gap) if gap <= 1 => format!("{length} (same length)"),
+            Some(gap) => {
+                let amount = if gap < 60 {
+                    format!("{gap} s")
+                } else {
+                    mins(gap)
+                };
+                let way = if c.duration_sec > my_length {
+                    "longer"
+                } else {
+                    "shorter"
+                };
+                format!("{length} ({amount} {way})")
+            }
+        });
+    }
+    if !c.album.is_empty() {
+        parts.push(c.album.clone());
+    }
+    let lines = c
+        .lyrics
+        .lines()
+        .filter(|l| !crate::py::strip(l).is_empty())
+        .count();
+    parts.push(if lines == 1 {
+        "1 line".to_owned()
+    } else {
+        format!("{lines} lines")
+    });
+    ChoiceRow {
+        title,
+        detail: parts.join("  ·  "),
+        kind: if c.synced { "Synced" } else { "Plain text" },
+        synced: c.synced,
+    }
+}
+
 /// "Couldn't save “x.lrc”:\n<reason>" after the offer's Save fails.
 pub fn save_failed_text(lrc_name: &str, error: &str) -> String {
     format!("Couldn't save “{lrc_name}”:\n{error}")
@@ -495,6 +628,34 @@ pub const SHORTCUTS: [(&str, &str); 17] = [
 /// The line under the shortcut list.
 pub const SHORTCUTS_FOOTER: &str =
     "Drop songs, album folders or an .lrc file onto the window to open them.";
+
+/// Shortcuts the Python app doesn't have: the keys of the [`SHORTCUTS`] row each one
+/// follows in the F1 list, then its own keys and what they do.
+pub const EXTRA_SHORTCUTS: [(&str, &str, &str); 1] =
+    [("Ctrl+Shift+O", "Ctrl+Shift+A", "Add songs to the tracklist")];
+
+/// What the Rust build adds to [`SHORTCUTS_FOOTER`].
+pub const SHORTCUTS_FOOTER_EXTRA: &str =
+    "Hold Shift while dropping songs or folders to add them to the tracklist instead.";
+
+/// The rows of the F1 list: [`SHORTCUTS`] with [`EXTRA_SHORTCUTS`] in their places.
+pub fn shortcut_rows() -> Vec<(&'static str, &'static str)> {
+    let mut rows = Vec::with_capacity(SHORTCUTS.len() + EXTRA_SHORTCUTS.len());
+    for row in SHORTCUTS {
+        rows.push(row);
+        for (after, keys, action) in EXTRA_SHORTCUTS {
+            if after == row.0 {
+                rows.push((keys, action));
+            }
+        }
+    }
+    rows
+}
+
+/// The lines under the F1 list.
+pub fn shortcuts_footer() -> String {
+    format!("{SHORTCUTS_FOOTER}\n{SHORTCUTS_FOOTER_EXTRA}")
+}
 
 #[cfg(test)]
 mod tests {
@@ -592,6 +753,152 @@ mod tests {
         // An .lrc among other files isn't lyrics, and on its own it's not audio either.
         assert_eq!(drop_plan(&[lrc.clone(), other], true), None);
         assert_eq!(drop_plan(&[], true), None);
+    }
+
+    #[test]
+    fn shift_drops_add_to_the_tracklist() {
+        let dir = tempfile::tempdir().unwrap();
+        let album = dir.path().join("Album");
+        std::fs::create_dir(&album).unwrap();
+        let song = dir.path().join("a.MP3");
+        let other_song = dir.path().join("b.flac");
+        let lrc = dir.path().join("a.lrc");
+        for f in [&song, &other_song, &lrc] {
+            std::fs::write(f, b"x").unwrap();
+        }
+
+        let plan = add_drop_plan(std::slice::from_ref(&song)).unwrap();
+        assert_eq!(plan.headline, "Drop to add to the tracklist");
+        assert_eq!(plan.detail, "a.MP3");
+        assert_eq!(
+            plan.action,
+            DropAction::Add {
+                folders: vec![],
+                audio: vec![song.clone()]
+            }
+        );
+        assert!(!plan.replaces_tracklist());
+
+        let plan = add_drop_plan(std::slice::from_ref(&album)).unwrap();
+        assert_eq!(plan.detail, "Album");
+
+        let plan =
+            add_drop_plan(&[album.clone(), song.clone(), lrc.clone(), other_song.clone()]).unwrap();
+        assert_eq!(plan.detail, "3 items");
+        assert_eq!(
+            plan.action,
+            DropAction::Add {
+                folders: vec![album.clone()],
+                audio: vec![song.clone(), other_song]
+            }
+        );
+
+        // Lyrics aren't songs: a lone .lrc is left to `drop_plan`.
+        assert_eq!(add_drop_plan(std::slice::from_ref(&lrc)), None);
+        assert_eq!(add_drop_plan(&[]), None);
+
+        // Drops that start a new tracklist get the Shift hint; lyrics don't.
+        assert!(
+            drop_plan(std::slice::from_ref(&song), true)
+                .unwrap()
+                .replaces_tracklist()
+        );
+        assert!(
+            drop_plan(std::slice::from_ref(&album), true)
+                .unwrap()
+                .replaces_tracklist()
+        );
+        assert!(
+            drop_plan(&[album, song], true)
+                .unwrap()
+                .replaces_tracklist()
+        );
+        assert!(
+            !drop_plan(std::slice::from_ref(&lrc), true)
+                .unwrap()
+                .replaces_tracklist()
+        );
+    }
+
+    #[test]
+    fn rows_of_the_version_list() {
+        let mut c = Candidate {
+            id: 1,
+            track: "My Song".into(),
+            artist: "The Band".into(),
+            album: "Greatest Hits".into(),
+            duration_sec: 225,
+            synced: true,
+            lyrics: "[00:01.00]one\n\n[00:02.00]two\n".into(),
+            trusted: true,
+        };
+        let row = choice_row(&c, 225);
+        assert_eq!(row.title, "My Song — The Band");
+        assert_eq!(
+            row.detail,
+            "3:45 (same length)  ·  Greatest Hits  ·  2 lines"
+        );
+        assert_eq!((row.kind, row.synced), ("Synced", true));
+        assert_eq!(
+            choice_row(&c, 224).detail,
+            "3:45 (same length)  ·  Greatest Hits  ·  2 lines"
+        );
+        assert_eq!(
+            choice_row(&c, 213).detail,
+            "3:45 (12 s longer)  ·  Greatest Hits  ·  2 lines"
+        );
+        assert_eq!(
+            choice_row(&c, 300).detail,
+            "3:45 (1:15 shorter)  ·  Greatest Hits  ·  2 lines"
+        );
+        // The song's length is unknown: only the entry's is shown.
+        assert_eq!(
+            choice_row(&c, 0).detail,
+            "3:45  ·  Greatest Hits  ·  2 lines"
+        );
+
+        c.synced = false;
+        c.album.clear();
+        c.artist.clear();
+        c.duration_sec = 0;
+        c.lyrics = "only line".into();
+        let row = choice_row(&c, 225);
+        assert_eq!(row.title, "My Song");
+        assert_eq!(row.detail, "1 line");
+        assert_eq!((row.kind, row.synced), ("Plain text", false));
+        c.track.clear();
+        assert_eq!(choice_row(&c, 0).title, "Untitled");
+    }
+
+    #[test]
+    fn heading_of_the_version_list() {
+        assert_eq!(
+            choices_heading(5, "My Song", "The Band"),
+            "5 versions of “My Song” by The Band"
+        );
+        assert_eq!(
+            choices_heading(2, "01 Song", "Unknown Artist"),
+            "2 versions of “01 Song”"
+        );
+        assert_eq!(choices_heading(2, "Song", ""), "2 versions of “Song”");
+    }
+
+    #[test]
+    fn extra_shortcuts_sit_in_their_places() {
+        let rows = shortcut_rows();
+        assert_eq!(rows.len(), SHORTCUTS.len() + EXTRA_SHORTCUTS.len());
+        let at = rows.iter().position(|r| r.0 == "Ctrl+Shift+A").unwrap();
+        assert_eq!(rows[at - 1].0, "Ctrl+Shift+O");
+        assert_eq!(rows[at].1, "Add songs to the tracklist");
+        // Every extra row has a row to follow, and takes no key the list already has.
+        for (after, keys, _) in EXTRA_SHORTCUTS {
+            assert!(SHORTCUTS.iter().any(|r| r.0 == after), "{after}");
+            assert!(SHORTCUTS.iter().all(|r| r.0 != keys), "{keys}");
+        }
+        assert_eq!(
+            shortcuts_footer(),
+            "Drop songs, album folders or an .lrc file onto the window to open them.\nHold Shift while dropping songs or folders to add them to the tracklist instead."
+        );
     }
 
     #[test]

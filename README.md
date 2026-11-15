@@ -11,11 +11,13 @@ The repository also contains **LRC Companion**, an Android app for fixing tags a
 ### Player (Windows)
 
 - **Synced lyrics** that follow the song, from a `.lrc` file next to it, from the file's own tags, or found online on [LRCLIB](https://lrclib.net)
+- When LRCLIB has several versions of a song's lyrics, **Lyrics → Let me choose the version** lists them all, and each can be tried against the song as it plays before you keep one
 - **Romaji** for Japanese lyrics (press `R`), with a translation shown under each line
 - **Sync lyrics** (`Ctrl+T`): play the song and press Enter as each line starts, and plain lyrics become a synced `.lrc`
 - **Add translation** (`Ctrl+Shift+T`): pair a translation with synced lyrics, either line by line or with optional AI alignment
 - Save lyrics as a `.lrc` file or embed them in the audio file, so they travel with it
 - Albums, shuffle, repeat (off / track / album) and drag and drop
+- Add songs from anywhere to the tracklist that is playing: **Open → Add songs to tracklist…** (`Ctrl+Shift+A`), or hold `Shift` while dropping songs or folders
 - Dark and light themes, seven accent colors and an optional visualizer
 - Windows media keys and lock-screen controls, a tray icon, and it remembers where you left off
 - Plays FLAC, MP3, M4A, OGG, Opus and WAV

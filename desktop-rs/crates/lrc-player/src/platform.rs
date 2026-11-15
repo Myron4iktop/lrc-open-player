@@ -229,6 +229,26 @@ mod win {
 #[cfg(windows)]
 pub use win::{ensure_start_menu_shortcut, set_app_user_model_id, set_icons_from_exe};
 
+/// Whether [`shift_held`] can tell: only on Windows, where the drop overlay then says
+/// that Shift adds to the tracklist.
+pub const SHIFT_READABLE: bool = cfg!(windows);
+
+/// True while a Shift key is down, whichever window has the keyboard. Asked while files
+/// are dragged from Explorer: the drag runs in Explorer, so no key events reach this
+/// window, and winit doesn't pass on the key state Windows hands the drop target.
+#[cfg(windows)]
+pub fn shift_held() -> bool {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_SHIFT};
+    // SAFETY: takes a key code and returns its state; no pointers are involved.
+    let state = unsafe { GetAsyncKeyState(i32::from(VK_SHIFT.0)) };
+    state < 0 // the top bit is set while the key is down
+}
+
+#[cfg(not(windows))]
+pub fn shift_held() -> bool {
+    false
+}
+
 /// Moves the window back onto a screen if the remembered position is off every one
 /// (a monitor unplugged since), as Qt's `restoreGeometry` does.
 pub fn keep_on_screen(ui: &MainWindow) {

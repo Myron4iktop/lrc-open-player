@@ -1,9 +1,11 @@
 //! The main window's behaviour: `AudioLRCPlayer` in lrcplayer.py.
-//! The lyrics editors and the AI settings window are in [`editors`].
+//! The lyrics editors and the AI settings window are in [`editors`], and the list of
+//! LRCLIB's versions of a song's lyrics in [`choices`].
 //!
 //! The rules live in `lrc-core` (`queue`, `window`, `lrc`, `theme`) and are tested there;
 //! this file wires them to the Slint window and the audio engine.
 
+mod choices;
 mod editors;
 
 use std::cell::RefCell;
@@ -42,8 +44,8 @@ use crate::session::{SMOOTH_ANIMATION_KEY, SMOOTH_ANIMATION_TITLE, Store};
 use crate::tray::{Tray, TrayCommand, TrayItem};
 use crate::visualizer::Visualizer;
 use crate::{
-    DetailRow, DetailsDialog, LyricLineData, MainWindow, QuestionDialog, ShortcutRow,
-    ShortcutsDialog, Theme,
+    DetailRow, DetailsDialog, LyricLineData, LyricsChoicesDialog, MainWindow, QuestionDialog,
+    ShortcutRow, ShortcutsDialog, Theme,
 };
 
 thread_local! {
@@ -109,11 +111,19 @@ pub struct App {
     hovered: Vec<PathBuf>,
     dropped: Vec<PathBuf>,
     drop_pending: bool,
+    /// Shift was down when the drop overlay was last drawn: the drop adds to the tracklist.
+    hover_shift: bool,
+    /// Shift was down as the files were dropped.
+    drop_shift: bool,
 
     shortcuts: Option<ShortcutsDialog>,
     details: Option<DetailsDialog>,
     question: Option<QuestionDialog>,
     pending_offer: Option<PendingOffer>,
+    /// The list of LRCLIB's versions: the window once it has been opened, and what it
+    /// lists while it is open.
+    choices_dialog: Option<LyricsChoicesDialog>,
+    choosing: Option<choices::Choosing>,
 
     store: Store,
     /// Set when the app quits: online searches still running send nothing back.
@@ -188,10 +198,14 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         hovered: Vec::new(),
         dropped: Vec::new(),
         drop_pending: false,
+        hover_shift: false,
+        drop_shift: false,
         shortcuts: None,
         details: None,
         question: None,
         pending_offer: None,
+        choices_dialog: None,
+        choosing: None,
         store: Store::open(),
         quitting: Arc::new(AtomicBool::new(false)),
         closing: false,
@@ -333,15 +347,21 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         };
         let weak = weak.clone();
         let _ = slint::spawn_local(async move {
-            let mut dialog = rfd::AsyncFileDialog::new()
-                .set_title("Select Audio File")
-                .add_filter("Audio Files", &["flac", "mp3", "wav", "m4a", "ogg", "opus"]);
-            if let Some(dir) = start {
-                dialog = dialog.set_directory(dir);
+            if let Some(files) = pick_audio_files("Select Audio Files", start).await {
+                with_app(&weak, |a, ui| a.open_picked_files(ui, files));
             }
-            if let Some(file) = dialog.pick_file().await {
-                let path = file.path().to_path_buf();
-                with_app(&weak, |a, ui| a.open_file(ui, path));
+        });
+    });
+
+    let weak = Rc::downgrade(app);
+    ui.on_add_songs(move || {
+        let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
+            return;
+        };
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            if let Some(files) = pick_audio_files("Add Songs to Tracklist", start).await {
+                with_app(&weak, |a, _ui| a.add_to_tracklist(Vec::new(), files));
             }
         });
     });
@@ -380,6 +400,10 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     });
 
     on!(on_search_online, |a, ui| a.search_lyrics_online(ui, true));
+    on!(on_set_choose_lyrics, |a, ui, on| {
+        ui.set_choose_lyrics(on);
+        a.store.set(rules::CHOOSE_LYRICS_KEY, on)
+    });
     on!(on_show_details, |a, ui| a.show_details_dialog(ui));
     let weak = Rc::downgrade(app);
     ui.on_embed_lyrics(move || {
@@ -473,6 +497,19 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
         let _ = slint::quit_event_loop();
         slint::CloseRequestResponse::HideWindow
     });
+}
+
+/// The file dialog for songs, where several can be picked at once. `None` when it was
+/// cancelled.
+async fn pick_audio_files(title: &str, start: Option<PathBuf>) -> Option<Vec<PathBuf>> {
+    let mut dialog = rfd::AsyncFileDialog::new()
+        .set_title(title)
+        .add_filter("Audio Files", &["flac", "mp3", "wav", "m4a", "ogg", "opus"]);
+    if let Some(dir) = start {
+        dialog = dialog.set_directory(dir);
+    }
+    let files = dialog.pick_files().await?;
+    Some(files.iter().map(|f| f.path().to_path_buf()).collect())
 }
 
 /// "Embed lyrics in file…" (`embed_shown_lyrics`). Runs without the app borrowed, since
@@ -690,6 +727,7 @@ impl App {
         if let Some(dialog) = &self.question {
             fill_theme(&dialog.global::<Theme>(), &p);
         }
+        self.theme_choices(&p);
         self.theme_editors(&p);
         ui.invoke_sync_color_scheme();
         ui.set_theme_key(self.theme.into());
@@ -741,6 +779,86 @@ impl App {
         self.cancel_scan();
         self.set_playlist(ui, vec![path.clone()], Source::File(path));
         self.load_track_by_index(ui, 0, true, 0);
+    }
+
+    /// Open ▾ → Audio files…: one song plays on its own; several become a tracklist in
+    /// album order, as dropped songs do.
+    fn open_picked_files(&mut self, ui: &MainWindow, files: Vec<PathBuf>) {
+        if files.len() == 1 {
+            let file = files.into_iter().next().unwrap();
+            self.open_file(ui, file);
+        } else if !files.is_empty() {
+            self.scan(Vec::new(), files, true, ScanThen::Files, String::new());
+        }
+    }
+
+    /// Adds songs, and the songs of folders, to the end of the tracklist while the music
+    /// carries on (Open ▾ → Add songs to tracklist…, the tracklist's + button, and a
+    /// drop with Shift held). Not in the Python app.
+    ///
+    /// Their tags are read on a worker thread, like an album's. This doesn't go through
+    /// [`scan`](Self::scan), whose newest request cancels the one before: songs added
+    /// twice in a row must all arrive, and adding must not stop an album from opening.
+    fn add_to_tracklist(&mut self, folders: Vec<PathBuf>, files: Vec<PathBuf>) {
+        let quitting = self.quitting.clone();
+        let _ = std::thread::Builder::new()
+            .name("tracklist add".into())
+            .spawn(move || {
+                let cancelled = || quitting.load(Ordering::Relaxed);
+                let songs = scan_songs(
+                    &folders,
+                    &files,
+                    &SUPPORTED_EXTS,
+                    true,
+                    &cancelled,
+                    &mut |_| {},
+                );
+                if let Some(songs) = songs {
+                    let _ = slint::invoke_from_event_loop(move || {
+                        let entries = songs.into_iter().map(|s| (s.path, s.title)).collect();
+                        app_call(|a, ui| a.songs_to_add_read(ui, entries));
+                    });
+                }
+            });
+    }
+
+    /// The songs to add have been read: they join whatever tracklist is open by now.
+    fn songs_to_add_read(&mut self, ui: &MainWindow, entries: Vec<(PathBuf, Option<String>)>) {
+        if self.closing || entries.is_empty() {
+            return;
+        }
+        let paths: Vec<PathBuf> = entries.iter().map(|(p, _)| p.clone()).collect();
+        if self.queue.is_empty() {
+            // Nothing to add to: they are opened and played, as dropped songs are.
+            self.track_titles = entries.into_iter().collect();
+            self.open_files(ui, paths);
+            return;
+        }
+        self.track_titles.extend(entries);
+        let first_new = self.queue.playlist().len();
+        if self.queue.append(paths) > 0 {
+            let count = self.queue.playlist().len();
+            let new_rows: Vec<SharedString> =
+                (first_new..count).map(|i| self.queue_row(i)).collect();
+            let rows = ui.get_queue_rows();
+            // Added to the rows that are there, so the ⚠ marks stay.
+            match rows.as_any().downcast_ref::<VecModel<SharedString>>() {
+                Some(model) => new_rows.into_iter().for_each(|row| model.push(row)),
+                None => {
+                    self.populate_queue_list(ui);
+                    let current = self.queue.current().map_or(-1, |i| i as i32);
+                    ui.set_queue_current(current);
+                }
+            }
+            ui.set_queue_title(format!("Tracklist ({count})").into());
+            // The first new song scrolls into view.
+            ui.set_queue_reveal(first_new as i32);
+            ui.set_queue_reveal_count(ui.get_queue_reveal_count().wrapping_add(1));
+            self.update_navigation();
+            // The list is remembered now, not only at the next autosave.
+            self.save_session(ui, false);
+        }
+        self.show_queue_panel(ui);
     }
 
     /// Plays an album folder, with its subfolders, once its songs have been read.
@@ -907,23 +1025,21 @@ impl App {
 
     /// `_populate_queue_list`.
     fn populate_queue_list(&mut self, ui: &MainWindow) {
-        let rows: Vec<SharedString> = self
-            .queue
-            .playlist()
-            .iter()
-            .enumerate()
-            .map(|(i, path)| {
-                let title = match self.track_titles.get(path) {
-                    Some(title) => title.clone(),
-                    None => read_track_tags(path).title,
-                };
-                rules::queue_row_text(i + 1, title.as_deref(), path).into()
-            })
-            .collect();
-        let count = rows.len();
+        let count = self.queue.playlist().len();
+        let rows: Vec<SharedString> = (0..count).map(|i| self.queue_row(i)).collect();
         ui.set_queue_rows(ModelRc::from(Rc::new(VecModel::from(rows))));
         ui.set_queue_current(-1);
         ui.set_queue_title(format!("Tracklist ({count})").into());
+    }
+
+    /// The tracklist row of the playlist's song `index`: "01. Title".
+    fn queue_row(&self, index: usize) -> SharedString {
+        let path = &self.queue.playlist()[index];
+        let title = match self.track_titles.get(path) {
+            Some(title) => title.clone(),
+            None => read_track_tags(path).title,
+        };
+        rules::queue_row_text(index + 1, title.as_deref(), path).into()
     }
 
     fn show_queue_panel(&mut self, ui: &MainWindow) {
@@ -954,6 +1070,7 @@ impl App {
             return;
         }
         self.cancel_lyrics_search(); // skipping through an album shouldn't queue up lookups
+        self.close_choices(); // the versions listed were another song's
         let path = self.queue.playlist()[index].clone();
         ui.set_queue_current(index as i32);
         self.player.load(&path);
@@ -1343,15 +1460,15 @@ impl App {
             let Ok(dialog) = ShortcutsDialog::new() else {
                 return;
             };
-            let rows: Vec<ShortcutRow> = rules::SHORTCUTS
-                .iter()
+            let rows: Vec<ShortcutRow> = rules::shortcut_rows()
+                .into_iter()
                 .map(|(keys, action)| ShortcutRow {
-                    keys: (*keys).into(),
-                    action: (*action).into(),
+                    keys: keys.into(),
+                    action: action.into(),
                 })
                 .collect();
             dialog.set_rows(ModelRc::from(Rc::new(VecModel::from(rows))));
-            dialog.set_footer(rules::SHORTCUTS_FOOTER.into());
+            dialog.set_footer(rules::shortcuts_footer().into());
             fill_theme(
                 &dialog.global::<Theme>(),
                 &build_palette(self.theme, self.accent),
@@ -1383,6 +1500,9 @@ impl App {
     /// Lyrics found are saved as a .lrc next to the song only when that can't overwrite
     /// anything and the match is reliable. Otherwise a manual search asks first, and an
     /// automatic one only shows them.
+    ///
+    /// With Lyrics ▾ → Let me choose the version on, a manual search lists every version
+    /// LRCLIB has instead ([`choices`]).
     fn search_lyrics_online(&mut self, ui: &MainWindow, manual: bool) {
         let (Some(path), Some(info)) = (self.queue.current_path().cloned(), self.info.as_ref())
         else {
@@ -1394,6 +1514,16 @@ impl App {
             i64::try_from(info.duration_sec).unwrap_or(i64::MAX),
             info.title_from_tags,
         );
+        if manual
+            && self
+                .store
+                .settings
+                .get_bool(rules::CHOOSE_LYRICS_KEY, false)
+        {
+            self.search_lyrics_versions(ui, path, query);
+            return;
+        }
+        self.close_choices(); // a plain search replaces a list that is still open
         self.cancel_lyrics_search();
         self.show_lyrics_message(ui, rules::SEARCHING_TEXT, "status");
         let cancel = Arc::new(AtomicBool::new(false));
@@ -1435,18 +1565,35 @@ impl App {
             return; // other lyrics were put on screen while this search ran; they stay
         }
         if found.lyrics.is_empty() {
-            if manual && self.show_own_lyrics(ui, &path) {
-                message_later(
-                    rfd::MessageLevel::Info,
-                    rules::SEARCH_TITLE,
-                    rules::LRCLIB_HAS_NONE_TEXT.to_owned(),
-                );
-                return;
-            }
-            self.show_lyrics_message(ui, rules::NO_LYRICS_TEXT, "empty");
+            self.nothing_found_online(ui, &path, manual);
+        } else {
+            self.lyrics_found_online(ui, found, path, manual);
+        }
+    }
+
+    /// LRCLIB has nothing: after a manual search the song's own lyrics come back, with
+    /// a note; otherwise the lyrics area says there are none.
+    fn nothing_found_online(&mut self, ui: &MainWindow, path: &Path, manual: bool) {
+        if manual && self.show_own_lyrics(ui, path) {
+            message_later(
+                rfd::MessageLevel::Info,
+                rules::SEARCH_TITLE,
+                rules::LRCLIB_HAS_NONE_TEXT.to_owned(),
+            );
             return;
         }
+        self.show_lyrics_message(ui, rules::NO_LYRICS_TEXT, "empty");
+    }
 
+    /// Shows lyrics from LRCLIB, then keeps them, offers to, or leaves it at that
+    /// ([`rules::after_fetch`]).
+    fn lyrics_found_online(
+        &mut self,
+        ui: &MainWindow,
+        found: FetchResult,
+        path: PathBuf,
+        manual: bool,
+    ) {
         self.parse_and_display_lyrics(ui, &found.lyrics);
         let lrc_path = lrc_path_for(&path);
         let has_file = lrc_path.exists();
@@ -1638,6 +1785,7 @@ impl App {
         self.queue_wanted = s.get_bool("ui/queue_open", false);
         let romaji = s.get_bool("lyrics/romaji", false);
         ui.set_smooth_animation(s.get_bool(SMOOTH_ANIMATION_KEY, false));
+        ui.set_choose_lyrics(s.get_bool(rules::CHOOSE_LYRICS_KEY, false));
 
         self.apply_theme(ui, &theme, &accent, false);
         ui.set_volume(volume as f32);
@@ -1847,6 +1995,7 @@ impl App {
         if let Some(dialog) = &self.question {
             let _ = dialog.hide();
         }
+        self.close_choices();
         self.close_editors();
     }
 
@@ -1856,10 +2005,37 @@ impl App {
 
     pub fn drag_hovered(&mut self, ui: &MainWindow, path: PathBuf) {
         self.hovered.push(path);
-        match rules::drop_plan(&self.hovered, self.queue.current().is_some()) {
+        self.show_drop_overlay(ui);
+    }
+
+    /// What a drop of `paths` does. With Shift held and a tracklist open, songs and
+    /// folders are added to it; anything else is as in the Python app (`_drop_plan`).
+    fn drop_plan_for(&self, paths: &[PathBuf], shift: bool) -> Option<rules::DropPlan> {
+        if shift
+            && !self.queue.is_empty()
+            && let Some(plan) = rules::add_drop_plan(paths)
+        {
+            return Some(plan);
+        }
+        rules::drop_plan(paths, self.queue.current().is_some())
+    }
+
+    /// The overlay for the files being dragged, as Shift is now.
+    fn show_drop_overlay(&mut self, ui: &MainWindow) {
+        self.hover_shift = crate::platform::shift_held();
+        match self.drop_plan_for(&self.hovered, self.hover_shift) {
             Some(plan) => {
+                let hint = if plan.replaces_tracklist()
+                    && !self.queue.is_empty()
+                    && crate::platform::SHIFT_READABLE
+                {
+                    rules::DROP_ADD_HINT
+                } else {
+                    ""
+                };
                 ui.set_drop_headline(plan.headline.into());
                 ui.set_drop_detail(plan.detail.into());
+                ui.set_drop_hint(hint.into());
                 ui.set_drop_visible(true);
             }
             None => ui.set_drop_visible(false),
@@ -1868,6 +2044,7 @@ impl App {
 
     pub fn drag_left(&mut self, ui: &MainWindow) {
         self.hovered.clear();
+        self.hover_shift = false;
         ui.set_drop_visible(false);
     }
 
@@ -1879,15 +2056,20 @@ impl App {
             return;
         }
         self.drop_pending = true;
+        // What the overlay promised is what happens, even if Shift is let go a moment
+        // before the files arrive.
+        self.drop_shift = self.hover_shift || crate::platform::shift_held();
         Timer::single_shot(Duration::ZERO, || app_call(|a, ui| a.run_drop(ui)));
     }
 
     fn run_drop(&mut self, ui: &MainWindow) {
         self.drop_pending = false;
         let paths = std::mem::take(&mut self.dropped);
+        let shift = std::mem::take(&mut self.drop_shift);
         self.hovered.clear();
+        self.hover_shift = false;
         ui.set_drop_visible(false);
-        let Some(plan) = rules::drop_plan(&paths, self.queue.current().is_some()) else {
+        let Some(plan) = self.drop_plan_for(&paths, shift) else {
             return;
         };
         match plan.action {
@@ -1902,6 +2084,7 @@ impl App {
             DropAction::Files { folders, audio } => {
                 self.scan(folders, audio, true, ScanThen::Files, String::new());
             }
+            DropAction::Add { folders, audio } => self.add_to_tracklist(folders, audio),
         }
     }
 
@@ -1989,6 +2172,11 @@ impl App {
         if self.player.duration_ms() == 0 {
             ui.set_seek_max(0.0);
             ui.set_duration_text(rules::format_time(0).into());
+        }
+        // Shift pressed or let go while files are dragged over the window: the overlay
+        // says what the drop does now.
+        if !self.hovered.is_empty() && crate::platform::shift_held() != self.hover_shift {
+            self.show_drop_overlay(&ui);
         }
         let pos = self.player.position_ms();
         if !self.seeking {
