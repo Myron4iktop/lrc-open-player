@@ -7,6 +7,7 @@
 
 mod choices;
 mod editors;
+mod publish;
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -132,6 +133,8 @@ pub struct App {
     /// lists while it is open.
     choices_dialog: Option<LyricsChoicesDialog>,
     choosing: Option<choices::Choosing>,
+    /// "Publish to LRCLIB", while open.
+    publishing: Option<publish::Publishing>,
 
     store: Store,
     /// Set when the app quits: online searches still running send nothing back.
@@ -214,6 +217,7 @@ pub fn attach(ui: &MainWindow) -> (Rc<RefCell<App>>, Timers) {
         pending_offer: None,
         choices_dialog: None,
         choosing: None,
+        publishing: None,
         store: Store::open(),
         quitting: Arc::new(AtomicBool::new(false)),
         closing: false,
@@ -787,6 +791,7 @@ impl App {
             fill_theme(&dialog.global::<Theme>(), &p);
         }
         self.theme_choices(&p);
+        self.theme_publish(&p);
         self.theme_editors(&p);
         ui.invoke_sync_color_scheme();
         ui.set_theme_key(self.theme.into());
@@ -2220,6 +2225,7 @@ impl App {
             let _ = dialog.hide();
         }
         self.close_choices();
+        self.close_publish();
         self.close_editors();
     }
 

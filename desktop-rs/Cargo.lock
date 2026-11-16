@@ -2932,6 +2932,7 @@ dependencies = [
  "image",
  "lofty",
  "regex",
+ "ring",
  "rustfft",
  "rustls",
  "rustls-platform-verifier",

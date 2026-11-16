@@ -18,6 +18,8 @@ lofty = "0.25"
 regex = "1"
 # The visualizer's FFT (already built for Rubato's resampler).
 rustfft = "6.4"
+# SHA-256 for LRCLIB's anti-spam check when publishing (already built for rustls).
+ring = "0.17"
 # TLS for the AI client (already built for ureq), with the system's own certificate checks.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 rustls-platform-verifier = "0.7"

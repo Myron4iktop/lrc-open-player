@@ -6,6 +6,7 @@ LRC Open Player 1.1 lets you build, rearrange and save a tracklist from songs an
 - **Choose the version of the lyrics.** Turn on Lyrics ▾ → Let me choose the version, and Lyrics ▾ → Search online lists every version LRCLIB has, with its length next to your file's. Pick one and it shows in the player straight away, so you can watch whether the lines keep time with the song. "Use these lyrics" keeps it; Cancel puts the old lyrics back.
 - **Rearrange the tracklist.** Drag a row to move it, or click the ✕ that appears on a row to take that song out. The tracklist now also scrolls to the song that's playing.
 - **Playlists.** Open ▾ → Save tracklist as playlist… saves it as an `.m3u8` file, and Open ▾ → Playlist… opens `.m3u8` and `.m3u` playlists (you can also drop one on the window). Songs inside the playlist's folder are saved with relative paths, so the folder can be moved with its playlist.
+- **Publish your synced lyrics to LRCLIB.** In the sync editor (`Ctrl+T`), **Publish…** shares the lyrics you timed, so other people and other players can find them. You check the title, artist and album first; translations stay on your computer. No account needed.
 - Open ▾ → Audio files… can open several songs at once.
 
 ## Download
@@ -33,7 +34,7 @@ The first time it starts, it copies your settings from the Python version (theme
 
 ## Privacy
 
-No accounts, ads or telemetry. It only goes online to look up lyrics on LRCLIB (title, artist and length), and, if you turn AI alignment on, to the server you chose.
+No accounts, ads or telemetry. It only goes online to look up lyrics on LRCLIB (title, artist and length), to publish lyrics when you press Publish… in the sync editor, and, if you turn AI alignment on, to the server you chose.
 
 ## License
 
