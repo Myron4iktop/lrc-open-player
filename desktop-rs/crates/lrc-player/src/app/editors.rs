@@ -83,7 +83,7 @@ fn update_rows<T: Clone + PartialEq + 'static>(model: &VecModel<T>, rows: Vec<T>
 }
 
 /// Something the current callback hands to the event loop to drop, once it returns.
-fn drop_later<T: 'static>(value: T) {
+pub(super) fn drop_later<T: 'static>(value: T) {
     let mut value = Some(value);
     Timer::single_shot(Duration::ZERO, move || drop(value.take()));
 }
@@ -497,6 +497,27 @@ impl App {
         }
         self.parse_and_display_lyrics(ui, &text);
         self.sync_status(ed::PREVIEW_SHOWN);
+    }
+
+    /// What "Publish…" sends: the song and the editor's LRC, or a note for the editor's
+    /// status line when there is nothing ready to publish.
+    pub(super) fn sync_publish_input(&self) -> Result<(PathBuf, String), &'static str> {
+        let Some(w) = &self.sync else {
+            return Err(ed::NOTHING_STAMPED);
+        };
+        let (text, missing) = ed::build_sync_lrc(&w.ed.entries);
+        if text.is_empty() {
+            return Err(ed::NOTHING_STAMPED);
+        }
+        if missing > 0 {
+            return Err("Stamp every line before publishing: some lines have no timestamp yet.");
+        }
+        Ok((w.track_path.clone(), text))
+    }
+
+    /// A note in the sync editor's status line.
+    pub(super) fn sync_note(&self, text: &str) {
+        self.sync_status(text);
     }
 
     fn sync_copy(&mut self) {
@@ -1187,6 +1208,7 @@ fn connect_sync(d: &SyncDialog) {
     });
     d.on_save(|| ask_flow(sync_save()));
     d.on_embed(|| ask_flow(sync_embed()));
+    on!(on_publish, |a, ui| a.open_publish());
     d.on_close_asked(|| {
         ask_flow(async {
             try_close_sync().await;

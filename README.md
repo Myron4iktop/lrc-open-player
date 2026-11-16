@@ -11,11 +11,15 @@ The repository also contains **LRC Companion**, an Android app for fixing tags a
 ### Player (Windows)
 
 - **Synced lyrics** that follow the song, from a `.lrc` file next to it, from the file's own tags, or found online on [LRCLIB](https://lrclib.net)
+- When LRCLIB has several versions of a song's lyrics, **Lyrics → Let me choose the version** lists them all, and each can be tried against the song as it plays before you keep one
 - **Romaji** for Japanese lyrics (press `R`), with a translation shown under each line
-- **Sync lyrics** (`Ctrl+T`): play the song and press Enter as each line starts, and plain lyrics become a synced `.lrc`
+- **Sync lyrics** (`Ctrl+T`): play the song and press Enter as each line starts, and plain lyrics become a synced `.lrc`. **Publish…** shares the result on LRCLIB, so other people can find it
 - **Add translation** (`Ctrl+Shift+T`): pair a translation with synced lyrics, either line by line or with optional AI alignment
 - Save lyrics as a `.lrc` file or embed them in the audio file, so they travel with it
 - Albums, shuffle, repeat (off / track / album) and drag and drop
+- Add songs from anywhere to the tracklist that is playing: **Open → Add songs to tracklist…** (`Ctrl+Shift+A`), or hold `Shift` while dropping songs or folders
+- Drag tracklist rows to reorder them, and remove a song with the ✕ on its row
+- Save the tracklist as an `.m3u8` playlist, and open `.m3u8` and `.m3u` playlists (**Open → Playlist…**, or drop one on the window)
 - Dark and light themes, seven accent colors and an optional visualizer
 - Windows media keys and lock-screen controls, a tray icon, and it remembers where you left off
 - Plays FLAC, MP3, M4A, OGG, Opus and WAV
@@ -73,6 +77,7 @@ API keys are stored encrypted for your Windows account.
 There are no accounts, ads or telemetry. The player only goes online for:
 
 - **Lyrics search:** the song's title, artist and length are sent to LRCLIB.
+- **Publishing, only when you press Publish… in the sync editor:** the song's title, artist, album and length and its synced lyrics (without translations) are sent to LRCLIB, where anyone can see them. No account is involved.
 - **AI alignment, if you turn it on:** the lyrics and translation are sent to the server you chose. That's your own computer, or OpenRouter and the company running the model you picked.
 
 ## Third-party software

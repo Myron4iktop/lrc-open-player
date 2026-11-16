@@ -118,6 +118,20 @@ impl Query {
         let terms = py::strip(&format!("{} {}", self.title, self.artist)).to_owned();
         format!("{SEARCH_URL}?{}", urlencode(&[("q", terms)]))
     }
+
+    /// The `/api/search` address that asks for the title and the artist each in their
+    /// own field, or `None` without an artist. It finds other entries than the free-text
+    /// search does (each returns 20 at most), so [`fetch_candidates`] asks both.
+    pub fn fields_search_url(&self) -> Option<String> {
+        if self.artist.is_empty() {
+            return None;
+        }
+        let params = [
+            ("track_name", self.title.clone()),
+            ("artist_name", self.artist.clone()),
+        ];
+        Some(format!("{SEARCH_URL}?{}", urlencode(&params)))
+    }
 }
 
 /// Python's `urllib.parse.urlencode`: UTF-8, spaces as `+`, only `A-Za-z0-9_.-~` kept.
@@ -227,6 +241,39 @@ pub fn pick_from_get(data: &Value, query: &Query) -> Result<Option<FetchResult>,
     Ok(None)
 }
 
+/// A search hit's text field: "" when missing or empty. `Err` where Python would raise
+/// (a truthy value that isn't text).
+fn text_of(item: &Value, key: &str) -> Result<String, Raised> {
+    let v = item.get(key);
+    if !truthy(v) {
+        return Ok(String::new());
+    }
+    v.and_then(Value::as_str).map(str::to_owned).ok_or(Raised)
+}
+
+/// A search hit about as long as the song (within [`MATCH_TOLERANCE_SEC`]).
+fn fits(item: &Value, query: &Query) -> bool {
+    query.duration_sec > 0
+        && (search_duration(item) - query.duration_sec as f64).abs() <= MATCH_TOLERANCE_SEC
+}
+
+/// A search hit that is this song: as long, with the same title and artist.
+///
+/// "Trusted" means safe to keep without asking, so /api/search hits must agree on the
+/// song, not only its length: another track of the same length is a different song.
+/// Without an artist to compare (an untagged file) nothing is trusted: plenty of songs
+/// are called "Home" or "Intro" and run about as long, and a wrong .lrc saved next to
+/// the song would be shown from then on.
+fn matches(item: &Value, query: &Query) -> Result<bool, Raised> {
+    if query.artist.is_empty() || !fits(item, query) {
+        return Ok(false);
+    }
+    if !same_text(&text_of(item, "trackName")?, &query.title) {
+        return Ok(false);
+    }
+    Ok(same_text(&text_of(item, "artistName")?, &query.artist))
+}
+
 /// The best answer from `/api/search`: a synced hit that matches the song, then any
 /// synced hit, then any plain one. `Err` means the Python code would have raised, which
 /// ends the lookup as "No lyrics found online."
@@ -235,34 +282,9 @@ pub fn pick_from_search(results: &Value, query: &Query) -> Result<Option<FetchRe
         Value::Array(a) => a.iter().filter(|r| r.is_object()).collect(),
         _ => Vec::new(),
     };
-    let fits = |item: &Value| {
-        query.duration_sec > 0
-            && (search_duration(item) - query.duration_sec as f64).abs() <= MATCH_TOLERANCE_SEC
-    };
-    let text_of = |item: &Value, key: &str| -> Result<String, Raised> {
-        let v = item.get(key);
-        if !truthy(v) {
-            return Ok(String::new());
-        }
-        v.and_then(Value::as_str).map(str::to_owned).ok_or(Raised)
-    };
-    // "Trusted" means safe to keep without asking, so /api/search hits must agree on the
-    // song, not only its length: another track of the same length is a different song.
-    // Without an artist to compare (an untagged file) nothing is trusted: plenty of songs
-    // are called "Home" or "Intro" and run about as long, and a wrong .lrc saved next to
-    // the song would be shown from then on.
-    let matches = |item: &Value| -> Result<bool, Raised> {
-        if query.artist.is_empty() || !fits(item) {
-            return Ok(false);
-        }
-        if !same_text(&text_of(item, "trackName")?, &query.title) {
-            return Ok(false);
-        }
-        Ok(same_text(&text_of(item, "artistName")?, &query.artist))
-    };
 
     for item in &results {
-        if truthy(item.get("syncedLyrics")) && matches(item)? {
+        if truthy(item.get("syncedLyrics")) && matches(item, query)? {
             let text = lyrics_field(item, "syncedLyrics")?.unwrap_or_default();
             let d = search_duration(item);
             return FetchResult::new(text, "Synced lyrics matched on LRCLIB.", true, d).map(Some);
@@ -278,11 +300,179 @@ pub fn pick_from_search(results: &Value, query: &Query) -> Result<Option<FetchRe
     for item in &results {
         if let Some(text) = lyrics_field(item, "plainLyrics")? {
             let d = search_duration(item);
-            let trusted = matches(item)?;
+            let trusted = matches(item, query)?;
             return FetchResult::new(text, "Plain lyrics found on LRCLIB.", trusted, d).map(Some);
         }
     }
     Ok(None)
+}
+
+// ---------------------------------------------------------------------------------------
+// Every version LRCLIB has (not in the Python app)
+// ---------------------------------------------------------------------------------------
+
+/// One set of lyrics LRCLIB has for a song. A song often has several: other releases
+/// of it, a live take, or the same words timed by someone else.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Candidate {
+    /// LRCLIB's number for the entry, or 0 when it gave none.
+    pub id: i64,
+    pub track: String,
+    pub artist: String,
+    pub album: String,
+    /// The entry's length in whole seconds, or 0 when unknown.
+    pub duration_sec: i64,
+    /// The lyrics have line times. An entry with both kinds is offered as synced.
+    pub synced: bool,
+    pub lyrics: String,
+    /// Almost certainly this song, as [`FetchResult::trusted`] means it.
+    pub trusted: bool,
+}
+
+impl Candidate {
+    /// Reads one LRCLIB record, or `None` when it has no lyrics (an instrumental) or
+    /// isn't shaped like one. `trusted` is asked only for a record with lyrics.
+    fn from_record(item: &Value, trusted: impl FnOnce(&Value) -> bool) -> Option<Self> {
+        if !item.is_object() {
+            return None;
+        }
+        let lyrics_of = |key| lyrics_field(item, key).ok().flatten();
+        let (lyrics, synced) = match lyrics_of("syncedLyrics") {
+            Some(text) => (text, true),
+            None => (lyrics_of("plainLyrics")?, false),
+        };
+        if py::strip(lyrics).is_empty() {
+            return None;
+        }
+        let text = |key| text_of(item, key).unwrap_or_default();
+        let track = match text("trackName") {
+            name if name.is_empty() => text("name"),
+            name => name,
+        };
+        let duration = py::round_half_even(search_duration(item));
+        Some(Candidate {
+            id: item.get("id").and_then(Value::as_i64).unwrap_or(0),
+            track,
+            artist: text("artistName"),
+            album: text("albumName"),
+            duration_sec: if duration.is_finite() && duration > 0.0 {
+                duration as i64
+            } else {
+                0
+            },
+            synced,
+            lyrics: lyrics.to_owned(),
+            trusted: trusted(item),
+        })
+    }
+
+    /// The same lyrics as the lookup's answer, for the rules that follow a lookup
+    /// (showing them, and whether to keep them).
+    pub fn to_result(&self) -> FetchResult {
+        FetchResult {
+            lyrics: self.lyrics.clone(),
+            message: if self.synced {
+                "Synced lyrics chosen from LRCLIB."
+            } else {
+                "Plain lyrics chosen from LRCLIB."
+            }
+            .to_owned(),
+            trusted: self.trusted,
+            lrclib_duration_sec: self.duration_sec,
+        }
+    }
+
+    /// How far the entry's length is from the song's, in seconds; `None` when either
+    /// length is unknown.
+    pub fn length_gap(&self, song_duration_sec: i64) -> Option<i64> {
+        (self.duration_sec > 0 && song_duration_sec > 0)
+            .then(|| (self.duration_sec - song_duration_sec).abs())
+    }
+}
+
+/// Every version found for a song, the likeliest first.
+///
+/// `exact` is the answer of `/api/get` (LRCLIB's own best match), `searches` the answers
+/// of `/api/search`. An entry found by several of them is listed once. The order is the
+/// one [`pick_from_search`] picks in, so the first is what the player would have taken
+/// by itself: synced lyrics that match the song, then other synced lyrics, then plain
+/// ones; within each, the entry closest to the song's length comes first.
+pub fn candidates(exact: Option<&Value>, searches: &[Value], query: &Query) -> Vec<Candidate> {
+    let mut found: Vec<Candidate> = Vec::new();
+    let mut add = |c: Candidate| {
+        let seen = found.iter().any(|f| {
+            if c.id != 0 && f.id != 0 {
+                return c.id == f.id;
+            }
+            f.lyrics == c.lyrics && f.duration_sec == c.duration_sec && f.album == c.album
+        });
+        if !seen {
+            found.push(c);
+        }
+    };
+    // LRCLIB only answers /api/get with an entry of that length, by that artist.
+    let exact_lookup = query.duration_sec > 0 && !query.artist.is_empty();
+    if let Some(c) = exact.and_then(|item| Candidate::from_record(item, |_| exact_lookup)) {
+        add(c);
+    }
+    for results in searches {
+        let Value::Array(items) = results else {
+            continue;
+        };
+        for item in items {
+            let trusted = |item: &Value| matches(item, query).unwrap_or(false);
+            if let Some(c) = Candidate::from_record(item, trusted) {
+                add(c);
+            }
+        }
+    }
+    // Stable, so entries that tie stay in the order LRCLIB gave them.
+    found.sort_by_key(|c| {
+        let rank = match (c.synced, c.trusted) {
+            (true, true) => 0,
+            (true, false) => 1,
+            (false, true) => 2,
+            (false, false) => 3,
+        };
+        (rank, c.length_gap(query.duration_sec).unwrap_or(i64::MAX))
+    });
+    found
+}
+
+/// Asks LRCLIB for every version of a song: `/api/get` (6 s), then `/api/search` by
+/// title and artist fields and as free text (7 s each).
+///
+/// Returns `None` when `cancelled` was set. An empty list means LRCLIB has nothing, or
+/// couldn't be reached. Runs on a worker thread; it blocks for the requests.
+pub fn fetch_candidates(query: &Query, cancelled: &AtomicBool) -> Option<Vec<Candidate>> {
+    let mut asked = false;
+    fetch_candidates_with(query, cancelled, |url, timeout_secs| {
+        // LRCLIB asks clients to leave a gap between requests.
+        if std::mem::replace(&mut asked, true) {
+            std::thread::sleep(Duration::from_millis(250));
+        }
+        fetch_json(url, timeout_secs)
+    })
+}
+
+/// [`fetch_candidates`] with the HTTP part handed in, as for [`fetch_with`].
+pub fn fetch_candidates_with(
+    query: &Query,
+    cancelled: &AtomicBool,
+    mut get: impl FnMut(&str, u64) -> Option<Value>,
+) -> Option<Vec<Candidate>> {
+    let stop = || cancelled.load(Ordering::Relaxed);
+    let exact = get(&query.get_url(), 6);
+    let mut searches = Vec::new();
+    for url in [query.fields_search_url(), Some(query.search_url())] {
+        if stop() {
+            return None;
+        }
+        if let Some(results) = url.and_then(|url| get(&url, 7)) {
+            searches.push(results);
+        }
+    }
+    (!stop()).then(|| candidates(exact.as_ref(), &searches, query))
 }
 
 /// GETs a URL and parses the JSON, or `None` for anything but a 200 with valid JSON.
@@ -463,6 +653,168 @@ mod tests {
         assert!(!r.trusted);
         let data = json!({"syncedLyrics": "[00:01.00]x", "duration": 200});
         assert!(!pick_from_get(&data, &query).unwrap().unwrap().trusted);
+    }
+
+    fn record(id: i64, track: &str, artist: &str, duration: f64, synced: bool) -> Value {
+        let mut r = json!({
+            "id": id, "trackName": track, "artistName": artist, "albumName": "Album",
+            "duration": duration, "instrumental": false,
+            "plainLyrics": format!("plain {id}"), "syncedLyrics": null,
+        });
+        if synced {
+            r["syncedLyrics"] = json!(format!("[00:01.00]synced {id}"));
+        }
+        r
+    }
+
+    #[test]
+    fn fields_search_needs_an_artist() {
+        assert_eq!(
+            q("Café", "A B", 1).fields_search_url().unwrap(),
+            "https://lrclib.net/api/search?track_name=Caf%C3%A9&artist_name=A+B"
+        );
+        assert_eq!(q("Song", "", 1).fields_search_url(), None);
+    }
+
+    #[test]
+    fn candidates_list_every_version_once_likeliest_first() {
+        let query = q("My Song", "The Band", 200);
+        let exact = record(7, "My Song", "The Band", 200.0, true);
+        let by_fields = json!([
+            record(3, "My Song", "The Band", 245.0, true), // an extended version
+            record(7, "My Song", "The Band", 200.0, true), // the exact one again
+            record(4, "My Song", "The Band", 201.0, false), // plain, this song
+            {"id": 5, "trackName": "My Song", "artistName": "The Band", "duration": 200,
+             "instrumental": true, "plainLyrics": null, "syncedLyrics": null},
+            "junk",
+        ]);
+        let free_text = json!([
+            record(9, "My Song (Live)", "The Band", 206.0, true),
+            record(3, "My Song", "The Band", 245.0, true),
+            record(8, "My Song", "The Band", 198.0, true), // another upload of this song
+            record(6, "My Song", "Cover Artist", 150.0, false),
+        ]);
+        let found = candidates(Some(&exact), &[by_fields, free_text], &query);
+        let ids: Vec<i64> = found.iter().map(|c| c.id).collect();
+        // Synced and this song (7, then 8 as it is 2 s off), other synced ones by how
+        // close their length is (9, then 3), then plain: this song (4), another (6).
+        assert_eq!(ids, [7, 8, 9, 3, 4, 6]);
+        assert_eq!(
+            found.iter().map(|c| c.trusted).collect::<Vec<_>>(),
+            [true, true, false, false, true, false]
+        );
+        let first = &found[0];
+        assert!(first.synced);
+        assert_eq!(first.lyrics, "[00:01.00]synced 7");
+        assert_eq!(
+            (first.track.as_str(), first.album.as_str()),
+            ("My Song", "Album")
+        );
+        assert_eq!(first.duration_sec, 200);
+        assert_eq!(found[4].lyrics, "plain 4");
+        assert!(!found[4].synced);
+        assert_eq!(found[3].length_gap(200), Some(45));
+    }
+
+    #[test]
+    fn candidates_without_a_length_or_an_artist() {
+        // An untagged file: nothing is trusted, and LRCLIB's order is kept.
+        let query = q("Home", "", 0);
+        let results = json!([
+            record(1, "Home", "Someone", 200.0, false),
+            record(2, "Home", "Other", 180.0, true),
+            record(3, "Home", "Third", 0.0, true),
+        ]);
+        let exact = record(2, "Home", "Other", 180.0, true);
+        let found = candidates(Some(&exact), &[results], &query);
+        assert_eq!(found.iter().map(|c| c.id).collect::<Vec<_>>(), [2, 3, 1]);
+        assert!(found.iter().all(|c| !c.trusted));
+        assert_eq!(found[1].duration_sec, 0);
+        assert_eq!(found[0].length_gap(0), None);
+        assert_eq!(found[1].length_gap(200), None);
+        // Answers that aren't lists, or records, give nothing.
+        assert_eq!(
+            candidates(Some(&json!("x")), &[json!({"a": 1})], &query),
+            []
+        );
+    }
+
+    #[test]
+    fn records_without_an_id_are_told_apart_by_their_lyrics() {
+        let query = q("S", "A", 100);
+        let mut a = record(0, "S", "A", 100.0, true);
+        a.as_object_mut().unwrap().remove("id");
+        let mut b = a.clone();
+        b["syncedLyrics"] = json!("[00:02.00]other words");
+        let found = candidates(None, &[json!([a.clone(), a, b])], &query);
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0].id, 0);
+    }
+
+    #[test]
+    fn a_chosen_candidate_follows_the_lookup_rules() {
+        let query = q("My Song", "The Band", 200);
+        let found = candidates(
+            None,
+            &[json!([record(1, "My Song", "The Band", 245.4, true)])],
+            &query,
+        );
+        let result = found[0].to_result();
+        assert_eq!(result.lyrics, "[00:01.00]synced 1");
+        assert_eq!(result.message, "Synced lyrics chosen from LRCLIB.");
+        assert!(!result.trusted);
+        assert_eq!(result.lrclib_duration_sec, 245);
+    }
+
+    #[test]
+    fn fetch_candidates_asks_get_then_both_searches() {
+        let query = q("My Song", "The Band", 200);
+        let mut asked = Vec::new();
+        let found = fetch_candidates_with(&query, &AtomicBool::new(false), |url, timeout| {
+            asked.push((url.to_owned(), timeout));
+            if url.contains("/api/get") {
+                None // a 404: LRCLIB has no exact match
+            } else if url.contains("track_name") {
+                Some(json!([record(1, "My Song", "The Band", 200.0, true)]))
+            } else {
+                Some(json!([
+                    record(1, "My Song", "The Band", 200.0, true),
+                    record(2, "My Song", "The Band", 230.0, true)
+                ]))
+            }
+        })
+        .unwrap();
+        assert_eq!(found.iter().map(|c| c.id).collect::<Vec<_>>(), [1, 2]);
+        assert_eq!(
+            asked,
+            [
+                (query.get_url(), 6),
+                (query.fields_search_url().unwrap(), 7),
+                (query.search_url(), 7),
+            ]
+        );
+
+        // Without an artist there is one search; with nothing found, an empty list.
+        let query = q("My Song", "", 200);
+        let mut count = 0;
+        let found = fetch_candidates_with(&query, &AtomicBool::new(false), |_, _| {
+            count += 1;
+            None
+        });
+        assert_eq!((found, count), (Some(Vec::new()), 2));
+    }
+
+    #[test]
+    fn a_cancelled_candidate_search_sends_nothing() {
+        let query = q("My Song", "The Band", 200);
+        let cancelled = AtomicBool::new(false);
+        let mut count = 0;
+        let found = fetch_candidates_with(&query, &cancelled, |_, _| {
+            count += 1;
+            cancelled.store(true, Ordering::Relaxed);
+            Some(json!([record(1, "My Song", "The Band", 200.0, true)]))
+        });
+        assert_eq!((found, count), (None, 1));
     }
 
     #[test]

@@ -162,6 +162,7 @@ export component SyncDialog inherits Window {
     callback preview();
     callback copy-lrc();
     callback embed();
+    callback publish();
     callback move-cursor(int);
     callback nudge(int);
     callback row-clicked(int);
@@ -521,6 +522,14 @@ export component SyncDialog inherits Window {
                         tooltip: "Write the lyrics into the song itself, so they travel with it when you share it";
                         clicked => {
                             root.embed();
+                        }
+                    }
+
+                    PushButton {
+                        text: "Publish…";
+                        tooltip: "Share these synced lyrics on LRCLIB, so other people (and other players) can find them";
+                        clicked => {
+                            root.publish();
                         }
                     }
 
@@ -1571,6 +1580,172 @@ export component AnswerDialog inherits Window {
 
     // Bumped from Rust when the window comes back from the taskbar, as in main.slint:
     // changing this invisible full-window layer makes the next frame repaint every pixel.
+    in property <int> repaint-count;
+    Rectangle {
+        background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;
+    }
+}
+
+// "Publish to LRCLIB": the song's details as they will be sent, editable, and the
+// progress of the publish. Rust (src/app/publish.rs) runs it.
+export component PublishDialog inherits Window {
+    title: "Publish to LRCLIB";
+    icon: @image-url("../../../../desktop/favicon.ico");
+    preferred-width: 520px;
+    min-width: 440px;
+    // Room for the status line and the buttons, which wrapped notes above could push
+    // out of a window sized before they were laid out.
+    preferred-height: 430px;
+    min-height: 400px;
+    background: Theme.dialog-bg;
+    default-font-family: "Segoe UI";
+    in-out property <string> track;
+    in-out property <string> artist;
+    in-out property <string> album;
+    in property <string> length-text;
+    in property <string> summary;
+    in property <string> notes;
+    in property <string> status-text;
+    in property <bool> status-error;
+    // The proof of work or the upload is running.
+    in property <bool> busy;
+    // Published: the fields and the button are done with.
+    in property <bool> done;
+    callback publish();
+    callback dismiss();
+
+    public function sync-color-scheme() {
+        Palette.color-scheme = Theme.dark ? ColorScheme.dark : ColorScheme.light;
+    }
+
+    forward-focus: keys;
+    keys := FocusScope {
+        key-pressed(event) => {
+            if event.text == Key.Escape {
+                root.dismiss();
+                return accept;
+            }
+            reject
+        }
+
+        VerticalLayout {
+            padding: 22px;
+            spacing: 14px;
+
+            Text {
+                text: "Publish these lyrics to LRCLIB";
+                font-size: 16px;
+                font-weight: 700;
+                color: Theme.title;
+            }
+
+            Muted {
+                text: "Check the details: LRCLIB finds lyrics by title, artist, album and length.";
+            }
+
+            GridLayout {
+                spacing-horizontal: 12px;
+                spacing-vertical: 8px;
+                Row {
+                    FieldLabel {
+                        text: "Title";
+                    }
+
+                    LineEdit {
+                        text <=> root.track;
+                        enabled: !root.busy && !root.done;
+                    }
+                }
+
+                Row {
+                    FieldLabel {
+                        text: "Artist";
+                    }
+
+                    LineEdit {
+                        text <=> root.artist;
+                        enabled: !root.busy && !root.done;
+                    }
+                }
+
+                Row {
+                    FieldLabel {
+                        text: "Album";
+                    }
+
+                    LineEdit {
+                        text <=> root.album;
+                        enabled: !root.busy && !root.done;
+                        placeholder-text: "For a single, the song's title";
+                    }
+                }
+
+                Row {
+                    FieldLabel {
+                        text: "Length";
+                    }
+
+                    Text {
+                        text: root.length-text;
+                        color: Theme.text-soft;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            Text {
+                text: root.summary;
+                wrap: word-wrap;
+                font-size: 13px;
+                font-weight: 600;
+                color: Theme.text;
+            }
+
+            Help {
+                text: root.notes;
+            }
+
+            if root.busy: Progress {
+                known: false;
+            }
+
+            if root.status-text != "": Status {
+                text: root.status-text;
+                error: root.status-error;
+            }
+
+            // Spare height goes here, not into the buttons.
+            Rectangle {
+                vertical-stretch: 1;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: end;
+                vertical-stretch: 0;
+                if !root.done: PushButton {
+                    min-width: 110px;
+                    role: "primary";
+                    text: "Publish";
+                    enabled: !root.busy;
+                    clicked => {
+                        root.publish();
+                    }
+                }
+
+                PushButton {
+                    min-width: 90px;
+                    text: root.done ? "Close" : root.busy ? "Stop" : "Cancel";
+                    clicked => {
+                        root.dismiss();
+                    }
+                }
+            }
+        }
+    }
+
+    // Bumped from Rust when the window comes back from the taskbar, as in main.slint.
     in property <int> repaint-count;
     Rectangle {
         background: Math.mod(root.repaint-count, 2) == 0 ? transparent : #00000001;

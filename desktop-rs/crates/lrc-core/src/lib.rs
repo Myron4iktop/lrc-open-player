@@ -31,6 +31,8 @@ pub mod lrc;
 pub mod lrclib;
 mod mpeg;
 mod ogg;
+pub mod playlist;
+pub mod publish;
 pub mod py;
 pub mod queue;
 pub mod session;
