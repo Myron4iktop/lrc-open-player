@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::library::is_supported_audio;
 use crate::lrclib::Candidate;
+use crate::playlist::is_playlist;
 use crate::tags::TrackInfo;
 use crate::text::base_name;
 
@@ -170,6 +171,8 @@ pub enum DropAction {
         folders: Vec<PathBuf>,
         audio: Vec<PathBuf>,
     },
+    /// Play the songs this .m3u8 or .m3u playlist names (not in the Python app).
+    Playlist(PathBuf),
     /// Read these folders and songs, then add them to the end of the tracklist
     /// ([`add_drop_plan`]; not in the Python app).
     Add {
@@ -220,6 +223,13 @@ pub fn drop_plan(paths: &[PathBuf], has_track: bool) -> Option<DropPlan> {
                 detail: base_name(p),
             });
         }
+    }
+    if paths.len() == 1 && is_playlist(&lower_name(paths[0])) && paths[0].is_file() {
+        return Some(DropPlan {
+            action: DropAction::Playlist(paths[0].clone()),
+            headline: "Drop to play this playlist".into(),
+            detail: base_name(paths[0]),
+        });
     }
     let (folders, audio) = folders_and_songs(&paths);
     if folders.len() == 1 && audio.is_empty() {
@@ -293,7 +303,10 @@ impl DropPlan {
     pub fn replaces_tracklist(&self) -> bool {
         matches!(
             self.action,
-            DropAction::Folder(_) | DropAction::File(_) | DropAction::Files { .. }
+            DropAction::Folder(_)
+                | DropAction::File(_)
+                | DropAction::Files { .. }
+                | DropAction::Playlist(_)
         )
     }
 }
@@ -445,6 +458,42 @@ pub fn save_offer(
         no,
         default_no: has_lrc_file || has_embedded,
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// Playlists (not in the Python app)
+// ---------------------------------------------------------------------------------------
+
+/// The title of the message boxes after Open ▾ → Playlist….
+pub const OPEN_PLAYLIST_TITLE: &str = "Open playlist";
+/// The title of the message box when a playlist can't be saved.
+pub const SAVE_PLAYLIST_TITLE: &str = "Save playlist";
+/// The name the save dialog starts with.
+pub const DEFAULT_PLAYLIST_NAME: &str = "Tracklist.m3u8";
+
+/// A playlist with nothing to play: `listed` songs were named, none of them a song
+/// that is there.
+pub fn playlist_empty_text(name: &str, listed: usize) -> String {
+    if listed == 0 {
+        format!("“{name}” has no songs in it.")
+    } else {
+        format!("None of the songs in “{name}” could be found.")
+    }
+}
+
+/// The note when some of a playlist's songs are gone (moved, renamed, or on a drive
+/// that isn't plugged in); the rest play.
+pub fn playlist_missing_text(name: &str, missing: usize) -> String {
+    if missing == 1 {
+        format!("1 song in “{name}” couldn't be found and was left out.")
+    } else {
+        format!("{missing} songs in “{name}” couldn't be found and were left out.")
+    }
+}
+
+/// When saving a playlist failed.
+pub fn playlist_save_failed_text(name: &str, error: &str) -> String {
+    format!("Couldn't save “{name}”:\n{error}")
 }
 
 // ---------------------------------------------------------------------------------------
@@ -635,8 +684,7 @@ pub const EXTRA_SHORTCUTS: [(&str, &str, &str); 1] =
     [("Ctrl+Shift+O", "Ctrl+Shift+A", "Add songs to the tracklist")];
 
 /// What the Rust build adds to [`SHORTCUTS_FOOTER`].
-pub const SHORTCUTS_FOOTER_EXTRA: &str =
-    "Hold Shift while dropping songs or folders to add them to the tracklist instead.";
+pub const SHORTCUTS_FOOTER_EXTRA: &str = "Hold Shift while dropping songs or folders to add them to the tracklist instead. Drop an .m3u8 or .m3u playlist to play it.";
 
 /// The rows of the F1 list: [`SHORTCUTS`] with [`EXTRA_SHORTCUTS`] in their places.
 pub fn shortcut_rows() -> Vec<(&'static str, &'static str)> {
@@ -753,6 +801,49 @@ mod tests {
         // An .lrc among other files isn't lyrics, and on its own it's not audio either.
         assert_eq!(drop_plan(&[lrc.clone(), other], true), None);
         assert_eq!(drop_plan(&[], true), None);
+    }
+
+    #[test]
+    fn dropped_playlists_and_their_messages() {
+        let dir = tempfile::tempdir().unwrap();
+        let list = dir.path().join("Mix.M3U8");
+        let song = dir.path().join("a.mp3");
+        for f in [&list, &song] {
+            std::fs::write(f, b"x").unwrap();
+        }
+        let plan = drop_plan(std::slice::from_ref(&list), false).unwrap();
+        assert_eq!(plan.action, DropAction::Playlist(list.clone()));
+        assert_eq!(plan.headline, "Drop to play this playlist");
+        assert_eq!(plan.detail, "Mix.M3U8");
+        assert!(plan.replaces_tracklist());
+        // With Shift it is still opened: only songs and folders are added.
+        assert_eq!(add_drop_plan(std::slice::from_ref(&list)), None);
+        // Among songs it isn't a song.
+        let plan = drop_plan(&[list.clone(), song.clone()], false).unwrap();
+        assert_eq!(plan.action, DropAction::File(song));
+        // A playlist that isn't there is refused.
+        assert_eq!(drop_plan(&[dir.path().join("gone.m3u")], true), None);
+
+        assert_eq!(
+            playlist_empty_text("a.m3u8", 0),
+            "“a.m3u8” has no songs in it."
+        );
+        assert_eq!(
+            playlist_empty_text("a.m3u8", 3),
+            "None of the songs in “a.m3u8” could be found."
+        );
+        assert_eq!(
+            playlist_missing_text("a.m3u8", 1),
+            "1 song in “a.m3u8” couldn't be found and was left out."
+        );
+        assert_eq!(
+            playlist_missing_text("a.m3u8", 4),
+            "4 songs in “a.m3u8” couldn't be found and were left out."
+        );
+        assert_eq!(
+            playlist_save_failed_text("a.m3u8", "Denied"),
+            "Couldn't save “a.m3u8”:\nDenied"
+        );
     }
 
     #[test]
@@ -897,7 +988,7 @@ mod tests {
         }
         assert_eq!(
             shortcuts_footer(),
-            "Drop songs, album folders or an .lrc file onto the window to open them.\nHold Shift while dropping songs or folders to add them to the tracklist instead."
+            "Drop songs, album folders or an .lrc file onto the window to open them.\nHold Shift while dropping songs or folders to add them to the tracklist instead. Drop an .m3u8 or .m3u playlist to play it."
         );
     }
 

@@ -53,8 +53,9 @@ export component MainWindow inherits Window {
     in property <[string]> queue-rows;
     in-out property <int> queue-current: -1;
     in-out property <bool> queue-visible;
-    // A row to scroll the tracklist to (songs were just added), or -1. Rust sets the row
-    // and bumps the count; the list scrolls and sets the row back to -1.
+    // A row to bring into view in the tracklist (songs were just added, or another song
+    // plays), or -1. Rust sets the row and bumps the count; the list scrolls and sets the
+    // row back to -1.
     in-out property <int> queue-reveal: -1;
     in property <int> queue-reveal-count;
     // --- Lyrics ---
@@ -95,6 +96,8 @@ export component MainWindow inherits Window {
     callback open-file();
     callback open-album();
     callback add-songs();
+    callback open-playlist();
+    callback save-playlist();
     callback load-lrc();
     callback search-online();
     callback set-choose-lyrics(bool);
@@ -117,6 +120,9 @@ export component MainWindow inherits Window {
     callback offset-reset();
     callback offset-for-all();
     callback queue-play(int);
+    // The ✕ of a tracklist row, and a row dragged from one place to another.
+    callback queue-remove(int);
+    callback queue-move(int, int);
     callback line-clicked(int);
     callback toggle-fullscreen();
     callback set-visualizer(string);
@@ -308,14 +314,20 @@ export component MainWindow inherits Window {
                                 entries: [
                                     { id: "file", title: "Audio files…", shortcut: "Ctrl+O" },
                                     { id: "album", title: "Album folder…", shortcut: "Ctrl+Shift+O" },
+                                    { id: "playlist", title: "Playlist…" },
                                     { id: "-" },
                                     { id: "add", title: "Add songs to tracklist…", shortcut: "Ctrl+Shift+A" },
+                                    { id: "save-playlist", title: "Save tracklist as playlist…", disabled: root.queue-rows.length == 0 },
                                 ];
                                 activated(id) => {
                                     if id == "file" {
                                         root.open-file();
                                     } else if id == "add" {
                                         root.add-songs();
+                                    } else if id == "playlist" {
+                                        root.open-playlist();
+                                    } else if id == "save-playlist" {
+                                        root.save-playlist();
                                     } else {
                                         root.open-album();
                                     }
@@ -763,22 +775,41 @@ export component MainWindow inherits Window {
                         // and not from `rows.preferred-height`: rows just added aren't
                         // laid out yet, and the list couldn't scroll down to them.
                         content-height: max(0px, root.queue-rows.length * 46px - 2px);
+                        // The wheel scrolls the list; dragging moves a row instead.
+                        interactive: false;
 
-                        // Scrolls a row Rust asked for to the middle. `init` covers a
-                        // drawer that was opened by the same change that asked.
+                        // --- Dragging a row to another place ---
+                        // The row being dragged, or -1.
+                        property <int> drag-from: -1;
+                        // Where the pointer is, down from the top of the visible list.
+                        property <length> drag-view-y;
+                        // The gap the row would be dropped into: 0 is above the first row.
+                        property <int> drag-slot: clamp(round((self.drag-view-y - self.content-y) / 46px), 0, root.queue-rows.length);
+                        // The place the row would end up at.
+                        property <int> drag-to: self.drag-slot > self.drag-from ? self.drag-slot - 1 : self.drag-slot;
+                        // The press that just ended was a drag, so it isn't also a click.
+                        property <bool> was-drag;
+
+                        // Scrolls a row to the middle if it isn't in view: one Rust asked
+                        // for (songs were added, another song plays), or the playing
+                        // song when the drawer opens.
                         property <int> reveal-count: root.queue-reveal-count;
-                        function reveal() {
-                            if root.queue-reveal >= 0 && self.height > 0 {
-                                let most = max(0px, self.content-height - self.height);
-                                self.content-y = -clamp(root.queue-reveal * 46px - (self.height - 44px) / 2, 0px, most);
-                                root.queue-reveal = -1;
+                        function reveal(row: int) {
+                            if row >= 0 && self.height > 0 {
+                                let top = row * 46px;
+                                if top < -self.content-y || top + 44px > self.height - self.content-y {
+                                    let most = max(0px, self.content-height - self.height);
+                                    self.content-y = -clamp(top - (self.height - 44px) / 2, 0px, most);
+                                }
                             }
                         }
                         changed reveal-count => {
-                            self.reveal();
+                            self.reveal(root.queue-reveal);
+                            root.queue-reveal = -1;
                         }
                         init => {
-                            self.reveal();
+                            self.reveal(root.queue-reveal >= 0 ? root.queue-reveal : root.queue-current);
+                            root.queue-reveal = -1;
                         }
 
                         rows := VerticalLayout {
@@ -788,11 +819,12 @@ export component MainWindow inherits Window {
                             for row[i] in root.queue-rows: Rectangle {
                                 height: 44px;
                                 border-radius: 6px;
-                                background: i == root.queue-current ? Theme.sel : row-touch.has-hover ? Theme.hover : transparent;
+                                background: i == root.queue-current ? Theme.sel : row-touch.has-hover || remove-touch.has-hover ? Theme.hover : transparent;
+                                opacity: queue-list.drag-from == i ? 0.45 : 1;
 
                                 Text {
                                     x: 10px;
-                                    width: parent.width - 20px;
+                                    width: parent.width - 46px;
                                     height: 100%;
                                     text: row;
                                     overflow: elide;
@@ -803,13 +835,90 @@ export component MainWindow inherits Window {
                                 }
 
                                 row-touch := TouchArea {
+                                    pointer-event(event) => {
+                                        if event.button == PointerEventButton.left && event.kind == PointerEventKind.down {
+                                            queue-list.was-drag = false;
+                                        }
+                                        if event.button == PointerEventButton.left && event.kind == PointerEventKind.up && queue-list.drag-from == i {
+                                            queue-list.was-drag = true;
+                                            queue-list.drag-from = -1;
+                                            if queue-list.drag-to != i {
+                                                root.queue-move(i, queue-list.drag-to);
+                                            }
+                                        }
+                                        if event.kind == PointerEventKind.cancel {
+                                            queue-list.drag-from = -1;
+                                        }
+                                    }
+                                    moved => {
+                                        // A drag starts once the pointer has gone 8 px up or down.
+                                        if self.pressed && root.queue-rows.length > 1 && (queue-list.drag-from == i || abs((self.mouse-y - self.pressed-y) / 1px) > 8) {
+                                            queue-list.drag-view-y = parent.y + self.mouse-y + queue-list.content-y;
+                                            queue-list.drag-from = i;
+                                        }
+                                    }
                                     clicked => {
-                                        root.queue-current = i;
+                                        if !queue-list.was-drag {
+                                            root.queue-current = i;
+                                        }
                                     }
                                     double-clicked => {
                                         root.queue-play(i);
                                     }
                                 }
+
+                                // ✕ at the end of the row under the pointer: takes the
+                                // song out of the tracklist. The last song stays.
+                                remove-touch := TouchArea {
+                                    x: parent.width - 30px;
+                                    y: (parent.height - 24px) / 2;
+                                    width: 24px;
+                                    height: 24px;
+                                    enabled: root.queue-rows.length > 1 && queue-list.drag-from < 0;
+                                    clicked => {
+                                        root.queue-remove(i);
+                                    }
+
+                                    // Only the ✕ comes and goes with the pointer: the
+                                    // area itself is always there to be clicked.
+                                    Rectangle {
+                                        visible: remove-touch.enabled && (row-touch.has-hover || remove-touch.has-hover);
+                                        border-radius: 5px;
+                                        background: remove-touch.has-hover ? Theme.btn-hover : transparent;
+                                        Path {
+                                            width: 8px;
+                                            height: 8px;
+                                            viewbox-width: 10;
+                                            viewbox-height: 10;
+                                            stroke: i == root.queue-current ? Theme.sel-text : Theme.muted;
+                                            stroke-width: 1.3px;
+                                            commands: "M 1 1 L 9 9 M 9 1 L 1 9";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Where the dragged row would go.
+                        if queue-list.drag-from >= 0 && queue-list.drag-to != queue-list.drag-from: Rectangle {
+                            x: 4px;
+                            y: clamp(queue-list.drag-slot * 46px - 2px, 0px, max(0px, queue-list.content-height - 2px));
+                            width: queue-list.width - 8px;
+                            height: 2px;
+                            border-radius: 1px;
+                            background: Theme.accent;
+                        }
+                    }
+
+                    // While a row is dragged near the top or bottom edge, the list scrolls.
+                    Timer {
+                        interval: 16ms;
+                        running: queue-list.drag-from >= 0;
+                        triggered => {
+                            if queue-list.drag-view-y < 26px {
+                                queue-list.content-y = min(0px, queue-list.content-y + 9px);
+                            } else if queue-list.drag-view-y > queue-list.height - 26px {
+                                queue-list.content-y = max(-max(0px, queue-list.content-height - queue-list.height), queue-list.content-y - 9px);
                             }
                         }
                     }

@@ -9,7 +9,7 @@ mod choices;
 mod editors;
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
 use std::sync::Arc;
@@ -19,6 +19,7 @@ use std::time::Duration;
 use lrc_core::library::{SUPPORTED_EXTS, scan_songs};
 use lrc_core::lrc::{self, LyricLine};
 use lrc_core::lrclib::{self, FetchResult, Query};
+use lrc_core::playlist;
 use lrc_core::queue::{Previous, Queue, Repeat, Source};
 use lrc_core::session::{
     self as memory, PLACEMENT_KEY, Placement, PlaybackSnapshot, Remembered, RestorePlan, Snapshot,
@@ -61,6 +62,13 @@ enum ScanThen {
     Files,
     /// Bring back the last session's playlist, paused (`_finish_restore`).
     Restore(Remembered),
+    /// Play a playlist file's songs, in its order. `missing` of the songs it names
+    /// couldn't be found.
+    Playlist {
+        folder: PathBuf,
+        name: String,
+        missing: usize,
+    },
 }
 
 /// Lyrics found online, waiting for the answer to "Save these lyrics as …?".
@@ -367,6 +375,47 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     });
 
     let weak = Rc::downgrade(app);
+    ui.on_open_playlist(move || {
+        let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
+            return;
+        };
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            let mut dialog = rfd::AsyncFileDialog::new()
+                .set_title("Open Playlist")
+                .add_filter("Playlists", &["m3u8", "m3u"]);
+            if let Some(dir) = start {
+                dialog = dialog.set_directory(dir);
+            }
+            if let Some(file) = dialog.pick_file().await {
+                let path = file.path().to_path_buf();
+                with_app(&weak, |a, _ui| a.open_playlist(path));
+            }
+        });
+    });
+
+    let weak = Rc::downgrade(app);
+    ui.on_save_playlist(move || {
+        let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
+            return;
+        };
+        let weak = weak.clone();
+        let _ = slint::spawn_local(async move {
+            let mut dialog = rfd::AsyncFileDialog::new()
+                .set_title("Save Tracklist as Playlist")
+                .add_filter("Playlist", &["m3u8"])
+                .set_file_name(rules::DEFAULT_PLAYLIST_NAME);
+            if let Some(dir) = start {
+                dialog = dialog.set_directory(dir);
+            }
+            if let Some(file) = dialog.save_file().await {
+                let path = playlist::with_playlist_ext(file.path().to_path_buf());
+                with_app(&weak, |a, _ui| a.save_playlist(&path));
+            }
+        });
+    });
+
+    let weak = Rc::downgrade(app);
     ui.on_open_album(move || {
         let Some(start) = weak.upgrade().map(|a| a.borrow().dialog_start_dir()) else {
             return;
@@ -452,6 +501,16 @@ fn connect(ui: &MainWindow, app: &Rc<RefCell<App>>) {
     on!(on_queue_play, |a, ui, row| {
         if let Ok(i) = usize::try_from(row) {
             a.play_index(ui, i)
+        }
+    });
+    on!(on_queue_remove, |a, ui, row| {
+        if let Ok(i) = usize::try_from(row) {
+            a.remove_from_tracklist(ui, i)
+        }
+    });
+    on!(on_queue_move, |a, ui, from, to| {
+        if let (Ok(from), Ok(to)) = (usize::try_from(from), usize::try_from(to)) {
+            a.move_in_tracklist(ui, from, to)
         }
     });
     on!(on_line_clicked, |a, _ui, row| a.line_clicked(row));
@@ -861,6 +920,147 @@ impl App {
         self.show_queue_panel(ui);
     }
 
+    /// Open ▾ → Playlist…, or a playlist dropped on the window: plays the songs an
+    /// .m3u8 or .m3u file names, in its order. Songs that aren't there are left out,
+    /// with a note. Not in the Python app.
+    fn open_playlist(&mut self, path: PathBuf) {
+        let name = file_name(&path);
+        let listed = match playlist::read(&path) {
+            Ok(listed) => listed,
+            Err(problem) => {
+                message_later(
+                    rfd::MessageLevel::Warning,
+                    rules::OPEN_PLAYLIST_TITLE,
+                    problem,
+                );
+                return;
+            }
+        };
+        let mut seen = HashSet::new();
+        let songs: Vec<PathBuf> = listed
+            .iter()
+            .filter(|p| lrc_core::library::is_supported_audio(&p.to_string_lossy()) && p.is_file())
+            // A song listed twice plays once: the tracklist tells songs apart by path.
+            .filter(|p| seen.insert(memory::norm_path(&p.to_string_lossy(), cfg!(windows))))
+            .cloned()
+            .collect();
+        if songs.is_empty() {
+            message_later(
+                rfd::MessageLevel::Info,
+                rules::OPEN_PLAYLIST_TITLE,
+                rules::playlist_empty_text(&name, listed.len()),
+            );
+            return;
+        }
+        let missing = listed.iter().filter(|p| !p.is_file()).count();
+        let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
+        let label = format!("“{name}”");
+        let then = ScanThen::Playlist {
+            folder,
+            name,
+            missing,
+        };
+        self.scan(Vec::new(), songs, false, then, label);
+    }
+
+    /// Open ▾ → Save tracklist as playlist…: writes the tracklist, in its order, as an
+    /// .m3u8 file. Not in the Python app.
+    fn save_playlist(&mut self, path: &Path) {
+        let songs: Vec<(PathBuf, Option<String>)> = self
+            .queue
+            .playlist()
+            .iter()
+            .map(|song| {
+                let title = match self.track_titles.get(song) {
+                    Some(title) => title.clone(),
+                    None => read_track_tags(song).title,
+                };
+                (song.clone(), title)
+            })
+            .collect();
+        if songs.is_empty() {
+            return;
+        }
+        if let Err(error) = playlist::write(path, &songs) {
+            message_later(
+                rfd::MessageLevel::Warning,
+                rules::SAVE_PLAYLIST_TITLE,
+                rules::playlist_save_failed_text(&file_name(path), &error),
+            );
+        }
+    }
+
+    /// The songs whose tracklist rows carry the ⚠ mark, to keep the marks when the
+    /// rows are numbered again.
+    fn unplayable_songs(&self, ui: &MainWindow) -> HashSet<PathBuf> {
+        let rows = ui.get_queue_rows();
+        self.queue
+            .playlist()
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| {
+                rows.row_data(*i)
+                    .is_some_and(|text| text.starts_with(rules::UNPLAYABLE_MARK))
+            })
+            .map(|(_, path)| path.clone())
+            .collect()
+    }
+
+    /// The tracklist's rows again, after songs were removed or moved: numbered in the
+    /// new order, with the ⚠ marks and the playing song's highlight kept.
+    fn renumber_queue_rows(&mut self, ui: &MainWindow, unplayable: &HashSet<PathBuf>) {
+        self.populate_queue_list(ui);
+        for (index, path) in self.queue.playlist().iter().enumerate() {
+            if unplayable.contains(path) {
+                self.flag_queue_row(ui, index, true);
+            }
+        }
+        ui.set_queue_current(self.queue.current().map_or(-1, |i| i as i32));
+    }
+
+    /// The ✕ of a tracklist row: the song leaves the tracklist (the file stays where
+    /// it is). Removing the song that plays moves on to the one after it, playing or
+    /// paused as it was. The last song can't be removed. Not in the Python app.
+    fn remove_from_tracklist(&mut self, ui: &MainWindow, index: usize) {
+        if self.queue.playlist().len() < 2 || index >= self.queue.playlist().len() {
+            return;
+        }
+        // The editors work on the song that plays: it stays while one is open.
+        if self.queue.current() == Some(index) && self.editor_open() {
+            return;
+        }
+        let unplayable = self.unplayable_songs(ui);
+        let was_playing = self.player.state() == State::Playing;
+        let Some(was_current) = self.queue.remove(index) else {
+            return;
+        };
+        self.renumber_queue_rows(ui, &unplayable);
+        if was_current {
+            // The song after it, or the last one when it was the last itself.
+            let next = self
+                .queue
+                .next_track()
+                .or_else(|| self.queue.order().last().copied());
+            if let Some(next) = next {
+                self.load_track_by_index(ui, next, was_playing, 0);
+            }
+        }
+        self.update_navigation();
+        self.save_session(ui, false);
+    }
+
+    /// A tracklist row dragged from `from` to `to`. The music carries on; without
+    /// shuffle, what plays next follows the new order. Not in the Python app.
+    fn move_in_tracklist(&mut self, ui: &MainWindow, from: usize, to: usize) {
+        let unplayable = self.unplayable_songs(ui);
+        if !self.queue.move_song(from, to) {
+            return;
+        }
+        self.renumber_queue_rows(ui, &unplayable);
+        self.update_navigation();
+        self.save_session(ui, false);
+    }
+
     /// Plays an album folder, with its subfolders, once its songs have been read.
     pub fn open_album_folder(&mut self, folder: PathBuf) {
         let trimmed = folder.to_string_lossy();
@@ -1005,6 +1205,27 @@ impl App {
             }
             ScanThen::Files => self.open_files(ui, paths),
             ScanThen::Restore(remembered) => self.finish_restore(ui, paths, remembered),
+            ScanThen::Playlist {
+                folder,
+                name,
+                missing,
+            } => {
+                if paths.is_empty() {
+                    return;
+                }
+                // A list of songs, remembered as one, even when it names a single song.
+                self.set_playlist(ui, paths, Source::Files(folder));
+                self.show_queue_panel(ui);
+                let start = self.queue.start_index();
+                self.load_track_by_index(ui, start, true, 0);
+                if missing > 0 {
+                    message_later(
+                        rfd::MessageLevel::Info,
+                        rules::OPEN_PLAYLIST_TITLE,
+                        rules::playlist_missing_text(&name, missing),
+                    );
+                }
+            }
         }
     }
 
@@ -1073,6 +1294,9 @@ impl App {
         self.close_choices(); // the versions listed were another song's
         let path = self.queue.playlist()[index].clone();
         ui.set_queue_current(index as i32);
+        // The tracklist follows the song that plays, as a Qt list follows its current row.
+        ui.set_queue_reveal(index as i32);
+        ui.set_queue_reveal_count(ui.get_queue_reveal_count().wrapping_add(1));
         self.player.load(&path);
         self.play_wanted = autoplay;
         let song_offset = self.store.settings.get_int(&rules::offset_key(&path), 0);
@@ -2080,6 +2304,7 @@ impl App {
                 });
             }
             DropAction::Folder(folder) => self.open_album_folder(folder),
+            DropAction::Playlist(path) => self.open_playlist(path),
             DropAction::File(file) => self.open_file(ui, file),
             DropAction::Files { folders, audio } => {
                 self.scan(folders, audio, true, ScanThen::Files, String::new());

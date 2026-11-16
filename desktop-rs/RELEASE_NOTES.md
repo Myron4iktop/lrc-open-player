@@ -1,9 +1,11 @@
-LRC Open Player 1.1 lets you build a tracklist from songs anywhere on your computer, and choose which version of a song's lyrics to use when [LRCLIB](https://lrclib.net) has several.
+LRC Open Player 1.1 lets you build, rearrange and save a tracklist from songs anywhere on your computer, and choose which version of a song's lyrics to use when [LRCLIB](https://lrclib.net) has several.
 
 ## What's new
 
 - **Add songs to the tracklist that is playing.** Open ▾ → Add songs to tracklist… (`Ctrl+Shift+A`), the **+** button above the tracklist, or hold `Shift` while dropping songs or folders onto the window. The music carries on, the new songs go to the end, and the list is still there the next time you start the player.
 - **Choose the version of the lyrics.** Turn on Lyrics ▾ → Let me choose the version, and Lyrics ▾ → Search online lists every version LRCLIB has, with its length next to your file's. Pick one and it shows in the player straight away, so you can watch whether the lines keep time with the song. "Use these lyrics" keeps it; Cancel puts the old lyrics back.
+- **Rearrange the tracklist.** Drag a row to move it, or click the ✕ that appears on a row to take that song out. The tracklist now also scrolls to the song that's playing.
+- **Playlists.** Open ▾ → Save tracklist as playlist… saves it as an `.m3u8` file, and Open ▾ → Playlist… opens `.m3u8` and `.m3u` playlists (you can also drop one on the window). Songs inside the playlist's folder are saved with relative paths, so the folder can be moved with its playlist.
 - Open ▾ → Audio files… can open several songs at once.
 
 ## Download

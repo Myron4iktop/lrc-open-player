@@ -18,6 +18,8 @@ The repository also contains **LRC Companion**, an Android app for fixing tags a
 - Save lyrics as a `.lrc` file or embed them in the audio file, so they travel with it
 - Albums, shuffle, repeat (off / track / album) and drag and drop
 - Add songs from anywhere to the tracklist that is playing: **Open → Add songs to tracklist…** (`Ctrl+Shift+A`), or hold `Shift` while dropping songs or folders
+- Drag tracklist rows to reorder them, and remove a song with the ✕ on its row
+- Save the tracklist as an `.m3u8` playlist, and open `.m3u8` and `.m3u` playlists (**Open → Playlist…**, or drop one on the window)
 - Dark and light themes, seven accent colors and an optional visualizer
 - Windows media keys and lock-screen controls, a tray icon, and it remembers where you left off
 - Plays FLAC, MP3, M4A, OGG, Opus and WAV
